@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "gamunu.vscode-yarn",
+    "christian-kohler.npm-intellisense",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "oouo-diogo-perdigao.docthis",
+    "Prisma.prisma",
+    "Prisma.prisma-insider"
+  ]
+}

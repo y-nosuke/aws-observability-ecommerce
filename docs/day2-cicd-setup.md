@@ -14,8 +14,8 @@
 
 ```bash
 # プロジェクトのルートディレクトリで以下のコマンドを実行
-mkdir -p frontend/src
-mkdir -p backend/catalog-service
+mkdir -p frontend
+mkdir -p backend
 mkdir -p .github/workflows
 mkdir -p scripts
 ```

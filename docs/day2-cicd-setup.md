@@ -14,7 +14,7 @@
 
 ```bash
 # プロジェクトのルートディレクトリで以下のコマンドを実行
-mkdir -p frontend
+mkdir -p frontend/src
 mkdir -p backend/catalog-service
 mkdir -p .github/workflows
 mkdir -p scripts
@@ -110,6 +110,28 @@ npm run dev
 ## 6. サンプルバックエンドサービスの準備
 
 バックエンドサービスとして、Node.jsベースの簡単なLambda関数を作成します。
+
+### カタログサービスのプロジェクト作成
+
+```bash
+# バックエンドディレクトリに移動
+cd backend
+
+# カタログサービスのディレクトリを作成
+mkdir -p catalog-service
+
+# カタログサービスディレクトリに移動
+cd catalog-service
+
+# package.jsonの初期化
+npm init -y
+
+# 必要な依存関係のインストール
+npm install aws-sdk aws-xray-sdk-core
+
+# プロジェクトルートディレクトリに戻る
+cd ../..
+```
 
 ### カタログサービスのLambda関数
 

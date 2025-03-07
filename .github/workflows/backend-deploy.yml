@@ -1,0 +1,54 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+  workflow_dispatch: # 手動トリガー用
+
+jobs:
+  deploy-lambda:
+    name: Build and Deploy Lambda Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Get function names from Terraform
+        id: get-functions
+        run: |
+          cd terraform
+          CATALOG_FUNCTION_NAME=$(terraform output -raw catalog_lambda_function_name)
+          echo "CATALOG_FUNCTION_NAME=$CATALOG_FUNCTION_NAME" >> $GITHUB_ENV
+
+      - name: Install dependencies for catalog service
+        if: hashFiles('backend/catalog-service/**/*.js') != ''
+        run: |
+          cd backend/catalog-service
+          npm ci
+
+      - name: Deploy catalog service
+        if: hashFiles('backend/catalog-service/**/*.js') != '' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          cd backend/catalog-service
+          zip -r ../catalog-service.zip .
+          cd ..
+          aws lambda update-function-code --function-name ${{ env.CATALOG_FUNCTION_NAME }} --zip-file fileb://catalog-service.zip

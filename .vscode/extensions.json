@@ -6,6 +6,7 @@
     "esbenp.prettier-vscode",
     "oouo-diogo-perdigao.docthis",
     "Prisma.prisma",
-    "Prisma.prisma-insider"
+    "Prisma.prisma-insider",
+    "github.vscode-github-actions"
   ]
 }

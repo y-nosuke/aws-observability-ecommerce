@@ -1,39 +1,32 @@
-output "vpc_id" {
-  description = "The ID of the VPC"
-  value       = aws_vpc.main.id
+# API Gateway エンドポイント出力
+output "api_endpoint" {
+  description = "API Gateway Endpoint URL"
+  value       = aws_apigatewayv2_api.main.api_endpoint
 }
 
-output "public_subnet_ids" {
-  description = "The IDs of the public subnets"
-  value       = aws_subnet.public[*].id
+# Lambda関数出力
+output "catalog_lambda_function_name" {
+  description = "Catalog Service Lambda Function Name"
+  value       = aws_lambda_function.catalog_service.function_name
 }
 
-output "private_subnet_ids" {
-  description = "The IDs of the private subnets"
-  value       = aws_subnet.private[*].id
+output "catalog_lambda_function_arn" {
+  description = "Catalog Service Lambda Function ARN"
+  value       = aws_lambda_function.catalog_service.arn
 }
 
-output "api_security_group_id" {
-  description = "The ID of the API security group"
-  value       = aws_security_group.api.id
+# フロントエンド関連の出力
+output "frontend_bucket_name" {
+  description = "Frontend S3 Bucket Name"
+  value       = aws_s3_bucket.frontend.bucket
 }
 
-output "app_security_group_id" {
-  description = "The ID of the application security group"
-  value       = aws_security_group.app.id
-}
-
-output "db_security_group_id" {
-  description = "The ID of the database security group"
-  value       = aws_security_group.db.id
+output "cloudfront_distribution_id" {
+  description = "CloudFront Distribution ID"
+  value       = aws_cloudfront_distribution.frontend.id
 }
 
 output "cloudfront_domain" {
-  description = "The domain name of the CloudFront distribution"
+  description = "CloudFront Domain Name"
   value       = aws_cloudfront_distribution.frontend.domain_name
-}
-
-output "api_endpoint" {
-  description = "The endpoint URL of the API Gateway"
-  value       = aws_apigatewayv2_api.main.api_endpoint
 }

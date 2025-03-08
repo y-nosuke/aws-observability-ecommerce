@@ -81,14 +81,3 @@ data "archive_file" "lambda_dummy_zip" {
   source_file = local_file.lambda_dummy.filename
   depends_on  = [local_file.lambda_dummy]
 }
-
-# Lambda関数出力
-output "catalog_lambda_function_name" {
-  description = "Catalog Service Lambda Function Name"
-  value       = aws_lambda_function.catalog_service.function_name
-}
-
-output "catalog_lambda_function_arn" {
-  description = "Catalog Service Lambda Function ARN"
-  value       = aws_lambda_function.catalog_service.arn
-}

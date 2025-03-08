@@ -41,12 +41,7 @@ jobs:
         run: |
           cd frontend
           npm run build
-          npm run export || echo "Export command may not be needed"
-
-          echo "Checking build directories:"
-          ls -la
-          ls -la .next || echo ".next directory does not exist"
-          ls -la out || echo "out directory does not exist"
+          npm run export
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2

@@ -46,17 +46,7 @@ jobs:
         id: get-functions
         run: |
           cd terraform
-          # まず出力を確認
-          echo "Terraform outputs:"
-          terraform output
-
-          # 直接関数名を設定。まずLambda関数名を固定値として使用
-          # これはあなたが作成したLambda関数の名前に合わせる必要があります
-          CATALOG_FUNCTION_NAME="ecommerce-observability-catalog-service-dev"
-
-          echo "Using fixed function name: $CATALOG_FUNCTION_NAME"
-
-          # 環境変数にセット
+          CATALOG_FUNCTION_NAME=$(terraform output -raw catalog_lambda_function_name)
           echo "CATALOG_FUNCTION_NAME=$CATALOG_FUNCTION_NAME" >> $GITHUB_ENV
 
       - name: Install dependencies for catalog service

@@ -47,8 +47,18 @@ jobs:
         id: get-functions
         run: |
           cd terraform
-          CATALOG_FUNCTION_NAME=$(terraform output -raw catalog_lambda_function_name)
-          echo "CATALOG_FUNCTION_NAME=$CATALOG_FUNCTION_NAME" >> $GITHUB_ENV
+          # 出力を変数に安全に格納
+          OUTPUT=$(terraform output -raw catalog_lambda_function_name || echo "")
+          # 出力が空でないか確認
+          if [ -z "$OUTPUT" ]; then
+            echo "Error: Terraform output for catalog_lambda_function_name is empty"
+            exit 1
+          fi
+          # 出力にスペースやコロンなどの特殊文字が含まれていないか確認
+          CLEANED_OUTPUT=$(echo "$OUTPUT" | tr -dc '[:alnum:]-_')
+          # 環境変数に設定
+          echo "CATALOG_FUNCTION_NAME=$CLEANED_OUTPUT" >> $GITHUB_ENV
+          echo "Function name: $CLEANED_OUTPUT"
 
       - name: Install dependencies for catalog service
         if: hashFiles('backend/catalog-service/**/*.js') != ''

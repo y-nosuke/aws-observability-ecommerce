@@ -15,9 +15,9 @@ resource "aws_dynamodb_table" "products" {
   }
 
   global_secondary_index {
-    name               = "CategoryIndex"
-    hash_key           = "category_id"
-    projection_type    = "ALL"
+    name            = "CategoryIndex"
+    hash_key        = "category_id"
+    projection_type = "ALL"
   }
 
   tags = {
@@ -64,10 +64,10 @@ resource "aws_dynamodb_table" "product_views" {
   }
 
   global_secondary_index {
-    name               = "ProductViewsIndex"
-    hash_key           = "product_id"
-    range_key          = "timestamp"
-    projection_type    = "ALL"
+    name            = "ProductViewsIndex"
+    hash_key        = "product_id"
+    range_key       = "timestamp"
+    projection_type = "ALL"
   }
 
   tags = {

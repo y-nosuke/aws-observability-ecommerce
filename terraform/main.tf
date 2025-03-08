@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "ap-northeast-1"  # 東京リージョン（任意のリージョンに変更可能）
+  region = "ap-northeast-1" # 東京リージョン（任意のリージョンに変更可能）
 
   default_tags {
     tags = {

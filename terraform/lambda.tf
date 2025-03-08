@@ -32,15 +32,15 @@ resource "aws_lambda_function" "catalog_service" {
   function_name = "${var.project_name}-catalog-service-${var.environment}"
   description   = "Catalog service for e-commerce application"
 
-  role          = aws_iam_role.lambda_execution.arn
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
+  role    = aws_iam_role.lambda_execution.arn
+  handler = "index.handler"
+  runtime = "nodejs18.x"
 
   # デフォルトのZIPファイル（後で更新される）
-  filename      = "${path.module}/lambda_dummy.zip"
+  filename = "${path.module}/lambda_dummy.zip"
 
-  memory_size   = 256
-  timeout       = 10
+  memory_size = 256
+  timeout     = 10
 
   environment {
     variables = {

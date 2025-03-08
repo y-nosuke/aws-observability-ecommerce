@@ -47,18 +47,25 @@ jobs:
         id: get-functions
         run: |
           cd terraform
-          # 出力を変数に安全に格納
-          OUTPUT=$(terraform output -raw catalog_lambda_function_name || echo "")
-          # 出力が空でないか確認
-          if [ -z "$OUTPUT" ]; then
-            echo "Error: Terraform output for catalog_lambda_function_name is empty"
+          # terraform outputコマンドの結果をファイルに保存
+          terraform output -json > terraform_output.json
+
+          # jqを使って関数名を抽出（jqはGitHub Actionsに標準でインストールされています）
+          CATALOG_FUNCTION_NAME=$(jq -r '.catalog_lambda_function_name.value' terraform_output.json)
+
+          echo "Function name extracted: $CATALOG_FUNCTION_NAME"
+
+          # 関数名が有効かチェック
+          if [[ ! "$CATALOG_FUNCTION_NAME" =~ ^[a-zA-Z0-9-_]+$ ]]; then
+            echo "Invalid function name: $CATALOG_FUNCTION_NAME"
             exit 1
           fi
-          # 出力にスペースやコロンなどの特殊文字が含まれていないか確認
-          CLEANED_OUTPUT=$(echo "$OUTPUT" | tr -dc '[:alnum:]-_')
-          # 環境変数に設定
-          echo "CATALOG_FUNCTION_NAME=$CLEANED_OUTPUT" >> $GITHUB_ENV
-          echo "Function name: $CLEANED_OUTPUT"
+
+          # 環境変数にセット
+          echo "CATALOG_FUNCTION_NAME=$CATALOG_FUNCTION_NAME" >> $GITHUB_ENV
+
+          # 確認のためにもう一度表示
+          echo "Function name set to: $CATALOG_FUNCTION_NAME"
 
       - name: Install dependencies for catalog service
         if: hashFiles('backend/catalog-service/**/*.js') != ''

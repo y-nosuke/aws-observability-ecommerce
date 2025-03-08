@@ -12,7 +12,8 @@
   "editor.insertSpaces": true,
   "files.encoding": "utf8",
   "files.eol": "\n",
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   },

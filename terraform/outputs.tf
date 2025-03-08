@@ -27,3 +27,13 @@ output "db_security_group_id" {
   description = "The ID of the database security group"
   value       = aws_security_group.db.id
 }
+
+output "cloudfront_domain" {
+  description = "The domain name of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.frontend.domain_name
+}
+
+output "api_endpoint" {
+  description = "The endpoint URL of the API Gateway"
+  value       = aws_apigatewayv2_api.main.api_endpoint
+}

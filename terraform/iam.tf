@@ -1,8 +1,6 @@
-# terraform/iam.tf
-
-# GitHub ActionsがAssumeできるIAMロール
-resource "aws_iam_role" "github_actions" {
-  name = "GitHubActionsRole"
+# Lambda実行用の基本IAMロール
+resource "aws_iam_role" "lambda_execution" {
+  name = "ecommerce-lambda-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -11,102 +9,37 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          Service = "lambda.amazonaws.com"
         }
       }
     ]
   })
+
+  tags = {
+    Name = "ecommerce-lambda-execution-role"
+  }
 }
 
-# デプロイに必要な権限ポリシー
-resource "aws_iam_policy" "deployment_policy" {
-  name = "DeploymentPolicy"
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          aws_s3_bucket.frontend_deploy.arn,
-          "${aws_s3_bucket.frontend_deploy.arn}/*",
-          aws_s3_bucket.cfn_templates.arn,
-          "${aws_s3_bucket.cfn_templates.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations"
-        ]
-        Resource = aws_cloudfront_distribution.frontend_distribution.arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "lambda:UpdateFunctionCode",
-          "lambda:GetFunction",
-          "lambda:CreateFunction",
-          "lambda:DeleteFunction",
-          "lambda:UpdateFunctionConfiguration",
-          "lambda:TagResource"
-        ]
-        Resource = "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:ecommerce-*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "apigateway:PUT",
-          "apigateway:POST",
-          "apigateway:GET",
-          "apigateway:DELETE",
-          "apigateway:PATCH"
-        ]
-        Resource = "arn:aws:apigateway:${data.aws_region.current.name}::*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:DescribeTable",
-          "dynamodb:CreateTable",
-          "dynamodb:UpdateTable",
-          "dynamodb:DeleteTable"
-        ]
-        Resource = "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/ecommerce-*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters"
-        ]
-        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/ecommerce/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "cloudformation:*Stack*"
-        ]
-        Resource = "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/ecommerce-*/*"
-      }
-    ]
-  })
+# Lambda実行に必要な基本ポリシーをアタッチ
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# ポリシーをロールにアタッチ
-resource "aws_iam_role_policy_attachment" "github_actions_policy" {
-  role       = aws_iam_role.github_actions.name
-  policy_arn = aws_iam_policy.deployment_policy.arn
+# CloudWatch Logsへの書き込み権限
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
-# 現在のAWSアカウント情報を取得
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
+# X-Rayトレース権限
+resource "aws_iam_role_policy_attachment" "lambda_xray" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+}
+
+# DynamoDBアクセス権限 (後でカスタムポリシーに置き換えるのがベストプラクティス)
+resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}

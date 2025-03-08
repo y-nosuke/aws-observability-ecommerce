@@ -11,7 +11,7 @@ resource "aws_security_group" "api" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow HTTP from anywhere"
   }
-  
+
   ingress {
     from_port   = 443
     to_port     = 443

@@ -172,18 +172,44 @@ terraform apply
 
 作成したDynamoDBテーブルにサンプルデータを投入するスクリプトを作成します。
 
+### データ投入用環境のセットアップ
+
+```bash
+# scriptsディレクトリに移動
+cd scripts
+
+# package.jsonの初期化
+npm init -y
+
+# AWS SDK v3をインストール（最新のSDKを使用）
+npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+```
+
 ### データ投入スクリプト
 
 `scripts/seed-dynamodb.js` ファイルを作成します。
 
 > ファイルの内容は `seed-dynamodb.js` Artifactを参照してください。
 
-スクリプトを実行します：
+### スクリプトの実行
 
 ```bash
-cd scripts
-npm install aws-sdk
+# scriptsディレクトリで
 node seed-dynamodb.js
+```
+
+または、package.jsonにスクリプトエントリを追加して実行することもできます：
+
+```bash
+# package.jsonに以下の内容を追加
+echo '{
+  "scripts": {
+    "seed": "node seed-dynamodb.js"
+  }
+}' > package.json
+
+# スクリプトを実行
+npm run seed
 ```
 
 ## 10. 初回デプロイとパイプラインのテスト

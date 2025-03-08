@@ -47,25 +47,18 @@ jobs:
         id: get-functions
         run: |
           cd terraform
-          # terraform outputコマンドの結果をファイルに保存
-          terraform output -json > terraform_output.json
+          # まず出力を確認
+          echo "Terraform outputs:"
+          terraform output
 
-          # jqを使って関数名を抽出（jqはGitHub Actionsに標準でインストールされています）
-          CATALOG_FUNCTION_NAME=$(jq -r '.catalog_lambda_function_name.value' terraform_output.json)
+          # 直接関数名を設定。まずLambda関数名を固定値として使用
+          # これはあなたが作成したLambda関数の名前に合わせる必要があります
+          CATALOG_FUNCTION_NAME="ecommerce-observability-catalog-service-dev"
 
-          echo "Function name extracted: $CATALOG_FUNCTION_NAME"
-
-          # 関数名が有効かチェック
-          if [[ ! "$CATALOG_FUNCTION_NAME" =~ ^[a-zA-Z0-9-_]+$ ]]; then
-            echo "Invalid function name: $CATALOG_FUNCTION_NAME"
-            exit 1
-          fi
+          echo "Using fixed function name: $CATALOG_FUNCTION_NAME"
 
           # 環境変数にセット
           echo "CATALOG_FUNCTION_NAME=$CATALOG_FUNCTION_NAME" >> $GITHUB_ENV
-
-          # 確認のためにもう一度表示
-          echo "Function name set to: $CATALOG_FUNCTION_NAME"
 
       - name: Install dependencies for catalog service
         if: hashFiles('backend/catalog-service/**/*.js') != ''

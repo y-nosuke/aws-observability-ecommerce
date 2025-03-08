@@ -33,10 +33,14 @@ const log = (level, message, data = {}) => {
 
 // リクエスト処理の基本関数
 const handleRequest = async (event, context, handler) => {
+  // イベントからパスとHTTPメソッドを取得
+  const path = getPath(event);
+  const httpMethod = getHttpMethod(event);
+
   // リクエスト開始ログ
   log("INFO", "Request received", {
-    path: event.path,
-    httpMethod: event.httpMethod,
+    path,
+    httpMethod,
     queryStringParameters: event.queryStringParameters,
   });
 
@@ -79,6 +83,70 @@ const handleRequest = async (event, context, handler) => {
       }),
     };
   }
+};
+
+// イベントからパスを取得する関数
+const getPath = (event) => {
+  if (event.path) {
+    return event.path;
+  }
+
+  if (event.requestContext) {
+    if (event.requestContext.http) {
+      return event.requestContext.http.path; // HTTP API (v2)
+    }
+    if (event.requestContext.path) {
+      return event.requestContext.path; // REST API (v1)
+    }
+    if (event.requestContext.resourcePath) {
+      return event.requestContext.resourcePath; // 別のREST API形式
+    }
+  }
+
+  if (event.resource) {
+    return event.resource; // バックアップとしてリソースパスを使用
+  }
+
+  log("WARN", "Could not determine path from event", { event });
+  return "/"; // デフォルトパス
+};
+
+// イベントからHTTPメソッドを取得する関数
+const getHttpMethod = (event) => {
+  if (event.httpMethod) {
+    return event.httpMethod;
+  }
+
+  if (event.requestContext && event.requestContext.http) {
+    return event.requestContext.http.method; // HTTP API (v2)
+  }
+
+  if (event.requestContext && event.requestContext.httpMethod) {
+    return event.requestContext.httpMethod; // REST API (v1)
+  }
+
+  log("WARN", "Could not determine HTTP method from event", { event });
+  return "GET"; // デフォルトメソッド
+};
+
+// パスパラメータを取得する関数
+const getPathParameter = (event, index) => {
+  const path = getPath(event);
+  const segments = path.split("/").filter((segment) => segment.length > 0);
+
+  if (segments.length > index) {
+    return segments[index];
+  }
+
+  // API Gateway v2の場合はpathParametersから取得
+  if (event.pathParameters) {
+    const keys = Object.keys(event.pathParameters);
+    if (keys.length > 0) {
+      return event.pathParameters[keys[0]];
+    }
+  }
+
+  return null;
 };
 
 // 全商品を取得
@@ -248,8 +316,15 @@ const getCategory = async (categoryId) => {
 
 // Lambda関数のルーティング処理
 exports.handler = async (event, context) => {
+  // イベントの全体構造をログに出力（デバッグ用）
+  log("DEBUG", "Event received", { event });
+
+  // パスとHTTPメソッドを取得
+  const path = getPath(event);
+  const httpMethod = getHttpMethod(event);
+
   // ヘルスチェックエンドポイント
-  if (event.path === "/health") {
+  if (path === "/health") {
     return {
       statusCode: 200,
       headers: {
@@ -265,7 +340,7 @@ exports.handler = async (event, context) => {
   }
 
   // 商品一覧の取得
-  if (event.path === "/products" && event.httpMethod === "GET") {
+  if (path === "/products" && httpMethod === "GET") {
     return handleRequest(event, context, async () => {
       const products = await getProducts();
 
@@ -281,12 +356,9 @@ exports.handler = async (event, context) => {
   }
 
   // 特定の商品の取得
-  if (
-    event.path.match(/^\/products\/[a-zA-Z0-9-]+$/) &&
-    event.httpMethod === "GET"
-  ) {
+  if (path.match(/^\/products\/[a-zA-Z0-9-]+$/) && httpMethod === "GET") {
     return handleRequest(event, context, async () => {
-      const productId = event.path.split("/")[2];
+      const productId = path.split("/")[2];
 
       try {
         const product = await getProduct(productId);
@@ -316,7 +388,7 @@ exports.handler = async (event, context) => {
   }
 
   // カテゴリ一覧の取得
-  if (event.path === "/categories" && event.httpMethod === "GET") {
+  if (path === "/categories" && httpMethod === "GET") {
     return handleRequest(event, context, async () => {
       const categories = await getCategories();
 
@@ -332,12 +404,9 @@ exports.handler = async (event, context) => {
   }
 
   // 特定のカテゴリの取得
-  if (
-    event.path.match(/^\/categories\/[a-zA-Z0-9-]+$/) &&
-    event.httpMethod === "GET"
-  ) {
+  if (path.match(/^\/categories\/[a-zA-Z0-9-]+$/) && httpMethod === "GET") {
     return handleRequest(event, context, async () => {
-      const categoryId = event.path.split("/")[2];
+      const categoryId = path.split("/")[2];
 
       try {
         const category = await getCategory(categoryId);
@@ -368,11 +437,11 @@ exports.handler = async (event, context) => {
 
   // カテゴリに属する商品一覧の取得
   if (
-    event.path.match(/^\/categories\/[a-zA-Z0-9-]+\/products$/) &&
-    event.httpMethod === "GET"
+    path.match(/^\/categories\/[a-zA-Z0-9-]+\/products$/) &&
+    httpMethod === "GET"
   ) {
     return handleRequest(event, context, async () => {
-      const categoryId = event.path.split("/")[2];
+      const categoryId = path.split("/")[2];
 
       try {
         // カテゴリが存在するか確認
@@ -412,6 +481,10 @@ exports.handler = async (event, context) => {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
     },
-    body: JSON.stringify({ message: "Not found" }),
+    body: JSON.stringify({
+      message: "Not found",
+      path: path,
+      method: httpMethod,
+    }),
   };
 };

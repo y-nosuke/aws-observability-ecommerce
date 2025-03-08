@@ -49,9 +49,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Terraformのセットアップを追加
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
@@ -59,6 +58,9 @@ jobs:
         run: |
           cd terraform
           terraform init
+
+      - name: Debug Terraform output
+        run: terraform output -raw frontend_bucket_name
 
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

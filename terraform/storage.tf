@@ -48,3 +48,19 @@ resource "aws_s3_bucket_public_access_block" "deployment_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+resource "aws_s3_bucket" "s3_logs" {
+  bucket = "${var.project_name}-s3-logs-${var.environment}"
+
+  tags = {
+    Name = "${var.project_name}-s3-logs"
+  }
+}
+
+# フロントエンドバケットにサーバーアクセスログを設定
+resource "aws_s3_bucket_logging" "frontend_logging" {
+  bucket = aws_s3_bucket.frontend.id
+
+  target_bucket = aws_s3_bucket.s3_logs.id
+  target_prefix = "s3-access-logs/"
+}

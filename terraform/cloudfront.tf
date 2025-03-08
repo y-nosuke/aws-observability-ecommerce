@@ -63,6 +63,12 @@ resource "aws_cloudfront_distribution" "frontend" {
     cloudfront_default_certificate = true
   }
 
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
+    prefix          = "cloudfront/"
+  }
+
   tags = {
     Name = "${var.project_name}-frontend-distribution"
   }
@@ -95,4 +101,30 @@ resource "aws_s3_bucket_policy" "frontend" {
       }
     ]
   })
+}
+
+resource "aws_s3_bucket" "cloudfront_logs" {
+  bucket = "${var.project_name}-cloudfront-logs-${var.environment}"
+
+  tags = {
+    Name = "${var.project_name}-cloudfront-logs"
+  }
+}
+
+# バケット所有権設定 - ObjectWriter (ACLを有効にする)
+resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_ownership" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+}
+
+# バケットACL設定 - CloudFrontのログ配信が可能になるように
+resource "aws_s3_bucket_acl" "cloudfront_logs_acl" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+  acl    = "private"
+
+  # 所有権設定に依存
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs_ownership]
 }

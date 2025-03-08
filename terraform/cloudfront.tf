@@ -4,15 +4,13 @@ resource "aws_cloudfront_distribution" "frontend" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # 北米・欧州・アジアの低価格リージョンのみ使用
+  comment             = "${var.project_name}-frontend"
 
   # S3バケットをオリジンとして設定
   origin {
-    domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
-    origin_id   = "S3-${aws_s3_bucket.frontend.bucket}"
-
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.frontend.cloudfront_access_identity_path
-    }
+    domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.frontend.bucket}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }
 
   # デフォルトのキャッシュ動作
@@ -63,10 +61,14 @@ resource "aws_cloudfront_distribution" "frontend" {
     cloudfront_default_certificate = true
   }
 
-  logging_config {
-    include_cookies = false
-    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
-    prefix          = "cloudfront/"
+  # アクセスログの設定（オプション）
+  dynamic "logging_config" {
+    for_each = var.enable_cloudfront_logs ? [1] : []
+    content {
+      include_cookies = false
+      bucket          = aws_s3_bucket.cloudfront_logs[0].bucket_domain_name
+      prefix          = "cloudfront/"
+    }
   }
 
   tags = {
@@ -74,37 +76,21 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 }
 
-# CloudFront Origin Access Identity
-resource "aws_cloudfront_origin_access_identity" "frontend" {
-  comment = "OAI for ${var.project_name} frontend"
+# CloudFrontオリジンアクセスコントロール
+resource "aws_cloudfront_origin_access_control" "frontend" {
+  name                              = "${var.project_name}-frontend-oac"
+  description                       = "OAC for ${var.project_name} frontend"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
-# S3バケットポリシー - CloudFrontからのアクセスを許可
-resource "aws_s3_bucket_policy" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowCloudFrontServicePrincipal"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.frontend.arn}/*"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
-          }
-        }
-      }
-    ]
-  })
-}
-
+# CloudFrontアクセスログ用のS3バケット（オプション）
 resource "aws_s3_bucket" "cloudfront_logs" {
+  count  = var.enable_cloudfront_logs ? 1 : 0
   bucket = "${var.project_name}-cloudfront-logs-${var.environment}"
+
+  force_destroy = true
 
   tags = {
     Name = "${var.project_name}-cloudfront-logs"
@@ -113,7 +99,8 @@ resource "aws_s3_bucket" "cloudfront_logs" {
 
 # バケット所有権設定 - ObjectWriter (ACLを有効にする)
 resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_ownership" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
+  count  = var.enable_cloudfront_logs ? 1 : 0
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
 
   rule {
     object_ownership = "ObjectWriter"
@@ -122,7 +109,8 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_ownership" {
 
 # バケットACL設定 - CloudFrontのログ配信が可能になるように
 resource "aws_s3_bucket_acl" "cloudfront_logs_acl" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
+  count  = var.enable_cloudfront_logs ? 1 : 0
+  bucket = aws_s3_bucket.cloudfront_logs[0].id
   acl    = "private"
 
   # 所有権設定に依存

@@ -39,7 +39,7 @@ Next.jsは初心者でも始めやすいReactフレームワークです。以�
 
 Next.jsでは、`pages`ディレクトリ内のファイル構造がそのままURLになります。
 
-```
+```text
 📁 pages
   ├── index.js         → / (ホームページ)
   ├── products
@@ -205,7 +205,7 @@ Next.jsでは、UIを再利用可能なコンポーネントに分割します�
 
 ### 1.5.1. MVPアーキテクチャ（シンプル）
 
-```
+```text
 ユーザー → CloudFront → S3 (Next.js静的資産)
          ↘ ALB → Fargate (Go Echo API) → MySQL (RDS)
 ```
@@ -219,7 +219,7 @@ Next.jsでは、UIを再利用可能なコンポーネントに分割します�
 
 ### 1.5.2. 全機能アーキテクチャ（拡張性）
 
-```
+```text
 ユーザー → CloudFront → S3 (Next.js静的資産)
          ↘ ALB → ┌→ ユーザー管理サービス (Fargate) → RDS
                  ├→ 商品サービス (Fargate) → RDS

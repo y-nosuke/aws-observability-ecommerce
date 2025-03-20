@@ -1,0 +1,180 @@
+services:
+  traefik:
+    image: traefik:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./infra/traefik:/etc/traefik
+    command:
+      - "--api.insecure=true" # 開発環境なのでダッシュボードを有効化
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    networks:
+      - aws-observability-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    restart: always
+    volumes:
+      - ./backend:/app
+    expose:
+      - "8080"
+    environment:
+      - APP_NAME=aws-observability-ecommerce
+      - APP_VERSION=1.0.0
+      - APP_ENV=development
+      - PORT=8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      # shop.localhostのAPIエンドポイント
+      - "traefik.http.routers.shop-api.rule=Host(`shop.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.shop-api.entrypoints=web"
+      # admin.localhostのAPIエンドポイント
+      - "traefik.http.routers.admin-api.rule=Host(`admin.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.admin-api.entrypoints=web"
+      # api.localhostのAPIエンドポイント（オプション）
+      - "traefik.http.routers.backend-api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend-api.entrypoints=web"
+      # 共通のサービス設定
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+    networks:
+      - aws-observability-network
+
+  frontend-customer:
+    build:
+      context: ./frontend-customer
+      dockerfile: Dockerfile.dev
+    restart: always
+    volumes:
+      - ./frontend-customer:/app
+      - /app/node_modules
+    expose:
+      - "3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-customer.rule=Host(`shop.localhost`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.frontend-customer.entrypoints=web"
+      - "traefik.http.services.frontend-customer.loadbalancer.server.port=3000"
+    networks:
+      - aws-observability-network
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend-admin:/app
+      - /app/node_modules
+    expose:
+      - "3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-admin.rule=Host(`admin.localhost`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.frontend-admin.entrypoints=web"
+      - "traefik.http.services.frontend-admin.loadbalancer.server.port=3000"
+    networks:
+      - aws-observability-network
+
+  mysql:
+    image: mysql:latest
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=ecommerce
+      - MYSQL_USER=ecommerce_user
+      - MYSQL_PASSWORD=ecommerce_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "ecommerce_user",
+          "-pecommerce_password",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "traefik.enable=false" # Traefikからの直接アクセスは不要
+    networks:
+      - aws-observability-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=ecommerce_user
+      - PMA_PASSWORD=ecommerce_password
+      - UPLOAD_LIMIT=300M
+    depends_on:
+      - mysql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`db.localhost`)"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+    networks:
+      - aws-observability-network
+
+  localstack:
+    image: localstack/localstack:latest
+    restart: always
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=cloudwatch,logs,xray,s3,dynamodb,lambda,sqs,sns
+      - DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+      - HOSTNAME_EXTERNAL=localstack
+      - DEBUG=1
+    volumes:
+      - ./infra/localstack:/docker-entrypoint-initaws.d
+      - /var/run/docker.sock:/var/run/docker.sock
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "traefik.enable=false" # Traefikからの直接アクセスは不要
+    networks:
+      - aws-observability-network
+
+volumes:
+  mysql_data:
+  localstack_data:
+
+networks:
+  aws-observability-network:
+    name: aws-observability-network

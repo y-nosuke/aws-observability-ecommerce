@@ -1,0 +1,33 @@
+# ビルド成果物
+.next/
+out/
+build/
+dist/
+
+# 依存関係
+node_modules/
+
+# 静的ファイル
+public/
+static/
+
+# キャッシュとログ
+.cache/
+*.log
+
+# テスト・カバレッジレポート
+coverage/
+
+# 自動生成されたファイル
+*.generated.*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# その他
+.git/
+.github/
+.vscode/
+.DS_Store
+.env*
+!.env.example

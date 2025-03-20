@@ -1,0 +1,62 @@
+# Go関連
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+tmp
+
+# フロントエンド関連
+node_modules/
+.next/
+out/
+.cache/
+dist/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# LocalStack関連
+.localstack/
+localstack-volume/
+
+# 環境変数
+.envrc
+
+# テスト関連
+coverage/
+*.out
+
+# IDE関連
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# エディタ関連
+*.swp
+*.swo
+*~
+
+# OS関連
+.DS_Store
+Thumbs.db

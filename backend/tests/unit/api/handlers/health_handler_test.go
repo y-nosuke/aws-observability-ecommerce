@@ -21,9 +21,9 @@ func TestHealthHandlerBasicResponse(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// モック設定
-	originalVersion := config.Config.App.Version
-	config.Config.App.Version = "test-1.0.0"
-	defer func() { config.Config.App.Version = originalVersion }()
+	originalVersion := config.App.Version
+	config.App.Version = "test-1.0.0"
+	defer func() { config.App.Version = originalVersion }()
 
 	// ハンドラーの作成
 	h := handlers.NewHealthHandler()

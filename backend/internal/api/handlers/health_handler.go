@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"runtime"
 	"time"
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/y-nosuke/aws-observability-ecommerce/internal/api/middleware"
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/config"
 )
 
@@ -31,17 +31,21 @@ type HealthHandler struct {
 func NewHealthHandler() *HealthHandler {
 	return &HealthHandler{
 		startTime: time.Now(),
-		version:   config.Config.App.Version, // アプリケーションバージョン
+		version:   config.App.Version, // アプリケーションバージョン
 	}
 }
 
 // HandleHealthCheck はヘルスチェックエンドポイントのハンドラー関数
 func (h *HealthHandler) HandleHealthCheck(c echo.Context) error {
+	// コンテキストからロガーを取得
+	log := middleware.GetLogger(c)
+
 	// リクエストの処理開始をログに記録
-	log.Println("Health check request received",
+	log.Debug("Health check request received",
 		"method", c.Request().Method,
 		"path", c.Path(),
 		"remote_ip", c.RealIP(),
+		"request_id", middleware.GetRequestID(c),
 	)
 
 	// サービスの状態をチェック（ここでは簡易的にすべて稼働中とする）
@@ -77,9 +81,10 @@ func (h *HealthHandler) HandleHealthCheck(c echo.Context) error {
 	}
 
 	// レスポンスの送信をログに記録
-	log.Println("Health check completed",
+	log.Info("Health check completed",
 		"status", response.Status,
-		"uptime", response.Uptime,
+		"uptime_ms", response.Uptime,
+		"goroutines", resources["goroutines"],
 	)
 
 	return c.JSON(http.StatusOK, response)

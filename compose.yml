@@ -151,10 +151,13 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=cloudwatch,logs,xray,s3,dynamodb,lambda,sqs,sns
-      - DEFAULT_REGION=us-east-1
-      - AWS_DEFAULT_REGION=us-east-1
+      - SERVICES=cloudwatch,logs,s3
+      - DEFAULT_REGION=ap-northeast-1
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=localstack
+      - AWS_SECRET_ACCESS_KEY=localstack
       - HOSTNAME_EXTERNAL=localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
       - DEBUG=1
     volumes:
       - ./infra/localstack:/docker-entrypoint-initaws.d

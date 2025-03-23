@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/internal/api/middleware"
 )
 
 // ProductHandler は商品関連のハンドラーを表す構造体
@@ -91,15 +92,17 @@ func NewProductHandler() *ProductHandler {
 
 // HandleGetProducts は商品一覧を取得するハンドラー関数
 func (h *ProductHandler) HandleGetProducts(c echo.Context) error {
-	// リクエストの処理開始をログに記録
-	log.Printf("Get products request received from %s", c.RealIP())
+	// コンテキストからロガーを取得
+	log := middleware.GetLogger(c)
 
-	// クエリパラメータからページネーション情報を取得
+	// リクエストパラメータを取得してログに記録
 	page := 1
 	pageStr := c.QueryParam("page")
 	if pageStr != "" {
 		parsedPage, err := strconv.Atoi(pageStr)
-		if err == nil && parsedPage > 0 {
+		if err != nil {
+			log.Warn("Invalid page parameter", "page", pageStr, "error", err.Error())
+		} else if parsedPage > 0 {
 			page = parsedPage
 		}
 	}
@@ -108,24 +111,50 @@ func (h *ProductHandler) HandleGetProducts(c echo.Context) error {
 	pageSizeStr := c.QueryParam("page_size")
 	if pageSizeStr != "" {
 		parsedPageSize, err := strconv.Atoi(pageSizeStr)
-		if err == nil && parsedPageSize > 0 && parsedPageSize <= 50 {
+		if err != nil {
+			log.Warn("Invalid page_size parameter", "page_size", pageSizeStr, "error", err.Error())
+		} else if parsedPageSize > 0 && parsedPageSize <= 50 {
 			pageSize = parsedPageSize
 		}
 	}
 
 	// カテゴリーIDによるフィルタリング
-	categoryID, err := strconv.Atoi(c.QueryParam("category_id"))
+	categoryID := 0
+	categoryIDStr := c.QueryParam("category_id")
+	if categoryIDStr != "" {
+		parsedCategoryID, err := strconv.Atoi(categoryIDStr)
+		if err != nil {
+			log.Warn("Invalid category_id parameter", "category_id", categoryIDStr, "error", err.Error())
+		} else if parsedCategoryID > 0 {
+			categoryID = parsedCategoryID
+		}
+	}
+
+	// リクエストパラメータの詳細をデバッグレベルでログに記録
+	log.Debug("Product list request parameters",
+		"page", page,
+		"page_size", pageSize,
+		"category_id", categoryID)
+
 	var filteredProducts []Product
-	if err == nil && categoryID > 0 {
+	if categoryID > 0 {
 		// カテゴリーでフィルタリング
 		for _, p := range h.products {
 			if p.CategoryID == categoryID {
 				filteredProducts = append(filteredProducts, p)
 			}
 		}
+
+		log.Info("Products filtered by category",
+			"category_id", categoryID,
+			"filtered_count", len(filteredProducts),
+			"total_count", len(h.products))
 	} else {
 		// フィルタリングなし
 		filteredProducts = h.products
+
+		log.Info("All products requested",
+			"total_count", len(filteredProducts))
 	}
 
 	// 製品の総数
@@ -147,6 +176,9 @@ func (h *ProductHandler) HandleGetProducts(c echo.Context) error {
 		pageProducts = filteredProducts[startIndex:endIndex]
 	} else {
 		pageProducts = []Product{}
+		log.Warn("Requested page exceeds available products",
+			"page", page,
+			"total_pages", totalPages)
 	}
 
 	// レスポンスを構築
@@ -159,8 +191,11 @@ func (h *ProductHandler) HandleGetProducts(c echo.Context) error {
 	}
 
 	// レスポンスの送信をログに記録
-	log.Printf("Get products request completed. Total items: %d, Page: %d, Items returned: %d",
-		totalItems, page, len(pageProducts))
+	log.Info("Products list response generated",
+		"page", page,
+		"page_size", pageSize,
+		"total_items", totalItems,
+		"items_returned", len(pageProducts))
 
 	return c.JSON(http.StatusOK, response)
 }
@@ -188,13 +223,19 @@ func (h *ProductHandler) GetCategories() []Category {
 
 // HandleGetCategories はカテゴリー一覧を取得するハンドラー関数
 func (h *ProductHandler) HandleGetCategories(c echo.Context) error {
+	// コンテキストからロガーを取得
+	log := middleware.GetLogger(c)
+
 	// リクエストの処理開始をログに記録
-	log.Printf("Get categories request received from %s", c.RealIP())
+	log.Info("Categories list requested",
+		"remote_ip", c.RealIP(),
+		"request_id", middleware.GetRequestID(c))
 
 	categories := h.GetCategories()
 
 	// レスポンスの送信をログに記録
-	log.Printf("Get categories request completed. Categories count: %d", len(categories))
+	log.Info("Categories list response generated",
+		"categories_count", len(categories))
 
 	return c.JSON(http.StatusOK, categories)
 }

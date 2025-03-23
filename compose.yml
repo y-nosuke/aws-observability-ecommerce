@@ -1,6 +1,7 @@
 services:
   traefik:
     image: traefik:latest
+    container_name: traefik
     restart: always
     ports:
       - "80:80"
@@ -8,11 +9,6 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - ./infra/traefik:/etc/traefik
-    command:
-      - "--api.insecure=true" # 開発環境なのでダッシュボードを有効化
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
     networks:
       - aws-observability-network
 
@@ -20,6 +16,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    container_name: backend
     restart: always
     volumes:
       - ./backend:/app
@@ -30,6 +27,24 @@ services:
       - APP_VERSION=1.0.0
       - APP_ENV=development
       - PORT=8080
+      # ログ設定
+      - LOG_PRESET=local-debug
+#      - LOG_LEVEL=debug
+#      - LOG_FORMAT=json
+#      - LOG_USE_CONSOLE=true
+#      - LOG_USE_FILE=true
+#      - LOG_FILE_PATH=logs/app.log
+#      - LOG_USE_CLOUDWATCH=true
+#      - LOG_CREATE_LOG_GROUP=true
+#      - LOG_GROUP_NAME=/aws-observability-ecommerce/dev/backend
+#      - LOG_CLOUDWATCH_FLUSH_SECS=10
+#      - LOG_CLOUDWATCH_BATCH_SIZE=200
+      # AWS設定
+      - AWS_USE_LOCALSTACK=true
+      - AWS_REGION=ap-northeast-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     depends_on:
       mysql:
         condition: service_healthy
@@ -55,6 +70,7 @@ services:
     build:
       context: ./frontend-customer
       dockerfile: Dockerfile.dev
+    container_name: frontend-customer
     restart: always
     volumes:
       - ./frontend-customer:/app
@@ -77,6 +93,8 @@ services:
     build:
       context: ./frontend-admin
       dockerfile: Dockerfile.dev
+    container_name: frontend-admin
+    restart: always
     volumes:
       - ./frontend-admin:/app
       - /app/node_modules
@@ -96,6 +114,7 @@ services:
 
   mysql:
     image: mysql:latest
+    container_name: mysql
     restart: always
     ports:
       - "3306:3306"
@@ -106,6 +125,7 @@ services:
       - MYSQL_PASSWORD=ecommerce_password
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./infra/mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
       test:
         [
@@ -115,8 +135,8 @@ services:
           "-h",
           "localhost",
           "-u",
-          "ecommerce_user",
-          "-pecommerce_password",
+          "root",
+          "-p$$MYSQL_ROOT_PASSWORD",
         ]
       interval: 5s
       timeout: 5s
@@ -128,9 +148,10 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
     restart: always
-    ports:
-      - "8081:80"
+    expose:
+      - "80"
     environment:
       - PMA_HOST=mysql
       - PMA_USER=ecommerce_user
@@ -147,9 +168,11 @@ services:
 
   localstack:
     image: localstack/localstack:latest
+    container_name: localstack
     restart: always
     ports:
-      - "4566:4566"
+      - "4566:4566" # LocalStackのメインエンドポイント
+      - "4510-4559:4510-4559" # 内部サービス用ポート範囲
     environment:
       - SERVICES=cloudwatch,logs,s3
       - DEFAULT_REGION=ap-northeast-1
@@ -160,9 +183,10 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
       - DEBUG=1
     volumes:
-      - ./infra/localstack:/docker-entrypoint-initaws.d
+      - ./infra/localstack:/etc/localstack/init/ready.d
       - /var/run/docker.sock:/var/run/docker.sock
       - localstack_data:/var/lib/localstack
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s

@@ -32,7 +32,7 @@ func GetLogger(c echo.Context) *slog.Logger {
 	if l, ok := c.Get(LoggerKey).(*slog.Logger); ok {
 		return l
 	}
-	return logger.Logger(c.Request().Context()) // デフォルトロガーを返す
+	return logger.FromContext(c.Request().Context()) // コンテキストからロガーを取得
 }
 
 // SetLogger はEchoコンテキストにロガーを設定する

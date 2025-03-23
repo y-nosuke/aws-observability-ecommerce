@@ -2831,7 +2831,7 @@ func NewAWSConfig(ctx context.Context) (*AWSConfig, error) {
 
   // LocalStack用の認証情報と設定
   cfg, err = config.LoadDefaultConfig(ctx,
-   config.WithRegion("us-east-1"),
+   config.WithRegion("ap-northeast-1"),
    config.WithEndpointResolverWithOptions(customResolver),
    config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "test")),
   )
@@ -3155,13 +3155,7 @@ func addAttr(m map[string]interface{}, prefix string, attr slog.Attr) {
 
 #### 1.6.2.2. ロガーの初期化処理実装
 
-次に、アプリケーション起動時にCloudWatch Logsハンドラーを初期化し、標準ロガーとして設定する処理を実装します。`internal/logger/logger.go`ファイルを作成します：
-
-```bash
-touch internal/logger/logger.go
-```
-
-`internal/logger/logger.go`を以下のように実装します：
+次に、アプリケーション起動時にCloudWatch Logsハンドラーを初期化し、標準ロガーとして設定する処理を実装します。`internal/logger/logger.go`を以下のように実装します：
 
 ```go
 package logger
@@ -3205,7 +3199,7 @@ func DefaultConfig() Config {
   UseFile:     false,
   FilePath:    "logs/app.log",
   UseCloudWatch: true,
-  LogGroupName:  "/aws-observability-ecommerce/app",
+  LogGroupName:  "/aws-observability-ecommerce/dev/backend",
  }
 }
 
@@ -3599,14 +3593,16 @@ export PORT=8080
 
 ## AWS設定
 export USE_LOCALSTACK=true
-export AWS_REGION=us-east-1
+export AWS_REGION=ap-northeast-1
+export AWS_ENDPOINT=http://localstack:4566
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 
 ## ロギング設定
 export LOG_LEVEL=debug
+export LOG_FORMAT=json
 export USE_CLOUDWATCH=true
-export LOG_GROUP_NAME=/aws-observability-ecommerce/app
+export LOG_GROUP_NAME=aws-observability-ecommerce
 ```
 
 Docker Composeファイル（`compose.yml`）のバックエンドサービス設定にも環境変数を追加します：
@@ -3627,12 +3623,12 @@ Docker Composeファイル（`compose.yml`）のバックエンドサービス�
       - APP_ENV=development
       - PORT=8080
       - USE_LOCALSTACK=true
-      - AWS_REGION=us-east-1
+      - AWS_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - LOG_LEVEL=debug
       - USE_CLOUDWATCH=true
-      - LOG_GROUP_NAME=/aws-observability-ecommerce/app
+      - LOG_GROUP_NAME=/aws-observability-ecommerce/dev/backend
     depends_on:
       mysql:
         condition: service_healthy
@@ -3665,10 +3661,10 @@ Docker Composeファイル（`compose.yml`）のバックエンドサービス�
     task exec:localstack -- awslocal logs describe-log-groups
 
     ## ログストリームの一覧を表示
-    task exec:localstack -- awslocal logs describe-log-streams --log-group-name /aws-observability-ecommerce/app
+    task exec:localstack -- awslocal logs describe-log-streams --log-group-name /aws-observability-ecommerce/dev/backend
 
     ## ログイベントを取得（ログストリーム名は実際の値に置き換え）
-    task exec:localstack -- awslocal logs get-log-events --log-group-name /aws-observability-ecommerce/app --log-stream-name app-xxxx-xxxx-xxxx-xxxx
+    task exec:localstack -- awslocal logs get-log-events --log-group-name /aws-observability-ecommerce/dev/backend --log-stream-name app-xxxx-xxxx-xxxx-xxxx
     ```
 
 4. ログの内容を確認し、フォーマットと属性が正しいことを確認します。

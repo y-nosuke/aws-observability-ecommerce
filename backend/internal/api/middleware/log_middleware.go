@@ -57,34 +57,37 @@ func LoggerMiddleware(config LoggerConfig) echo.MiddlewareFunc {
 				c.Request().Body = io.NopCloser(bytes.NewBuffer(buf))
 			}
 
+			req := c.Request()
+			res := c.Response()
+
 			// リクエスト情報のログ記録
 			log.Info("API request received",
-				"method", c.Request().Method,
-				"path", c.Request().URL.Path,
-				"query", c.Request().URL.RawQuery,
+				"method", req.Method,
+				"path", req.URL.Path,
+				"query", req.URL.RawQuery,
 				"remote_ip", c.RealIP(),
-				"user_agent", c.Request().UserAgent())
+				"user_agent", req.UserAgent())
 
-			if config.LogRequestBody && reqBody != "" {
+			if config.LogRequestBody {
 				log.Debug("Request body", "body", reqBody)
 			}
 
 			// レスポンスをキャプチャするためのレスポンスライター
 			resBody := new(bytes.Buffer)
-			mw := io.MultiWriter(c.Response().Writer, resBody)
+			mw := io.MultiWriter(res.Writer, resBody)
 			writer := &bodyDumpResponseWriter{
-				ResponseWriter: c.Response().Writer,
+				ResponseWriter: res.Writer,
 				Writer:         mw,
 			}
-			c.Response().Writer = writer
+			res.Writer = writer
 
 			// 次のハンドラーを呼び出し
 			err := next(c)
 
 			// レスポンス情報を記録
 			elapsed := time.Since(start)
-			statusCode := c.Response().Status
-			responseSize := c.Response().Size
+			statusCode := res.Status
+			responseSize := res.Size
 
 			// ログレベルをステータスコードに基づいて決定
 			var logFunc func(msg string, args ...interface{})
@@ -97,8 +100,8 @@ func LoggerMiddleware(config LoggerConfig) echo.MiddlewareFunc {
 			}
 
 			logFunc("API request completed",
-				"method", c.Request().Method,
-				"path", c.Request().URL.Path,
+				"method", req.Method,
+				"path", req.URL.Path,
 				"status", statusCode,
 				"elapsed_ms", elapsed.Milliseconds(),
 				"size", responseSize)

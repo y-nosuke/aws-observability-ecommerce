@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +13,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/api/handlers"
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/api/middleware"
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/api/router"
+	"github.com/y-nosuke/aws-observability-ecommerce/internal/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/internal/logger"
 )
@@ -21,16 +23,46 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// AWS設定オプションの準備
+	awsOptions := aws.Options{
+		UseLocalStack: config.AWS.UseLocalStack,
+		Region:        config.AWS.Region,
+		Endpoint:      config.AWS.Endpoint,
+		Credentials: aws.Credentials{
+			AccessKey: config.AWS.AccessKey,
+			SecretKey: config.AWS.SecretKey,
+			Token:     config.AWS.Token,
+		},
+	}
+
 	// ロガーの初期化
-	log := logger.Init(logger.Config{
-		Environment: config.App.Environment,
-		LogLevel:    config.Log.Level,
-		ServiceName: config.App.Name,
-		Version:     config.App.Version,
+	appLogger, err := logger.New(ctx, logger.InitConfig{
+		AppName:             config.App.Name,
+		Environment:         config.App.Environment,
+		LogLevel:            config.Log.Level,
+		UseConsole:          config.Log.UseConsole,
+		UseFile:             config.Log.UseFile,
+		FilePath:            config.Log.LogFilePath,
+		UseCloudWatch:       config.Log.UseCloudWatch,
+		CreateLogGroup:      config.Log.CreateLogGroup,
+		LogGroupName:        config.Log.CloudWatchLogGroup,
+		CloudWatchFlushSecs: config.Log.CloudWatchFlushSecs,
+		CloudWatchBatchSize: config.Log.CloudWatchBatchSize,
+		AWSOptions:          awsOptions,
 	})
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer func(appLogger *logger.Logger) {
+		if closeErr := appLogger.Close(); closeErr != nil {
+			log.Fatalf("Failed to close logger: %v", closeErr)
+		}
+	}(appLogger)
+
+	slogger := appLogger.Logger()
 
 	// アプリケーションの起動をログに記録
-	log.Info("Starting application",
+	slogger.Info("Starting application",
 		"version", config.App.Version,
 		"environment", config.App.Environment)
 
@@ -54,23 +86,24 @@ func main() {
 
 	// サーバーの起動（非同期）
 	go func() {
-		log.Info("Server starting", "port", config.Server.Port)
-		if err := e.Start(":" + config.Server.Port); err != nil {
-			log.Error("Server shutdown", "error", err)
+		address := ":" + config.Server.Port
+		slogger.Info("Server starting", "address", address)
+		if startErr := e.Start(address); startErr != nil {
+			slogger.Error("Server shutdown unexpectedly", "error", startErr)
 		}
 	}()
 
 	// シグナルを待機
 	<-ctx.Done()
-	log.Info("Shutdown signal received, gracefully shutting down...")
+	slogger.Info("Shutdown signal received, gracefully shutting down...")
 
 	// グレースフルシャットダウン
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := e.Shutdown(shutdownCtx); err != nil {
-		log.Error("Server shutdown failed", "error", err)
+		slogger.Error("Server shutdown failed", "error", err)
 	}
 
-	log.Info("Server has been shutdown gracefully")
+	slogger.Info("Server has been shutdown gracefully")
 }

@@ -26,6 +26,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -44,14 +46,81 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    labels:
-      - "traefik.enable=true"
-      # api.localhostのAPIエンドポイント
-      - "traefik.http.routers.backend-api.rule=Host(`api.localhost`)"
-      - "traefik.http.routers.backend-api.entrypoints=web"
-      - "traefik.http.services.backend.loadbalancer.server.port=8080"
     networks:
       - ecommerce-network
+
+  frontend-customer:
+    build:
+      context: ./frontend-customer
+      dockerfile: Dockerfile
+    container_name: frontend-customer
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    volumes:
+      - ./frontend-customer:/app # ホットリロード用
+      - /app/node_modules # node_modulesはコンテナ内のまま
+      - /app/.next # .nextディレクトリはコンテナ内のまま
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: frontend-admin
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+    volumes:
+      - ./frontend-admin:/app
+      - /app/node_modules
+    ports:
+      - "3010:3000"
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   mysql:
     image: mysql:latest
@@ -96,7 +165,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
-    restart: always
+    restart: unless-stopped
     expose:
       - "80"
     environment:

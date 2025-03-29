@@ -47,7 +47,7 @@ docker-compose up -d
 
 1. バックエンドとフロントエンドの状態を確認：
 
-- バックエンド：<http://localhost:8080/health>
+- バックエンド：<http://localhost:8000/health>
 - フロントエンド：<http://localhost:3000>
 
 ## 開発環境

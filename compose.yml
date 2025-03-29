@@ -1,0 +1,131 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik ダッシュボード
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - ecommerce-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce}
+      MYSQL_USER: ${MYSQL_USER:-ecommerce_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ecommerce_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./infra/mysql/initdb.d:/docker-entrypoint-initdb.d:ro
+      - ./infra/mysql/conf.d:/etc/mysql/conf.d:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD:-rootpassword}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - "traefik.enable=false" # Traefikからの直接アクセスは不要
+    networks:
+      - ecommerce-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    expose:
+      - "80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=ecommerce_user
+      - PMA_PASSWORD=ecommerce_password
+      - UPLOAD_LIMIT=300M
+    depends_on:
+      - mysql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+    networks:
+      - ecommerce-network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    restart: unless-stopped
+    environment:
+      - SERVICES=s3,cloudwatch,logs,events,sns,sqs,lambda
+
+      - LAMBDA_EXECUTOR=docker
+      - DEFAULT_REGION=ap-northeast-1
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=localstack
+      - AWS_SECRET_ACCESS_KEY=localstack
+      - HOSTNAME_EXTERNAL=localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEBUG=1
+    ports:
+      - "4566:4566" # LocalStackの主要ポート（すべてのAWSサービスへのアクセスに使用）
+      - "4571:4571" # Localstack Gateway
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/localstack/init-scripts:/etc/localstack/init/ready.d:ro
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    labels:
+      - "traefik.enable=false" # Traefikからの直接アクセスは不要
+    networks:
+      - ecommerce-network
+
+volumes:
+  mysql_data:
+    driver: local
+  localstack_data:
+    driver: local
+
+networks:
+  ecommerce-network:
+    driver: bridge
+    name: ecommerce-network

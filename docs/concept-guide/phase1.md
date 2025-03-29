@@ -88,7 +88,7 @@
 
 フェーズ1では、以下の図のようなシンプルな構成でアプリケーションを構築します。顧客向け画面と管理画面を別のプロジェクトとして分離し、ホスト名ベースのルーティングを採用しています。
 
-```
+```text
 ┌───────────────┐      ┌───────────────┐      ┌───────────────┐
 │               │      │               │      │               │
 │  Next.js      │      │  Go/Echo      │      │  MySQL        │
@@ -753,7 +753,7 @@ Next.jsのフロントエンドは、これらのAPIを呼び出してデータ�
 2. **ホスト名の設定**
    - `/etc/hosts`ファイル（Windowsの場合は`C:\Windows\System32\drivers\etc\hosts`）に以下を追加:
 
-   ```
+   ```text
    127.0.0.1  shop.localhost
    127.0.0.1  admin.localhost
    ```
@@ -911,13 +911,11 @@ npm test
 │   └── .env.local               # 環境変数（git管理外）
 │
 ├── infra/                       # インフラ関連
-│   ├── docker/                  # Docker関連設定
-│   │   ├── mysql/               # MySQL設定
-│   │   └── traefik/             # Traefik設定
-│   │
+│   ├── mysql/                   # MySQL設定
+│   ├── traefik/                 # Traefik設定
 │   └── localstack/              # LocalStack設定
 │
-├── docker-compose.yml           # Docker Compose設定
+├── compose.yml           # Docker Compose設定
 ├── Taskfile.yml                 # go-task設定
 ├── .gitignore                   # Git除外設定
 └── README.md                    # プロジェクト説明

@@ -1,0 +1,58 @@
+version: "3"
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_CUSTOMER_DIR: frontend-customer
+  FRONTEND_ADMIN_DIR: frontend-admin
+
+tasks:
+  start:
+    desc: Start all services with docker-compose
+    cmds:
+      - docker-compose up -d
+
+  stop:
+    desc: Stop all services
+    cmds:
+      - docker-compose down
+
+  restart:
+    desc: Restart all services
+    cmds:
+      - task: stop
+      - task: start
+
+  logs:
+    desc: Follow docker logs
+    cmds:
+      - docker-compose logs -f {{.CLI_ARGS | default ""}}
+
+  backend:lint:
+    desc: Run linters on backend code
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - golangci-lint run ./...
+
+  backend:test:
+    desc: Run backend tests
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - go test ./... -v
+
+  frontend:install:
+    desc: Install frontend dependencies
+    cmds:
+      - cd {{.FRONTEND_CUSTOMER_DIR}} && npm install
+      - cd {{.FRONTEND_ADMIN_DIR}} && npm install
+
+  frontend:lint:
+    desc: Run linter on frontend code
+    cmds:
+      - cd {{.FRONTEND_CUSTOMER_DIR}} && npm run lint
+      - cd {{.FRONTEND_ADMIN_DIR}} && npm run lint
+
+  aws:localstack:status:
+    desc: Check LocalStack status
+    cmds:
+      - aws --endpoint-url=http://localhost:4566 --profile localstack s3 ls
+      - echo "LocalStack is running"

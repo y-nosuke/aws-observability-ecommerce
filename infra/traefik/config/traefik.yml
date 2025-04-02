@@ -1,0 +1,49 @@
+# 全体的な設定
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+# APIとダッシュボードの設定
+api:
+  dashboard: true
+  insecure: true # 開発環境のみ。本番では必ずfalseに変更すること
+
+# エントリーポイントの設定
+entryPoints:
+  web:
+    address: ":80"
+    # 開発環境ではコメントアウト、本番環境ではHTTPSへのリダイレクトを有効化
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: websecure
+    #       scheme: https
+
+  websecure:
+    address: ":443"
+
+# プロバイダー設定
+providers:
+  # Docker設定
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: ecommerce-network
+
+  # ファイルプロバイダー設定
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+# ログ設定
+log:
+  level: "INFO" # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+
+# アクセスログ設定
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+
+# プロメテウスメトリクス
+metrics:
+  prometheus: {}

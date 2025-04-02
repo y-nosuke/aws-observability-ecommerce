@@ -1,35 +1,36 @@
 services:
+  # Traefikリバースプロキシサービス
   traefik:
     image: traefik:latest
     container_name: traefik
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     ports:
-      - "80:80"
-      - "8080:8080" # Traefik ダッシュボード
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "8080:8080" # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./logs/traefik:/var/log/traefik
     networks:
       - ecommerce-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
     deploy:
       resources:
         limits:
           memory: 256M
 
+  # バックエンドAPIサービス
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - APP_NAME=aws-observability-ecommerce
       - APP_VERSION=1.0.0
@@ -41,14 +42,21 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`backend.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.backend.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
 
+  # 顧客向けフロントエンドNext.jsサービス
   frontend-customer:
     build:
       context: ./frontend-customer
@@ -56,27 +64,25 @@ services:
     container_name: frontend-customer
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api
     volumes:
       - ./frontend-customer:/app # ホットリロード用
       - /app/node_modules # node_modulesはコンテナ内のまま
       - /app/.next # .nextディレクトリはコンテナ内のまま
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
       - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.customer.rule=Host(`customer.localhost`)"
+      - "traefik.http.routers.customer.entrypoints=web"
+      - "traefik.http.services.customer.loadbalancer.server.port=3000"
+      - "traefik.http.routers.customer.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -86,6 +92,7 @@ services:
         limits:
           memory: 512M
 
+  # 管理者向けフロントエンドNext.jsサービス
   frontend-admin:
     build:
       context: ./frontend-admin
@@ -93,26 +100,24 @@ services:
     container_name: frontend-admin
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api
     volumes:
       - ./frontend-admin:/app
       - /app/node_modules
-    ports:
-      - "3010:3000"
+    expose:
+      - "3000"
     depends_on:
       - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin.rule=Host(`admin.localhost`)"
+      - "traefik.http.routers.admin.entrypoints=web"
+      - "traefik.http.services.admin.loadbalancer.server.port=3000"
+      - "traefik.http.routers.admin.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -179,6 +184,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
       - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+      - "traefik.http.routers.phpmyadmin.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
 
@@ -188,7 +194,6 @@ services:
     restart: unless-stopped
     environment:
       - SERVICES=s3,cloudwatch,logs,events,sns,sqs,lambda
-
       - LAMBDA_EXECUTOR=docker
       - DEFAULT_REGION=ap-northeast-1
       - AWS_DEFAULT_REGION=ap-northeast-1

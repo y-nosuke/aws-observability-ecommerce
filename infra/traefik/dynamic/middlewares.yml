@@ -1,0 +1,39 @@
+http:
+  middlewares:
+    # セキュリティヘッダーの設定
+    secure-headers:
+      headers:
+        frameDeny: true
+        sslRedirect: false # 開発環境ではfalse
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customRequestHeaders:
+          X-Forwarded-Proto: "http" # 開発環境ではhttp
+
+    # 開発用CORS設定
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "http://localhost"
+          - "http://localhost:3000"
+          - "http://localhost:8000"
+          - "http://backend.localhost"
+          - "http://customer.localhost"
+          - "http://admin.localhost"
+          - "http://phpmyadmin.localhost"
+        accessControlMaxAge: 100
+        accessControlAllowCredentials: true
+        addVaryHeader: true

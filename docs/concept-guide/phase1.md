@@ -93,7 +93,7 @@
 │               │      │               │      │               │
 │  Next.js      │      │  Go/Echo      │      │  MySQL        │
 │ 顧客向け画面   │ ←──→ │  Backend      │ ←──→ │  Database     │
-│(shop.localhost)│      │               │      │               │
+│(customer.localhost)│      │               │      │               │
 └───────────────┘      └───────────────┘      └───────────────┘
                               ↑
 ┌───────────────┐             │

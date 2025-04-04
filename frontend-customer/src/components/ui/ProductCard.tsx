@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 interface ProductCardProps {
@@ -31,9 +32,11 @@ export default function ProductCard({
       )}
       <div className="image-container h-52 bg-gray-100 dark:bg-gray-700 overflow-hidden">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={name}
+            width={400}
+            height={300}
             className="w-full h-full object-cover"
           />
         ) : (

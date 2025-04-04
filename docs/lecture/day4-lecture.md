@@ -14,8 +14,8 @@
       - [1.4.3.1. middlewares.yml](#1431-middlewaresyml)
       - [1.4.3.2. tls.yml](#1432-tlsyml)
     - [1.4.4. Docker Composeへの統合](#144-docker-composeへの統合)
-    - [1.4.4. サービスのラベル設定](#144-サービスのラベル設定)
-    - [1.4.5. Traefikの起動と動作確認](#145-traefikの起動と動作確認)
+    - [1.4.5. サービスのラベル設定](#145-サービスのラベル設定)
+    - [1.4.6. Traefikの起動と動作確認](#146-traefikの起動と動作確認)
   - [1.5. 【確認ポイント】](#15-確認ポイント)
   - [1.6. 【詳細解説】](#16-詳細解説)
     - [1.6.1. Traefikの基本アーキテクチャ](#161-traefikの基本アーキテクチャ)
@@ -29,14 +29,16 @@
     - [1.6.6. ミドルウェア連鎖と適用方法](#166-ミドルウェア連鎖と適用方法)
   - [1.7. 【補足情報】](#17-補足情報)
     - [1.7.1. 開発環境と本番環境の設定の違い](#171-開発環境と本番環境の設定の違い)
-      - [AWS環境での一般的な構成](#aws環境での一般的な構成)
-      - [オンプレミスや他のクラウド環境でTraefikを直接公開する場合](#オンプレミスや他のクラウド環境でtraefikを直接公開する場合)
-      - [本番環境に向けた一般的な変更点](#本番環境に向けた一般的な変更点)
+      - [1.7.1.1. AWS環境での一般的な構成](#1711-aws環境での一般的な構成)
+      - [1.7.1.2. オンプレミスや他のクラウド環境でTraefikを直接公開する場合](#1712-オンプレミスや他のクラウド環境でtraefikを直接公開する場合)
+      - [1.7.1.3. 本番環境に向けた一般的な変更点](#1713-本番環境に向けた一般的な変更点)
     - [1.7.2. カスタムミドルウエアの作成方法](#172-カスタムミドルウエアの作成方法)
     - [1.7.3. 本番環境でのデプロイパターン](#173-本番環境でのデプロイパターン)
-      - [1. コンテナオーケストレーションプラットフォームでの活用](#1-コンテナオーケストレーションプラットフォームでの活用)
-      - [2. HA構成（高可用性）での設定](#2-ha構成高可用性での設定)
-      - [3. Blue/Greenデプロイの実装](#3-bluegreenデプロイの実装)
+      - [1.7.3.1. コンテナオーケストレーションプラットフォームでの活用](#1731-コンテナオーケストレーションプラットフォームでの活用)
+        - [1.7.3.1.1. ECS（Elastic Container Service）での使用](#17311-ecselastic-container-serviceでの使用)
+        - [1.7.3.1.2. Kubernetes環境での使用](#17312-kubernetes環境での使用)
+      - [1.7.3.2. HA構成（高可用性）での設定](#1732-ha構成高可用性での設定)
+      - [1.7.3.3. Blue/Greenデプロイの実装](#1733-bluegreenデプロイの実装)
   - [1.8. 【よくある問題と解決法】](#18-よくある問題と解決法)
     - [1.8.1. 問題1: Traefikダッシュボードにアクセスできない](#181-問題1-traefikダッシュボードにアクセスできない)
     - [1.8.2. 問題2: バックエンドサービスへのルーティングが機能しない](#182-問題2-バックエンドサービスへのルーティングが機能しない)
@@ -137,6 +139,17 @@ providers:
     directory: "/etc/traefik/dynamic"
     watch: true
 
+# 証明書リゾルバー設定（開発環境ではセルフサイン証明書を使用）
+certificatesResolvers:
+  default:
+    # 開発環境なのでLet's Encryptは使わない
+    # letsencrypt:
+    #   caServer: "https://acme-v02.api.letsencrypt.org/directory"
+    #   email: "admin@example.com"
+    #   storage: "/etc/traefik/data/acme.json"
+    #   httpChallenge:
+    #     entryPoint: web
+
 # ログ設定
 log:
   level: "INFO"  # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
@@ -157,7 +170,7 @@ metrics:
 
 #### 1.4.3.1. middlewares.yml
 
-以下の内容を`./infra/traefik/dynamic/middlewares.yml`ファイルに記述します：
+`docker/traefik/config/middlewares.yml`ファイルを作成し、共通のミドルウェア設定を記述します：
 
 ```yaml
 http:
@@ -203,23 +216,28 @@ http:
 以下の内容を`./infra/traefik/dynamic/tls.yml`ファイルに記述します：
 
 ```yaml
+# TLS設定
+
 tls:
   options:
     default:
       minVersion: "VersionTLS12"
-      sniStrict: true
       cipherSuites:
-        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_AES_128_GCM_SHA256"
+        - "TLS_AES_256_GCM_SHA384"
+        - "TLS_CHACHA20_POLY1305_SHA256"
+      curvePreferences:
+        - "CurveP521"
+        - "CurveP384"
+      sniStrict: true
 ```
 
 ### 1.4.4. Docker Composeへの統合
 
-Docker ComposeファイルにTraefikサービスを追加します。プロジェクトルートの`docker-compose.yml`ファイルを以下のように編集します：
+Docker ComposeファイルにTraefikサービスを追加します。プロジェクトルートの`compose.yml`ファイルを以下のように編集します：
 
 ```yaml
 services:
@@ -361,9 +379,17 @@ networks:
     name: ecommerce-network
 ```
 
-### 1.4.4. サービスのラベル設定
+### 1.4.5. サービスのラベル設定
 
-Traefikは、Dockerコンテナのラベルを使用して設定を行います。上記のDocker Composeファイルでは、バックエンドとフロントエンドのサービスに対して次のようなラベルを設定しています：
+Traefikは、Dockerコンテナのラベルを使用して設定を行います：
+
+- `traefik.enable=true` - Traefikでこのサービスを管理することを有効化
+- `traefik.http.routers.[name].rule=Host(...)` - ホスト名ベースのルーティングルール
+- `traefik.http.routers.[name].entrypoints=...` - 使用するエントリーポイント
+- `traefik.http.services.[name].loadbalancer.server.port=...` - コンテナ内部のポート
+- `traefik.http.routers.[name].middlewares=...` - 適用するミドルウェア
+
+上記のDocker Composeファイルでは、バックエンドとフロントエンドのサービスに対して次のようなラベルを設定しています：
 
 1. **バックエンドサービスのラベル設定**:
    - `traefik.enable=true`: Traefikでこのサービスを管理することを有効化
@@ -384,12 +410,12 @@ Traefikは、Dockerコンテナのラベルを使用して設定を行います�
    - `traefik.http.routers.frontend.entrypoints=web`: 使用するエントリーポイント
    - `traefik.http.services.frontend.loadbalancer.server.port=3000`: コンテナ内部のポート
 
-### 1.4.5. Traefikの起動と動作確認
+### 1.4.6. Traefikの起動と動作確認
 
 すべての設定が完了したら、Docker Composeを使用してサービスを起動します：
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 起動後、以下のエンドポイントにアクセスして動作を確認できます：
@@ -438,19 +464,19 @@ sudo vi /etc/hosts
 Traefikは、モダンなリバースプロキシとロードバランサーで、特にマイクロサービスとDocker環境に適しています。以下はアーキテクチャの主要コンポーネントです：
 
 1. **エントリーポイント (Entrypoints)**
-   - ネットワークリクエストの受信ポイント
-   - 通常、HTTP（80番ポート）とHTTPS（443番ポート）を定義
+   - トラフィックの入口となるポートとプロトコル
+   - 一般的に`web`（HTTP）と`websecure`（HTTPS）の2つが定義される
 
 2. **ルーター (Routers)**
    - リクエストを適切なサービスに記述するルールを定義
    - ホスト名、パス、ヘッダーなどの条件に基づくマッチング
 
 3. **ミドルウェア (Middlewares)**
-   - リクエストがサービスに到達する前に処理するフィルター
-   - 例：CORS設定、セキュリティヘッダー追加、リダイレクトなど
+   - リクエスト/レスポンスを変更・加工するコンポーネント
+   - 例：CORS設定、セキュリティヘッダー追加、認証、リダイレクト、ヘッダー操作、レート制限など
 
 4. **サービス (Services)**
-   - 実際のバックエンドサービスを表す
+   - 実際のバックエンドサービス（コンテナ）
    - 負荷分散、ヘルスチェックなどの機能を提供
 
 5. **プロバイダー (Providers)**
@@ -462,6 +488,8 @@ Traefikは、モダンなリバースプロキシとロードバランサーで�
 ```text
 クライアント -> エントリーポイント -> ルーター -> ミドルウェア -> サービス -> バックエンドサーバー
 ```
+
+![Traefikアーキテクチャ](https://doc.traefik.io/traefik/assets/img/architecture-overview.png)
 
 ### 1.6.2. 開発環境向け設定ファイルの詳細説明
 
@@ -590,6 +618,8 @@ tls:
         - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
         - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+      curvePreferences: [...]  # 楕円曲線暗号の優先順位
+      sniStrict: true  # SNI厳格モード
 ```
 
 **開発環境でこのファイルが存在する理由**:
@@ -757,7 +787,7 @@ Docker Composeのラベル設定で注目すべき点は、複数のミドルウ
 | **リソース制限**         | 緩め                                  | 厳格（メモリ、CPU制限）        |
 | **モニタリング**         | 基本機能のみ                          | 高度な監視と警告設定           |
 
-#### AWS環境での一般的な構成
+#### 1.7.1.1. AWS環境での一般的な構成
 
 AWS環境では、Traefikを利用する際、以下のような構成が一般的です：
 
@@ -816,7 +846,7 @@ AWS環境では、Traefikを利用する際、以下のような構成が一般�
    }
    ```
 
-#### オンプレミスや他のクラウド環境でTraefikを直接公開する場合
+#### 1.7.1.2. オンプレミスや他のクラウド環境でTraefikを直接公開する場合
 
 ALBなどのロードバランサーがない環境では、Traefikを直接インターネットに公開するケースがあります。その場合の重要な設定：
 
@@ -910,7 +940,7 @@ ALBなどのロードバランサーがない環境では、Traefikを直接イ�
              - "admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"  # htpasswd生成パスワード
    ```
 
-#### 本番環境に向けた一般的な変更点
+#### 1.7.1.3. 本番環境に向けた一般的な変更点
 
 どのような本番環境でも共通して必要な変更点：
 
@@ -1051,9 +1081,9 @@ Traefikの強力な機能の一つは、カスタムミドルウエアを追加�
 
 本番環境でTraefikを使用する場合のデプロイパターンには、以下のようなオプションがあります：
 
-#### 1. コンテナオーケストレーションプラットフォームでの活用
+#### 1.7.3.1. コンテナオーケストレーションプラットフォームでの活用
 
-**ECS（Elastic Container Service）での使用**
+##### 1.7.3.1.1. ECS（Elastic Container Service）での使用
 
 - タスク定義で各サービスとTraefikをリンク
 - サービスディスカバリーにAWS Cloud Mapを活用
@@ -1110,13 +1140,13 @@ resource "aws_ecs_task_definition" "app" {
 }
 ```
 
-**Kubernetes環境での使用**
+##### 1.7.3.1.2. Kubernetes環境での使用
 
 - Kubernetes Ingress Controllerとして活用
 - CustomResourceDefinitions（CRDs）による設定
 - Kubernetes Service DiscoveryとTraefikの連携
 
-#### 2. HA構成（高可用性）での設定
+#### 1.7.3.2. HA構成（高可用性）での設定
 
 本番環境では高可用性を確保するために、以下の設定を検討します：
 
@@ -1150,7 +1180,7 @@ certificatesResolvers:
         entryPoint: web
 ```
 
-#### 3. Blue/Greenデプロイの実装
+#### 1.7.3.3. Blue/Greenデプロイの実装
 
 新バージョンのリリースにおいて、Blue/Greenデプロイパターンを実装することも可能です：
 

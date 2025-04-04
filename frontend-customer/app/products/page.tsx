@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  salePrice: number | null;
+  category: string;
+  isNew: boolean;
+  imageUrl: string | null;
+}
+
 export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortOption, setSortOption] = useState("recommended");
@@ -107,7 +118,7 @@ export default function ProductsPage() {
   );
 
   // 商品を並び替え
-  const sortProducts = (products) => {
+  const sortProducts = (products: Product[]) => {
     switch (sortOption) {
       case "price-asc":
         return [...products].sort(

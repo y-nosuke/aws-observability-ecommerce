@@ -1,49 +1,43 @@
-# 1. Week 1 - Day 1: Docker Compose 環境の構築
+# 1. Week 1 - Day 1: 開発環境とGitHubリポジトリの設定
 
 ## 1.1. 目次
 
-- [1. Week 1 - Day 1: Docker Compose 環境の構築](#1-week-1---day-1-docker-compose-環境の構築)
+- [1. Week 1 - Day 1: 開発環境とGitHubリポジトリの設定](#1-week-1---day-1-開発環境とgithubリポジトリの設定)
   - [1.1. 目次](#11-目次)
   - [1.2. 【要点】](#12-要点)
   - [1.3. 【準備】](#13-準備)
     - [1.3.1. チェックリスト](#131-チェックリスト)
   - [1.4. 【手順】](#14-手順)
-    - [1.4.1. プロジェクト構造の作成](#141-プロジェクト構造の作成)
-    - [1.4.2. Docker Compose 設定ファイルの作成](#142-docker-compose-設定ファイルの作成)
-    - [1.4.3. Traefik の設定](#143-traefik-の設定)
-    - [1.4.4. MySQL の設定](#144-mysql-の設定)
-      - [1.4.4.1. 設定ファイル権限の設定方法](#1441-設定ファイル権限の設定方法)
-        - [1.4.4.1.1. Linux/macOSの場合](#14411-linuxmacosの場合)
-        - [1.4.4.1.2. Windowsの場合（WSL使用時も含む）](#14412-windowsの場合wsl使用時も含む)
-    - [1.4.5. LocalStack の設定](#145-localstack-の設定)
+    - [1.4.1. GitHubリポジトリのセットアップ](#141-githubリポジトリのセットアップ)
+    - [1.4.2. ブランチ戦略とprotected branchの設定](#142-ブランチ戦略とprotected-branchの設定)
+    - [1.4.3. プロジェクト構造の作成](#143-プロジェクト構造の作成)
+    - [1.4.4. Docker Compose 設定ファイルの作成](#144-docker-compose-設定ファイルの作成)
+    - [1.4.5. MySQL の設定](#145-mysql-の設定)
+      - [1.4.5.1. 設定ファイル権限の設定方法](#1451-設定ファイル権限の設定方法)
+        - [1.4.5.1.1. Linux/macOSの場合](#14511-linuxmacosの場合)
+        - [1.4.5.1.2. Windowsの場合（WSL使用時も含む）](#14512-windowsの場合wsl使用時も含む)
     - [1.4.6. Docker Compose 環境の起動と検証](#146-docker-compose-環境の起動と検証)
   - [1.5. 【確認ポイント】](#15-確認ポイント)
   - [1.6. 【詳細解説】](#16-詳細解説)
     - [1.6.1. Docker Compose の役割と利点](#161-docker-compose-の役割と利点)
-    - [1.6.2. Traefik の基本概念と動作原理](#162-traefik-の基本概念と動作原理)
-    - [1.6.3. LocalStack によるAWSエミュレーション](#163-localstack-によるawsエミュレーション)
+    - [1.6.2. GitHubのブランチ保護と開発ワークフロー](#162-githubのブランチ保護と開発ワークフロー)
   - [1.7. 【補足情報】](#17-補足情報)
     - [1.7.1. Docker ネットワークについて](#171-docker-ネットワークについて)
     - [1.7.2. ボリュームによるデータ永続化](#172-ボリュームによるデータ永続化)
-    - [1.7.3. LocalStack Desktopの活用](#173-localstack-desktopの活用)
-      - [1.7.3.1. LocalStack Desktopのインストール](#1731-localstack-desktopのインストール)
-      - [1.7.3.2. LocalStack Desktopの設定と使用方法](#1732-localstack-desktopの設定と使用方法)
-      - [1.7.3.3. LocalStack Desktopの主な機能](#1733-localstack-desktopの主な機能)
-      - [1.7.3.4. LocalStack Desktopの活用例](#1734-localstack-desktopの活用例)
   - [1.8. 【よくある問題と解決法】](#18-よくある問題と解決法)
     - [1.8.1. 問題1: ポートの競合](#181-問題1-ポートの競合)
-    - [1.8.2. 問題2: Traefikでのホスト名解決の問題](#182-問題2-traefikでのホスト名解決の問題)
+    - [1.8.2. 問題2: MySQLの接続エラー](#182-問題2-mysqlの接続エラー)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
   - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
-- Docker Compose を使用して複数のサービス（MySQL、Traefik、LocalStack）を連携させた開発環境を構築する
-- Traefik を使用してホスト名ベースのルーティングを設定し、顧客向けと管理者向けの分離された環境を準備する
-- LocalStack を使用してAWSサービスをローカルでエミュレートする準備をする
-- サービス間の接続とネットワークを適切に設定する
-- 永続データのためのボリュームを設定し、コンテナ再起動後もデータが維持されるようにする
+- GitHubリポジトリを作成し、適切なブランチ戦略とprotected branchを設定する
+- Docker Compose を使用してMySQLデータベースを含む開発環境を構築する
+- プロジェクトの基本的なディレクトリ構造を設定する
+- データベースの永続化とネットワーク設定を適切に構成する
+- コード品質と開発フローを維持するためのGitHub設定を行う
 
 ## 1.3. 【準備】
 
@@ -58,6 +52,13 @@
   # git version 2.34.1 以上が望ましい
   ```
 
+- [x] GitHub アカウント
+
+  ```bash
+  # GitHubアカウントを持っていることを確認
+  # https://github.com/
+  ```
+
 - [x] Docker Engine
 
   ```bash
@@ -70,17 +71,6 @@
   ```bash
   docker compose version
   # Docker Compose version v2.10.0 以上が望ましい
-  ```
-
-- [x] awslocal (LocalStack用AWS CLIラッパー)
-
-  ```bash
-  # まずpipxをインストール
-  brew install pipx
-  # pipxを使ってawscli-localをインストール
-  pipx install awscli-local
-  awslocal --version
-  # aws-cli/x.x.x Python/x.x.x ...
   ```
 
 - [x] テキストエディタまたはIDE (Visual Studio Code推奨)
@@ -101,28 +91,116 @@
 
 ## 1.4. 【手順】
 
-### 1.4.1. プロジェクト構造の作成
+### 1.4.1. GitHubリポジトリのセットアップ
 
-まず、プロジェクト用の新しいディレクトリを作成し、基本的なファイル構造をセットアップします。
+まず、プロジェクト用のGitHubリポジトリを作成します。
+
+1. GitHubにログインし、右上の「+」アイコンから「New repository」を選択します。
+
+2. リポジトリ設定を行います：
+   - Repository name: `aws-observability-ecommerce`
+   - Description: `AWSオブザーバビリティ学習用のeコマースアプリケーション`
+   - Visibility: `Private` または `Public` (学習用途に応じて選択)
+   - README初期化: チェックを入れる
+   - .gitignore: `Go` を選択
+   - License: `MIT License` を選択
+
+3. 「Create repository」ボタンをクリックして、リポジトリを作成します。
+
+4. ローカル環境にリポジトリをクローンします：
+
+    ```bash
+    git clone https://github.com/あなたのユーザー名/aws-observability-ecommerce.git
+    cd aws-observability-ecommerce
+    ```
+
+5. 追加の.gitignore項目を設定します：
+
+    ```bash
+    # .gitignoreファイルを編集
+    cat << EOF >> .gitignore
+    # 環境変数
+    .env
+    .envrc
+
+    # エディタの設定
+    .vscode/
+    .idea/
+
+    # ビルド成果物
+    bin/
+    build/
+    dist/
+    tmp/
+
+    # データベースファイル
+    *.db
+    *.sqlite
+
+    # ログファイル
+    *.log
+    logs/
+
+    # システム固有のファイル
+    .DS_Store
+    Thumbs.db
+    EOF
+    ```
+
+### 1.4.2. ブランチ戦略とprotected branchの設定
+
+GitHubでブランチ保護設定を行い、安全な開発ワークフローを確立します。
+
+1. GitHubリポジトリページで「Settings」タブを開きます。
+
+2. 左側のメニューから「Branches」を選択します。
+
+3. 「Branch protection rules」セクションで「Add rule」ボタンをクリックします。
+
+4. 以下の設定を行います：
+   - Branch name pattern: `main`
+   - Require pull request reviews before merging: チェックを入れる
+     - Required approving reviews: `1`
+   - Require status checks to pass before merging: チェックを入れる
+   - Require branches to be up to date before merging: チェックを入れる
+   - Include administrators: オプションでチェックを入れる
+   - Allow force pushes: チェックを外す
+   - Allow deletions: チェックを外す
+
+5. 「Create」ボタンをクリックして、保護ルールを作成します。
+
+6. 開発用の`develop`ブランチを作成します：
+
+    ```bash
+    git checkout -b develop
+    git push -u origin develop
+    ```
+
+7. 必要に応じて、`develop`ブランチにも同様の保護ルールを設定します。
+
+### 1.4.3. プロジェクト構造の作成
+
+プロジェクト用の基本的なディレクトリ構造をセットアップします。
 
 ```bash
-# プロジェクトのルートディレクトリを作成
-mkdir -p aws-observability-ecommerce
+# 既にクローンしたリポジトリ内で作業
 cd aws-observability-ecommerce
 
 # Dockerおよび環境関連のディレクトリを作成
-mkdir -p infra/{mysql/{initdb.d,conf.d},traefik/dynamic,localstack/init-scripts}
+mkdir -p infra/mysql/{initdb.d,conf.d}
 
-# .gitignoreファイルを作成
-touch .gitignore
+# バックエンドとフロントエンド用のディレクトリを作成
+mkdir -p backend/{cmd,internal,pkg,api}
+mkdir -p frontend-customer
+mkdir -p frontend-admin
 
-# Git リポジトリを初期化
-git init
+# 各種設定ファイル用のディレクトリを作成
+mkdir -p .github/workflows
 ```
 
-### 1.4.2. Docker Compose 設定ファイルの作成
+### 1.4.4. Docker Compose 設定ファイルの作成
 
-プロジェクトのルートディレクトリに `compose.yml` ファイルを作成し、必要なサービスを定義します。
+プロジェクトのルートディレクトリに `compose.yml` ファイルを作成し、MySQL サービスを定義します。
 
 ```bash
 # Docker Compose 設定ファイルを作成
@@ -133,29 +211,6 @@ touch compose.yml
 
 ```yaml
 services:
-  traefik:
-    image: traefik:latest
-    container_name: traefik
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "8080:8080" # Traefik ダッシュボード
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
-    networks:
-      - ecommerce-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-
   mysql:
     image: mysql:latest
     container_name: mysql
@@ -187,8 +242,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    labels:
-      - "traefik.enable=false" # Traefikからの直接アクセスは不要
     networks:
       - ecommerce-network
     deploy:
@@ -200,8 +253,8 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     restart: always
-    expose:
-      - "80"
+    ports:
+      - "8080:80"
     environment:
       - PMA_HOST=mysql
       - PMA_USER=ecommerce_user
@@ -209,54 +262,11 @@ services:
       - UPLOAD_LIMIT=300M
     depends_on:
       - mysql
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
-      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
-    networks:
-      - ecommerce-network
-
-  localstack:
-    image: localstack/localstack:latest
-    container_name: localstack
-    restart: unless-stopped
-    environment:
-      - SERVICES=s3,cloudwatch,logs,events,sns,sqs,lambda
-
-      - LAMBDA_EXECUTOR=docker
-      - DEFAULT_REGION=ap-northeast-1
-      - AWS_DEFAULT_REGION=ap-northeast-1
-      - AWS_ACCESS_KEY_ID=localstack
-      - AWS_SECRET_ACCESS_KEY=localstack
-      - HOSTNAME_EXTERNAL=localstack
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - DEBUG=1
-    ports:
-      - "4566:4566" # LocalStackの主要ポート（すべてのAWSサービスへのアクセスに使用）
-      - "4571:4571" # Localstack Gateway
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./infra/localstack/init-scripts:/etc/localstack/init/ready.d:ro
-      - localstack_data:/var/lib/localstack
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-    labels:
-      - "traefik.enable=false" # Traefikからの直接アクセスは不要
     networks:
       - ecommerce-network
 
 volumes:
   mysql_data:
-    driver: local
-  localstack_data:
     driver: local
 
 networks:
@@ -265,99 +275,7 @@ networks:
     name: ecommerce-network
 ```
 
-### 1.4.3. Traefik の設定
-
-Traefik の設定ファイルを作成し、ホスト名ベースのルーティングを構成します。
-
-```bash
-# Traefik 設定ファイルを作成
-touch infra/traefik/traefik.yml
-touch infra/traefik/dynamic/config.yml
-```
-
-`infra/traefik/traefik.yml` に以下の内容を記述します：
-
-```yaml
-# Traefik グローバル設定
-api:
-  dashboard: true
-  insecure: true
-
-# エントリーポイント設定
-entryPoints:
-  web:
-    address: ":80"
-
-# Docker Provider 設定
-providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-  file:
-    directory: "/etc/traefik/dynamic"
-    watch: true
-
-# ログ設定
-log:
-  level: "INFO"
-
-# アクセスログ設定
-accessLog: {}
-```
-
-`infra/traefik/dynamic/config.yml` に以下の内容を記述します：
-
-```yaml
-# 動的設定
-http:
-  routers:
-    # 将来的に追加するバックエンドサービス用のルーター
-    backend:
-      rule: "Host(`api.localhost`)"
-      service: backend-service
-      entryPoints:
-        - web
-
-    # 将来的に追加する顧客向けフロントエンドサービス用のルーター
-    frontend-customer:
-      rule: "Host(`shop.localhost`)"
-      service: frontend-customer-service
-      entryPoints:
-        - web
-
-    # 将来的に追加する管理者向けフロントエンドサービス用のルーター
-    frontend-admin:
-      rule: "Host(`admin.localhost`)"
-      service: frontend-admin-service
-      entryPoints:
-        - web
-
-  # サービス定義（将来追加するサービスのためのプレースホルダー）
-  services:
-    backend-service:
-      loadBalancer:
-        servers:
-          - url: "http://backend:8080"
-
-    frontend-customer-service:
-      loadBalancer:
-        servers:
-          - url: "http://frontend-customer:3000"
-
-    frontend-admin-service:
-      loadBalancer:
-        servers:
-          - url: "http://frontend-admin:3000"
-```
-
-`/etc/hosts` に以下の内容を記述します：
-
-  ```bash
-  # ローカルホスト名のマッピングを追加
-  127.0.0.1 traefik.localhost api.localhost shop.localhost admin.localhost
-  ```
-
-### 1.4.4. MySQL の設定
+### 1.4.5. MySQL の設定
 
 MySQL の初期化スクリプトと設定ファイルを作成します。
 
@@ -377,7 +295,7 @@ touch infra/mysql/conf.d/my.cnf
 CREATE DATABASE IF NOT EXISTS `ecommerce`;
 
 -- 権限の設定
-GRANT ALL PRIVILEGES ON `ecommerce`.* TO 'ecommerceuser'@'%';
+GRANT ALL PRIVILEGES ON `ecommerce`.* TO 'ecommerce_user'@'%';
 FLUSH PRIVILEGES;
 
 -- ecommerceデータベースを選択
@@ -410,18 +328,18 @@ default-character-set=utf8mb4
 default-character-set=utf8mb4
 ```
 
-#### 1.4.4.1. 設定ファイル権限の設定方法
+#### 1.4.5.1. 設定ファイル権限の設定方法
 
-MySQLの設定ファイルを作成したら、適切な権限を設定する必要があります。WSL環境では、ファイルの権限設定方法がLinux/macOSとは異なります。
+MySQLの設定ファイルを作成したら、適切な権限を設定する必要があります。環境によって設定方法が異なります。
 
-##### 1.4.4.1.1. Linux/macOSの場合
+##### 1.4.5.1.1. Linux/macOSの場合
 
 ```bash
 # 設定ファイルの権限を変更（所有者のみ書き込み可能、他は読み取り専用）
 chmod 644 infra/mysql/conf.d/my.cnf
 ```
 
-##### 1.4.4.1.2. Windowsの場合（WSL使用時も含む）
+##### 1.4.5.1.2. Windowsの場合（WSL使用時も含む）
 
 Windows環境またはWSL環境でWindowsファイルシステム上のファイルを操作する場合：
 
@@ -433,57 +351,6 @@ Windows環境またはWSL環境でWindowsファイルシステム上のファイ
 
 ```text
 mysqld: [Warning] World-writable config file '/etc/mysql/conf.d/my.cnf' is ignored.
-```
-
-### 1.4.5. LocalStack の設定
-
-LocalStack の初期化スクリプトを作成します。
-
-```bash
-# LocalStack 初期化スクリプトを作成
-touch infra/localstack/init-scripts/01_init_aws_resources.sh
-```
-
-`infra/localstack/init-scripts/01_init_aws_resources.sh` に以下の内容を記述します：
-
-```bash
-#!/bin/bash
-# LocalStack初期化スクリプト
-
-set -e
-
-echo "LocalStack initializing AWS resources..."
-
-# デフォルトリージョンの設定
-REGION=${AWS_DEFAULT_REGION:-ap-northeast-1}
-LOCALSTACK_HOST=localhost
-ENDPOINT_URL=http://${LOCALSTACK_HOST}:4566
-
-# S3バケット作成
-echo "Creating S3 buckets..."
-aws --endpoint-url=${ENDPOINT_URL} s3 mb s3://ecommerce-product-images --region ${REGION}
-aws --endpoint-url=${ENDPOINT_URL} s3 mb s3://ecommerce-logs --region ${REGION}
-
-# CloudWatch Logsロググループ作成
-echo "Creating CloudWatch Logs groups..."
-aws --endpoint-url=${ENDPOINT_URL} logs create-log-group --log-group-name /ecommerce/api --region ${REGION}
-aws --endpoint-url=${ENDPOINT_URL} logs create-log-group --log-group-name /ecommerce/app --region ${REGION}
-
-# SNSトピック作成
-echo "Creating SNS topics..."
-aws --endpoint-url=${ENDPOINT_URL} sns create-topic --name ecommerce-notifications --region ${REGION}
-
-# SQSキュー作成
-echo "Creating SQS queues..."
-aws --endpoint-url=${ENDPOINT_URL} sqs create-queue --queue-name ecommerce-events --region ${REGION}
-
-echo "LocalStack initialization completed!"
-```
-
-スクリプトに実行権限を付与します。
-
-```bash
-chmod +x infra/localstack/init-scripts/01_init_aws_resources.sh
 ```
 
 ### 1.4.6. Docker Compose 環境の起動と検証
@@ -504,29 +371,43 @@ docker compose ps
 
 ```bash
 # サービスの停止
-docker-compose down
+docker compose down
 ```
 
 ボリュームも含めて完全にクリーンアップする場合は次のコマンドを使用します：
 
 ```bash
 # ボリュームも含めて削除
-docker-compose down -v
+docker compose down -v
 ```
 
 ## 1.5. 【確認ポイント】
 
-Docker Compose 環境が正しくセットアップされたことを確認するためのチェックリストです：
+Docker Compose 環境とGitHubリポジトリが正しくセットアップされたことを確認するためのチェックリストです：
 
-- [x] すべてのコンテナが起動し、ステータスが「Up」になっている
+- [x] GitHubリポジトリが正常に作成され、ローカルにクローンされている
+
+  ```bash
+  # リモートリポジトリの確認
+  git remote -v
+  # origin  https://github.com/あなたのユーザー名/aws-observability-ecommerce.git (fetch)
+  # origin  https://github.com/あなたのユーザー名/aws-observability-ecommerce.git (push)
+  ```
+
+- [x] ブランチ保護ルールが正しく設定されている
+
+  ```bash
+  # GitHubのSettings > Branchesページで確認
+  # mainとdevelopブランチに保護ルールが適用されていることを確認
+  ```
+
+- [x] Docker Composeのコンテナが起動し、ステータスが「Up」になっている
 
   ```bash
   $ docker compose ps
-  NAME         IMAGE                          COMMAND                  SERVICE      CREATED         STATUS                    PORTS
-  localstack   localstack/localstack:latest   "docker-entrypoint.sh"   localstack   9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:4566->4566/tcp, 4510-4559/tcp, 5678/tcp, 0.0.0.0:4571->4571/tcp
-  mysql        mysql:latest                   "docker-entrypoint.s…"   mysql        9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:3306->3306/tcp, 33060/tcp
-  phpmyadmin   phpmyadmin/phpmyadmin          "/docker-entrypoint.…"   phpmyadmin   9 minutes ago   Up 9 minutes             80/tcp
-  traefik      traefik:latest                 "/entrypoint.sh trae…"   traefik      9 minutes ago   Up 9 minutes             0.0.0.0:80->80/tcp, 0.0.0.0:8080->8080/tcp
+  NAME         IMAGE                       COMMAND                  SERVICE      CREATED         STATUS                    PORTS
+  mysql        mysql:latest                "docker-entrypoint.s…"   mysql        9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:3306->3306/tcp, 33060/tcp
+  phpmyadmin   phpmyadmin/phpmyadmin       "/docker-entrypoint.…"   phpmyadmin   9 minutes ago   Up 9 minutes             0.0.0.0:8080->80/tcp
   ```
 
 - [x] MySQL コンテナに接続できる
@@ -542,68 +423,24 @@ Docker Compose 環境が正しくセットアップされたことを確認す�
   # 「This is a test」というデータが表示されればOK
   ```
 
-- [x] Traefik ダッシュボードにアクセスできる
+- [x] phpMyAdminにアクセスできる
 
   ```bash
   # ブラウザで以下のURLにアクセス
-  # http://traefik.localhost:8080
+  # http://localhost:8080
 
-  # または curl で確認
-  $ curl -H "Host: traefik.localhost" http://localhost:8080/api/version
-  {"Version":"3.3.4","Codename":"saintnectaire","startDate":"2025-03-29T05:30:08.966459923Z"}
-  # バージョン情報が表示されればOK
+  # ログイン情報
+  # サーバー: mysql
+  # ユーザー名: ecommerce_user
+  # パスワード: ecommerce_password
   ```
 
-- [x] LocalStack が正常に動作し、awslocalを使って操作できる
+- [x] プロジェクトのディレクトリ構造が正しく作成されている
 
   ```bash
-  # S3バケットのリストを取得
-  $ awslocal s3 ls
-  2025-03-29 14:30:10 ecommerce-product-images
-  2025-03-29 14:30:11 ecommerce-logs
-  # ecommerce-product-imagesとecommerce-logsが表示されればOK
-
-  # CloudWatch Logsのロググループ一覧を取得
-  $ awslocal logs describe-log-groups
-  {
-      "logGroups": [
-          {
-              "logGroupName": "/ecommerce/api",
-              "creationTime": 1743226211882,
-              "metricFilterCount": 0,
-              "arn": "arn:aws:logs:ap-northeast-1:000000000000:log-group:/ecommerce/api:*",
-              "storedBytes": 0
-          },
-          {
-              "logGroupName": "/ecommerce/app",
-              "creationTime": 1743226212285,
-              "metricFilterCount": 0,
-              "arn": "arn:aws:logs:ap-northeast-1:000000000000:log-group:/ecommerce/app:*",
-              "storedBytes": 0
-          }
-      ]
-  }
-  # /ecommerce/apiと/ecommerce/appが表示されればOK
-
-  # SNSトピックの一覧を取得
-  $ awslocal sns list-topics
-  {
-      "Topics": [
-          {
-              "TopicArn": "arn:aws:sns:ap-northeast-1:000000000000:ecommerce-notifications"
-          }
-      ]
-  }
-  # ecommerce-notificationsトピックが表示されればOK
-
-  # SQSキューの一覧を取得
-  $ awslocal sqs list-queues
-  {
-      "QueueUrls": [
-          "http://sqs.ap-northeast-1.localhost.localstack.cloud:4566/000000000000/ecommerce-events"
-      ]
-  }
-  # ecommerce-eventsキューが表示されればOK
+  # ディレクトリ構造の確認
+  ls -la
+  # .github/、backend/、frontend-*/、infra/などのディレクトリが存在することを確認
   ```
 
 ## 1.6. 【詳細解説】
@@ -612,7 +449,7 @@ Docker Compose 環境が正しくセットアップされたことを確認す�
 
 Docker Compose は、複数のコンテナを定義し実行するためのツールです。本プロジェクトでは、以下の利点を活かして開発環境を構築しています：
 
-1. **依存関係の明確化**: 各サービス間の依存関係を`docker-compose.yml`ファイル内で明示的に定義できます。今回のプロジェクトでは、フロントエンドとバックエンドがデータベースに依存するという関係を表現しています。
+1. **依存関係の明確化**: 各サービス間の依存関係を`compose.yml`ファイル内で明示的に定義できます。今回のプロジェクトでは、phpMyAdminがMySQLに依存するという関係を表現しています。
 
 2. **環境の一貫性**: 開発チームの全員が同じ環境で作業できるようになります。「私の環境では動くのに」という問題を避けることができます。
 
@@ -624,58 +461,56 @@ Docker Compose は、複数のコンテナを定義し実行するためのツ�
 
 Docker Compose は、本番環境での使用は想定されていませんが、開発やテスト環境としては非常に有用です。本プロジェクトでは、開発中の効率化とフェーズ6での本番デプロイに向けた準備として使用しています。
 
-### 1.6.2. Traefik の基本概念と動作原理
+### 1.6.2. GitHubのブランチ保護と開発ワークフロー
 
-Traefik は、モダンなHTTPリバースプロキシおよびロードバランサーで、以下の特徴があります：
+GitHubのブランチ保護機能を活用することで、チーム開発における品質とセキュリティを確保できます。本プロジェクトでは、以下の開発ワークフローとブランチ戦略を採用しています：
 
-1. **自動検出**: Docker、Kubernetes、Consulなどと統合して、バックエンドサービスを自動検出します。本プロジェクトでは、Docker Providerを使用して、Dockerコンテナを自動検出しています。
+1. **Gitflow ワークフロー**: 主に2つの主要ブランチ（`main`と`develop`）を使用します。
+   - `main`: 本番環境に対応する安定したコード
+   - `develop`: 開発中の最新コード
+   - 機能開発は`feature/機能名`ブランチで行い、完了後に`develop`へマージ
+   - リリース準備は`release/バージョン`ブランチで行い、完了後に`main`と`develop`の両方へマージ
+   - 緊急修正は`hotfix/修正内容`ブランチで行い、完了後に`main`と`develop`の両方へマージ
 
-2. **動的再構成**: サービスの追加や削除を検出し、設定を自動的に更新します。再起動が不要です。
+2. **Protected Branch（保護されたブランチ）**: `main`と`develop`ブランチを保護することで、以下の利点があります。
+   - 直接のコミットを禁止し、Pull Requestを通じた変更のみを許可
+   - コードレビューの強制
+   - CI/CDテストの成功を必須とする
+   - マージ前の最新状態への更新を強制
+   - 履歴の書き換え（force push）を防止
 
-3. **ルーティングのカスタマイズ**: 本プロジェクトでは、ホスト名ベースのルーティングを使用しています。例えば、`shop.localhost`へのリクエストは顧客向けフロントエンド、`admin.localhost`へのリクエストは管理者向けフロントエンドにルーティングされます。
+3. **Pull Request (PR) プロセス**:
+   - 新機能や修正は、適切な命名規則に従ったブランチで開発
+   - 開発完了後、`develop`ブランチへのPRを作成
+   - コードレビューとCIテストのパス
+   - 承認後、PRをマージ
 
-4. **ミドルウェア**: リクエスト処理のパイプラインにミドルウェアを追加できます。認証、リダイレクト、レート制限などが可能です。
+4. **レビュープロセス**:
+   - PRのレビューでは、コード品質、テストカバレッジ、ドキュメンテーションなどを確認
+   - コメントやフィードバックを通じて改善点を指摘
+   - 必要な修正が完了し、レビュアーが承認すると、マージ可能に
 
-Traefikの構成は、静的構成（`traefik.yml`）と動的構成（`dynamic/config.yml`や Docker ラベル）に分かれています：
+5. **自動化とCI/CD**:
+   - GitHub Actionsを使用して、PR時に自動テストやリンターを実行
+   - テストが失敗した場合、PRのマージがブロックされる
+   - コード品質の基準を満たすことを保証
 
-- **静的構成**: Traefikの起動時にのみ読み込まれる設定で、エントリーポイント、プロバイダー、ログなどが含まれます。
-- **動的構成**: 実行時に変更可能な設定で、ルーター、サービス、ミドルウェアなどが含まれます。
+この開発ワークフローを採用することで、以下のメリットがあります：
 
-本プロジェクトでは、将来追加されるサービス（バックエンド、フロントエンド）に対するルーティングを事前に設定しています。これらのサービスが実際に起動していなくても、設定自体はエラーなく読み込まれます。
+- コードの品質維持
+- 履歴の一貫性と追跡可能性
+- チームコラボレーションの促進
+- 本番環境のコードの安定性確保
 
-### 1.6.3. LocalStack によるAWSエミュレーション
-
-LocalStack は、AWSのクラウドサービスをローカル環境でエミュレートするツールです。本プロジェクトでは、オブザーバビリティ機能を学習するために使用します：
-
-1. **コスト削減**: 実際のAWSサービスを使用せずに開発やテストができるため、コストを削減できます。
-
-2. **オフライン開発**: インターネット接続がなくても開発が可能です。
-
-3. **高速な反復**: デプロイや設定変更の反映が高速で、開発サイクルを短縮できます。
-
-4. **統合的なテスト環境**: 複数のAWSサービスを組み合わせたアプリケーションのテストが容易です。
-
-設定したLocalStackでは、以下のAWSサービスが利用可能です（compose.ymlの`SERVICES`パラメータで指定）：
-
-- **S3**: オブジェクトストレージ（商品画像の保存などに使用）
-- **CloudWatch**: モニタリングとオブザーバビリティサービス
-  - **CloudWatch Logs (logs)**: ログ収集と分析
-  - **CloudWatch Events/EventBridge (events)**: イベント処理とスケジューリング
-- **Lambda**: サーバーレスコンピューティング
-- **SQS**: Simple Queue Service（非同期メッセージキュー）
-- **SNS**: Simple Notification Service（パブリッシュ/サブスクライブメッセージング）
-
-初期化スクリプト（`01_init_aws_resources.sh`）では、プロジェクトで必要となる基本的なAWSリソース（S3バケット、CloudWatchロググループ、SNSトピック、SQSキュー）を事前に作成しています。
-
-将来のフェーズで実装するオブザーバビリティ機能（ログ、メトリクス、トレース）は、これらのLocalStackサービスを活用して学習していきます。
+後のフェーズでは、このワークフローにコード静的解析ツール、セキュリティチェック、自動デプロイなどを追加して、より堅牢な開発プロセスを構築していきます。
 
 ## 1.7. 【補足情報】
 
 ### 1.7.1. Docker ネットワークについて
 
-Docker Compose 設定では、すべてのサービスが `ecommerce-network` という名前のカスタムブリッジネットワークに接続されています。これにより、以下のメリットがあります：
+Docker Compose 設定では、サービスが `ecommerce-network` という名前のカスタムブリッジネットワークに接続されています。これにより、以下のメリットがあります：
 
-1. **サービス名による名前解決**: 同じネットワーク内のサービスは、サービス名でお互いを参照できます。例えば、バックエンドサービスからMySQLに接続する場合、ホスト名として `mysql` を使用できます。
+1. **サービス名による名前解決**: 同じネットワーク内のサービスは、サービス名でお互いを参照できます。例えば、phpMyAdminからMySQLに接続する場合、ホスト名として `mysql` を使用できます。
 
 2. **ネットワークの分離**: カスタムネットワークを使用することで、プロジェクト外の他のDockerコンテナと分離できます。
 
@@ -691,16 +526,15 @@ docker network ls
 docker network inspect ecommerce-network
 ```
 
+将来、バックエンドとフロントエンドのサービスを追加する際には、この同じネットワークに接続することで、サービス間の通信が容易になります。
+
 ### 1.7.2. ボリュームによるデータ永続化
 
-Docker コンテナ自体は一時的なものであり、コンテナが削除されると内部のデータも失われます。これを防ぐために、Docker Compose 設定では2つの名前付きボリュームを使用しています：
+Docker コンテナ自体は一時的なものであり、コンテナが削除されると内部のデータも失われます。これを防ぐために、Docker Compose 設定では名前付きボリューム `mysql_data` を使用しています。
 
-1. **mysql_data**: MySQL のデータファイルを保存します。
-2. **localstack_data**: LocalStack の状態とデータを保存します。
+これによる主なメリットは以下の通りです：
 
-これらのボリュームを使用することで、以下のメリットがあります：
-
-1. **データの永続化**: コンテナを再作成しても、データは失われません。
+1. **データの永続化**: コンテナを再作成しても、MySQLのデータは失われません。
 2. **パフォーマンス**: 名前付きボリュームは、バインドマウントよりも一般的にパフォーマンスが良いです。
 3. **バックアップの容易さ**: ボリュームのデータを簡単にバックアップできます。
 
@@ -721,79 +555,11 @@ docker volume inspect mysql_data
 docker run --rm -v aws-observability-ecommerce_mysql_data:/source -v $(pwd)/backup:/backup alpine tar -czvf /backup/mysql_data_backup.tar.gz -C /source .
 ```
 
-### 1.7.3. LocalStack Desktopの活用
-
-LocalStack Desktopは、LocalStackのグラフィカルインターフェースを提供するデスクトップアプリケーションです。Docker Composeで起動したLocalStackインスタンスを視覚的に管理できるため、AWS環境の理解とデバッグが容易になります。
-
-#### 1.7.3.1. LocalStack Desktopのインストール
-
-以下の手順でLocalStack Desktopをインストールします：
-
-1. 公式サイト（<https://docs.localstack.cloud/user-guide/tools/localstack-desktop/>）からLocalStack Desktopをダウンロードします。
-   - Windows、macOS、Linux向けのインストーラが提供されています。
-
-2. ダウンロードしたインストーラを実行し、画面の指示に従ってインストールを完了します。
-   - macOSの場合は、ダウンロードしたDMGファイルを開き、アプリケーションフォルダにドラッグします。
-   - Windowsの場合は、インストーラを実行してウィザードに従います。
-   - Linuxの場合は、APTリポジトリを追加するか、AppImageを使用します。
-
-#### 1.7.3.2. LocalStack Desktopの設定と使用方法
-
-1. LocalStack Desktopを起動します。
-
-2. 初回起動時に設定画面が表示されます。必要に応じて設定を行い、「Continue」または「Finish」をクリックします。
-   - 基本的にはデフォルト設定で問題ありません。
-
-3. Docker Composeで起動したLocalStackインスタンスを検出するための設定：
-   - 「Settings」タブを開きます。
-   - 「Docker」セクションで、「Auto-detect local Docker containers」オプションが有効になっていることを確認します。
-   - 「Integration」セクションで、「LocalStack Endpoint」が `http://localhost:4566` に設定されていることを確認します。
-
-4. ダッシュボードビューで、Docker Composeで起動したLocalStackインスタンスが表示されていることを確認します。
-   - 「Instances」セクションに `ecommerce-localstack` のようなエントリが表示されるはずです。
-
-#### 1.7.3.3. LocalStack Desktopの主な機能
-
-1. **リソースブラウザ**: 作成したAWSリソース（S3バケット、CloudWatchロググループなど）を視覚的に参照できます。
-   - 左側のナビゲーションパネルからサービスを選択し、作成したリソースを確認できます。
-
-2. **CloudWatchログの確認**:
-   - 「CloudWatch」セクションから「Logs」を選択し、ロググループとログストリームを確認できます。
-   - 作成したロググループ（`/ecommerce/api`など）をクリックして、ログイベントを表示します。
-
-3. **S3オブジェクトの管理**:
-   - 「S3」セクションから作成したバケットを参照し、オブジェクトのアップロード、ダウンロード、削除ができます。
-   - 例えば、`ecommerce-product-images`バケットを選択し、テスト画像をアップロードできます。
-
-4. **Lambda関数のテスト**:
-   - 「Lambda」セクションから関数を選択し、テストイベントを作成してデプロイした関数を実行できます。
-   - 関数のログや結果を直接確認できます。
-
-5. **リクエストの監視**:
-   - 「Activity」タブでは、LocalStackに送信されたAPIリクエストをリアルタイムで確認できます。
-   - これは、バックエンドコードのデバッグやAWS SDKの動作理解に役立ちます。
-
-#### 1.7.3.4. LocalStack Desktopの活用例
-
-1. **開発中のリアルタイム監視**:
-   - アプリケーションが生成するCloudWatchログをリアルタイムで確認し、デバッグに活用します。
-
-2. **S3バケットの内容確認**:
-   - アップロードされた商品画像ファイルがS3バケットに正しく保存されているかを視覚的に確認します。
-
-3. **メッセージングサービスのデバッグ**:
-   - SNSトピックやSQSキューに送信されたメッセージを確認し、非同期通信のデバッグを行います。
-
-4. **AWSリソースの手動作成**:
-   - GUIを使って追加のAWSリソースを作成し、アプリケーションのテストに活用します。
-
-LocalStack Desktopを使用することで、コマンドラインだけでは難しい視覚的な管理と監視が可能になり、AWS環境の学習とデバッグが効率化されます。
-
 ## 1.8. 【よくある問題と解決法】
 
 ### 1.8.1. 問題1: ポートの競合
 
-**症状**: Docker Compose の起動時に `Error starting userland proxy: listen tcp 0.0.0.0:80: bind: address already in use` のようなエラーが表示される。
+**症状**: Docker Compose の起動時に `Error starting userland proxy: listen tcp 0.0.0.0:3306: bind: address already in use` のようなエラーが表示される。
 
 **解決策**:
 
@@ -801,13 +567,13 @@ LocalStack Desktopを使用することで、コマンドラインだけでは�
 
    ```bash
    # Linuxの場合
-   sudo lsof -i :80
+   sudo lsof -i :3306
 
    # macOSの場合
-   sudo lsof -i :80
+   sudo lsof -i :3306
 
    # Windowsの場合
-   netstat -aon | findstr :80
+   netstat -aon | findstr :3306
    ```
 
 2. 競合しているプロセスを停止するか、Docker Compose の設定で使用するポートを変更します：
@@ -815,7 +581,7 @@ LocalStack Desktopを使用することで、コマンドラインだけでは�
    ```yaml
    # compose.ymlの該当部分を変更
    ports:
-     - "8080:80"  # ローカルの8080ポートをコンテナの80ポートにマッピング
+     - "3307:3306"  # ローカルの3307ポートをコンテナの3306ポートにマッピング
    ```
 
 3. 変更後、Docker Compose を再起動します：
@@ -825,50 +591,55 @@ LocalStack Desktopを使用することで、コマンドラインだけでは�
    docker compose up -d
    ```
 
-### 1.8.2. 問題2: Traefikでのホスト名解決の問題
+### 1.8.2. 問題2: MySQLの接続エラー
 
-**症状**: `shop.localhost` や `admin.localhost` にアクセスしても、正しいサービスにルーティングされない。
+**症状**: MySQLに接続できない、または `Access denied for user` というエラーが発生する。
 
 **解決策**:
 
-1. `/etc/hosts` ファイルに正しいマッピングが追加されていることを確認します：
+1. 環境変数が正しく設定されているか確認します：
 
    ```bash
-   sudo nano /etc/hosts
-
-   # 以下の行を追加または確認
-   127.0.0.1 traefik.localhost api.localhost shop.localhost admin.localhost
+   # .envファイルを確認
+   cat .env
+   # または環境変数を確認
+   echo $MYSQL_USER
+   echo $MYSQL_PASSWORD
    ```
 
-2. Traefik の設定が正しく読み込まれていることを確認します：
+2. MySQLコンテナが正常に起動しているか確認します：
 
    ```bash
-   # ブラウザでTraefikダッシュボードにアクセス
-   # http://traefik.localhost:8080
-
-   # または、Traefikのログを確認
-   docker compose logs traefik
+   docker compose ps
+   docker compose logs mysql
    ```
 
-3. Traefik の設定ファイルを修正した場合は、Traefik コンテナを再起動します：
+3. 認証情報を明示的に指定して接続を試みます：
 
    ```bash
-   docker compose restart traefik
+   docker compose exec mysql mysql -u ecommerce_user -pecommerce_password ecommerce
+   ```
+
+4. 必要に応じてMySQLコンテナを再作成します：
+
+   ```bash
+   docker compose down -v  # データも削除したい場合
+   docker compose up -d
    ```
 
 ## 1.9. 【今日の重要なポイント】
 
 本日の実装で特に重要なポイントは以下の通りです：
 
-1. **Docker Compose による環境の統合**: 複数のサービスを一元管理し、開発環境を簡単に再現できるようになりました。これにより、チーム全体で一貫した開発が可能になります。
+1. **GitHubリポジトリとブランチ保護**: 安全で効率的な開発ワークフローの基盤を構築しました。これにより、コード品質の維持とチームでの協業が容易になります。
 
-2. **Traefik によるルーティング**: ホスト名ベースのルーティングを設定し、顧客向けと管理者向けの分離された環境を準備しました。これにより、フロントエンドを独立して開発・デプロイできます。
+2. **基本的なプロジェクト構造**: フロントエンド、バックエンド、インフラの明確な分離を持つディレクトリ構造を設定しました。これはプロジェクトの拡張性と保守性に貢献します。
 
-3. **LocalStack によるAWSエミュレーション**: AWSサービスをローカルでエミュレートする環境を準備しました。これにより、コストをかけずにオブザーバビリティ機能を学習できます。
+3. **Docker Compose による環境の統合**: MySQLなどの開発依存サービスを一元管理し、開発環境を簡単に再現できるようになりました。これにより、チーム全体で一貫した開発が可能になります。
 
 4. **持続可能な開発環境**: ボリュームによるデータ永続化とサービス間のネットワーク接続を設定することで、長期的な開発に適した環境を構築しました。
 
-これらのポイントは、次回以降の実装においても基盤となる重要な概念です。特に、Docker環境の理解はプロジェクト全体を通じて必要となります。
+これらのポイントは、次回以降の実装においても基盤となる重要な概念です。特に、GitHubワークフローとDocker環境の理解はプロジェクト全体を通じて必要となります。
 
 ## 1.10. 【次回の準備】
 
@@ -898,12 +669,6 @@ export MYSQL_ROOT_PASSWORD=rootpassword
 export MYSQL_DATABASE=ecommerce
 export MYSQL_USER=ecommerce_user
 export MYSQL_PASSWORD=ecommerce_password
-
-# AWS設定（LocalStack用）
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=ap-northeast-1
-export AWS_ENDPOINT_URL=http://localhost:4566
 
 # 開発環境設定
 export ENVIRONMENT=development

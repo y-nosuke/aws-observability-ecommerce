@@ -1,0 +1,11 @@
+version: 1
+rules:
+  - expected: GitHub
+    pattern: /Github/i
+  - expected: JavaScript
+    pattern: /Javascript/i
+  - expected: "ログイン"
+    pattern: /サインイン/
+    specs:
+      - from: "サインインしてください"
+        to: "ログインしてください"

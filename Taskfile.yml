@@ -1,58 +1,112 @@
 version: "3"
 
 vars:
-  BACKEND_DIR: backend
-  FRONTEND_CUSTOMER_DIR: frontend-customer
-  FRONTEND_ADMIN_DIR: frontend-admin
+  PROJECT_NAME: ecommerce-app
 
 tasks:
-  start:
-    desc: Start all services with docker-compose
+  default:
+    desc: プロジェクトのヘルプを表示
     cmds:
-      - docker-compose up -d
+      - task -l
+    silent: true
 
-  stop:
-    desc: Stop all services
+  setup:
+    desc: プロジェクトのセットアップ
     cmds:
-      - docker-compose down
+      - task: setup:backend
+      - task: setup:frontend-customer
+      - task: setup:frontend-admin
 
-  restart:
-    desc: Restart all services
+  setup:backend:
+    desc: バックエンドのセットアップ
+    dir: backend
     cmds:
-      - task: stop
-      - task: start
+      - go mod tidy
+      - go mod verify
+
+  setup:frontend-customer:
+    desc: 顧客向けフロントエンドのセットアップ
+    dir: frontend-customer
+    cmds:
+      - npm install
+
+  setup:frontend-admin:
+    desc: 管理者向けフロントエンドのセットアップ
+    dir: frontend-admin
+    cmds:
+      - npm install
+
+  up:
+    desc: 開発環境を起動
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: 開発環境を停止
+    cmds:
+      - docker compose down
 
   logs:
-    desc: Follow docker logs
+    desc: コンテナのログを表示
     cmds:
-      - docker-compose logs -f {{.CLI_ARGS | default ""}}
+      - docker compose logs -f {{.CLI_ARGS | default ""}}
 
-  backend:lint:
-    desc: Run linters on backend code
-    dir: "{{.BACKEND_DIR}}"
+  lint:
+    desc: コードの静的解析を実行
+    cmds:
+      - task: lint:backend
+      - task: lint:frontend-customer
+      - task: lint:frontend-admin
+
+  lint:backend:
+    desc: バックエンドのlintを実行
+    dir: backend
     cmds:
       - golangci-lint run ./...
 
-  backend:test:
-    desc: Run backend tests
-    dir: "{{.BACKEND_DIR}}"
+  lint:frontend-customer:
+    desc: 顧客向けフロントエンドのlintを実行
+    dir: frontend-customer
+    cmds:
+      - npm run lint
+
+  lint:frontend-admin:
+    desc: 管理者向けフロントエンドのlintを実行
+    dir: frontend-admin
+    cmds:
+      - npm run lint
+
+  test:
+    desc: テストを実行
+    cmds:
+      - task: test:backend
+      - task: test:frontend-customer
+      - task: test:frontend-admin
+
+  test:backend:
+    desc: バックエンドのテストを実行
+    dir: backend
     cmds:
       - go test ./... -v
 
-  frontend:install:
-    desc: Install frontend dependencies
+  test:frontend-customer:
+    desc: 顧客向けフロントエンドのテストを実行
+    dir: frontend-customer
     cmds:
-      - cd {{.FRONTEND_CUSTOMER_DIR}} && npm install
-      - cd {{.FRONTEND_ADMIN_DIR}} && npm install
+      - npm test
 
-  frontend:lint:
-    desc: Run linter on frontend code
+  test:frontend-admin:
+    desc: 管理者向けフロントエンドのテストを実行
+    dir: frontend-admin
     cmds:
-      - cd {{.FRONTEND_CUSTOMER_DIR}} && npm run lint
-      - cd {{.FRONTEND_ADMIN_DIR}} && npm run lint
+      - npm test
 
-  aws:localstack:status:
-    desc: Check LocalStack status
+  localstack:create-bucket:
+    desc: S3バケットを作成
     cmds:
-      - aws --endpoint-url=http://localhost:4566 --profile localstack s3 ls
-      - echo "LocalStack is running"
+      - awslocal s3 mb s3://product-images
+
+  localstack:list-buckets:
+    desc: S3バケットを一覧表示
+    cmds:
+      - awslocal s3 ls

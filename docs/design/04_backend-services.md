@@ -30,143 +30,143 @@
 
 ### 1.2.1. 基本サービス
 
-| サービスID | サービス名           | 説明                             | 実装技術(MVP)                          | 実装技術(完成版)                             | エンドポイント                    | 対応機能(MVP)                                               | 対応機能(完成版)                           | オブザーバビリティ要素(MVP)        | オブザーバビリティ要素(完成版)                      |
-| ---------- | -------------------- | -------------------------------- | -------------------------------------- | -------------------------------------------- | --------------------------------- | ----------------------------------------------------------- | ------------------------------------------ | ---------------------------------- | --------------------------------------------------- |
-| SVC-01     | 商品カタログサービス | 商品情報の取得と管理を担当       | Go/Echo, MySQL                         | Fargate (ECS), RDS (MySQL/PostgreSQL)        | `/api/products/*`                 | C-BROWSE-01, C-BROWSE-02, C-BROWSE-03, A-PROD-01, A-PROD-02 | すべての商品関連機能                       | 基本的なログ、メトリクス、トレース | 完全な3本柱統合、カスタムメトリクス、異常検出       |
-| SVC-02     | 在庫管理サービス     | 商品の在庫状況の取得と更新を担当 | Go/Echo, MySQL                         | Fargate (ECS), RDS (MySQL), Lambda, DynamoDB | `/api/inventory/*`                | C-BROWSE-07, A-INV-01, A-INV-03                             | すべての在庫関連機能                       | 基本的なログ、メトリクス           | 完全な3本柱統合、在庫アラート、予測分析             |
-| SVC-03     | カートサービス       | カート情報の管理                 | クライアントサイドのみ（LocalStorage） | Fargate (ECS), DynamoDB                      | クライアント側のみ／`api/carts/*` | C-SHOP-01 (クライアント側実装)                              | C-SHOP-01 (サーバー側実装)                 | フロントエンドログのみ             | サーバー側の完全な3本柱統合、カート分析メトリクス   |
-| SVC-04     | 注文処理サービス     | 注文の処理と管理を担当           | Go/Echo, MySQL (シンプル実装)          | Fargate (ECS), RDS (MySQL), SQS, SNS         | `/api/orders/*`                   | C-SHOP-02 (シンプル実装)                                    | C-SHOP-02, C-SHOP-03, C-SHOP-04, C-SHOP-05 | 基本的なログ                       | 完全な3本柱統合、トランザクション監視、イベント追跡 |
+| サービスID              | サービス名           | 説明                             | 実装技術(MVP)                          | 実装技術(完成版)                             | エンドポイント                    | 対応機能(MVP)                                               | 対応機能(完成版)                           | オブザーバビリティ要素(MVP)        | オブザーバビリティ要素(完成版)                      |
+| ----------------------- | -------------------- | -------------------------------- | -------------------------------------- | -------------------------------------------- | --------------------------------- | ----------------------------------------------------------- | ------------------------------------------ | ---------------------------------- | --------------------------------------------------- |
+| SVC-CORE-PRODUCT-01     | 商品カタログサービス | 商品情報の取得と管理を担当       | Go/Echo, MySQL                         | Fargate (ECS), RDS (MySQL/PostgreSQL)        | `/api/products/*`                 | FEAT-CUST-BROWSE-01, FEAT-CUST-BROWSE-02, FEAT-CUST-BROWSE-03, FEAT-ADMIN-PROD-01, FEAT-ADMIN-PROD-02 | すべての商品関連機能                       | 基本的なログ、メトリクス、トレース | 完全な3本柱統合、カスタムメトリクス、異常検出       |
+| SVC-CORE-INVENTORY-01   | 在庫管理サービス     | 商品の在庫状況の取得と更新を担当 | Go/Echo, MySQL                         | Fargate (ECS), RDS (MySQL), Lambda, DynamoDB | `/api/inventory/*`                | FEAT-CUST-BROWSE-07, FEAT-ADMIN-INV-01, FEAT-ADMIN-INV-03                             | すべての在庫関連機能                       | 基本的なログ、メトリクス           | 完全な3本柱統合、在庫アラート、予測分析             |
+| SVC-CUST-CART-01        | カートサービス       | カート情報の管理                 | クライアントサイドのみ（LocalStorage） | Fargate (ECS), DynamoDB                      | クライアント側のみ／`api/carts/*` | FEAT-CUST-CART-01 (クライアント側実装)                              | FEAT-CUST-CART-01 (サーバー側実装)                 | フロントエンドログのみ             | サーバー側の完全な3本柱統合、カート分析メトリクス   |
+| SVC-CORE-ORDER-01       | 注文処理サービス     | 注文の処理と管理を担当           | Go/Echo, MySQL (シンプル実装)          | Fargate (ECS), RDS (MySQL), SQS, SNS         | `/api/orders/*`                   | FEAT-CUST-SHOP-02 (シンプル実装)                                    | FEAT-CUST-SHOP-02, FEAT-CUST-SHOP-03, FEAT-CUST-SHOP-04, FEAT-CUST-SHOP-05 | 基本的なログ                       | 完全な3本柱統合、トランザクション監視、イベント追跡 |
 
 ### 1.2.2. 認証・ユーザー管理サービス
 
-| サービスID | サービス名           | 説明                               | 実装技術(MVP)    | 実装技術(完成版)                   | エンドポイント | 対応機能(MVP)                | 対応機能(完成版)     | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                 |
-| ---------- | -------------------- | ---------------------------------- | ---------------- | ---------------------------------- | -------------- | ---------------------------- | -------------------- | --------------------------- | ---------------------------------------------- |
-| SVC-05     | 認証サービス         | 管理者認証を担当（シンプルな実装） | Go/Echo, JWTのみ | Fargate (ECS), Cognito, OAuth/OIDC | `/api/auth/*`  | 管理者ログイン（モック実装） | すべての認証関連機能 | 基本的なログ                | 認証セキュリティモニタリング、不審アクセス検知 |
-| SVC-08     | ユーザー管理サービス | ユーザープロフィールと設定の管理   | -                | Lambda, DynamoDB                   | `/api/users/*` | -                            | C-USER-03, C-USER-04 | -                           | 完全な3本柱統合、プロフィール変更追跡          |
+| サービスID              | サービス名           | 説明                               | 実装技術(MVP)    | 実装技術(完成版)                   | エンドポイント | 対応機能(MVP)                | 対応機能(完成版)     | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                 |
+| ----------------------- | -------------------- | ---------------------------------- | ---------------- | ---------------------------------- | -------------- | ---------------------------- | -------------------- | --------------------------- | ---------------------------------------------- |
+| SVC-CORE-AUTH-01        | 認証サービス         | 管理者認証を担当（シンプルな実装） | Go/Echo, JWTのみ | Fargate (ECS), Cognito, OAuth/OIDC | `/api/auth/*`  | 管理者ログイン（モック実装） | すべての認証関連機能 | 基本的なログ                | 認証セキュリティモニタリング、不審アクセス検知 |
+| SVC-CORE-USER-01        | ユーザー管理サービス | ユーザープロフィールと設定の管理   | -                | Lambda, DynamoDB                   | `/api/users/*` | -                            | FEAT-CUST-USER-03, FEAT-CUST-USER-04 | -                           | 完全な3本柱統合、プロフィール変更追跡          |
 
 ### 1.2.3. システム・モニタリングサービス
 
-| サービスID | サービス名             | 説明                                 | 実装技術(MVP) | 実装技術(完成版)                  | エンドポイント         | 対応機能(MVP)                         | 対応機能(完成版)                               | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                     |
-| ---------- | ---------------------- | ------------------------------------ | ------------- | --------------------------------- | ---------------------- | ------------------------------------- | ---------------------------------------------- | --------------------------- | -------------------------------------------------- |
-| SVC-06     | ヘルスチェックサービス | サービス状態とデータベース接続の確認 | Go/Echo       | Fargate (ECS), Lambda             | `/api/health`          | O-ALERT-01                            | O-ALERT-01, O-ALERT-02, O-ALERT-03             | 基本的なログとステータス    | 詳細なヘルスチェック、サブシステムごとのステータス |
-| SVC-07     | メトリクスサービス     | 基本的なメトリクスの収集と報告       | Go/Echo       | Fargate (ECS), Lambda, CloudWatch | `/api/metrics`         | O-METRIC-01, O-METRIC-02, O-METRIC-03 | すべてのメトリクス関連機能                     | 基本的なメトリクスとログ    | 高度なメトリクス分析、異常検出                     |
-| SVC-09     | 通知サービス           | 各種通知の送信と管理                 | -             | Lambda, SNS, SES                  | `/api/notifications/*` | -                                     | C-NOTIF-01, C-NOTIF-02, C-NOTIF-03, C-NOTIF-04 | -                           | 完全な3本柱統合、通知成功率モニタリング            |
+| サービスID              | サービス名             | 説明                                 | 実装技術(MVP) | 実装技術(完成版)                  | エンドポイント         | 対応機能(MVP)                         | 対応機能(完成版)                               | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                     |
+| ----------------------- | ---------------------- | ------------------------------------ | ------------- | --------------------------------- | ---------------------- | ------------------------------------- | ---------------------------------------------- | --------------------------- | -------------------------------------------------- |
+| SVC-SYS-HEALTH-01       | ヘルスチェックサービス | サービス状態とデータベース接続の確認 | Go/Echo       | Fargate (ECS), Lambda             | `/api/health`          | FEAT-OBS-ALERT-01                            | FEAT-OBS-ALERT-01, FEAT-OBS-ALERT-02, FEAT-OBS-ALERT-03             | 基本的なログとステータス    | 詳細なヘルスチェック、サブシステムごとのステータス |
+| SVC-OBS-METRICS-01      | メトリクスサービス     | 基本的なメトリクスの収集と報告       | Go/Echo       | Fargate (ECS), Lambda, CloudWatch | `/api/metrics`         | FEAT-OBS-METRIC-01, FEAT-OBS-METRIC-02, FEAT-OBS-METRIC-03 | すべてのメトリクス関連機能                     | 基本的なメトリクスとログ    | 高度なメトリクス分析、異常検出                     |
+| SVC-CORE-NOTIFICATION-01 | 通知サービス           | 各種通知の送信と管理                 | -             | Lambda, SNS, SES                  | `/api/notifications/*` | -                                     | FEAT-CUST-NOTIF-01, FEAT-CUST-NOTIF-02, FEAT-CUST-NOTIF-03, FEAT-CUST-NOTIF-04 | -                           | 完全な3本柱統合、通知成功率モニタリング            |
 
 ### 1.2.4. イベント処理とサーバーレス関数
 
-| サービスID | サービス名           | 説明                         | 実装技術(MVP) | 実装技術(完成版)                    | トリガー(MVP)     | トリガー(完成版)                       | 対応機能(MVP)    | 対応機能(完成版)                   | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                           |
-| ---------- | -------------------- | ---------------------------- | ------------- | ----------------------------------- | ----------------- | -------------------------------------- | ---------------- | ---------------------------------- | --------------------------- | -------------------------------------------------------- |
-| SVC-10     | 画像処理サービス     | 商品画像の処理とリサイズ     | Lambda, S3    | Lambda, S3, Step Functions          | S3イベント        | S3イベント、API Gateway                | A-PROD-05 (基本) | A-PROD-05 (拡張)                   | 基本的なログ                | Lambda Insights, トレース, カスタムメトリクス            |
-| SVC-11     | バッチ処理サービス   | 在庫レポート生成             | Lambda        | Lambda, Step Functions, EventBridge | CloudWatch Events | EventBridge Rules                      | A-BATCH-01       | A-BATCH-01, A-BATCH-02, A-BATCH-03 | 基本的なログ                | 完全な3本柱統合、実行メトリクス、エラー追跡              |
-| SVC-12     | イベント処理サービス | イベント処理とサービス間連携 | -             | Lambda, SNS, SQS, EventBridge       | -                 | 各種イベント（注文確定、在庫更新など） | -                | すべてのイベント駆動型機能         | -                           | イベントトレース、メッセージ追跡、デッドレターキュー監視 |
+| サービスID             | サービス名           | 説明                         | 実装技術(MVP) | 実装技術(完成版)                    | トリガー(MVP)     | トリガー(完成版)                       | 対応機能(MVP)                | 対応機能(完成版)                   | オブザーバビリティ要素(MVP) | オブザーバビリティ要素(完成版)                           |
+| ---------------------- | -------------------- | ---------------------------- | ------------- | ----------------------------------- | ----------------- | -------------------------------------- | ---------------------------- | ---------------------------------- | --------------------------- | -------------------------------------------------------- |
+| SVC-CORE-IMAGE-01      | 画像処理サービス     | 商品画像の処理とリサイズ     | Lambda, S3    | Lambda, S3, Step Functions          | S3イベント        | S3イベント、API Gateway                | FEAT-ADMIN-PROD-05 (基本)    | FEAT-ADMIN-PROD-05 (拡張)         | 基本的なログ                | Lambda Insights, トレース, カスタムメトリクス            |
+| SVC-CORE-BATCH-01      | バッチ処理サービス   | 在庫レポート生成             | Lambda        | Lambda, Step Functions, EventBridge | CloudWatch Events | EventBridge Rules                      | FEAT-ADMIN-BATCH-01         | FEAT-ADMIN-BATCH-01, FEAT-ADMIN-BATCH-02, FEAT-ADMIN-BATCH-03 | 基本的なログ                | 完全な3本柱統合、実行メトリクス、エラー追跡              |
+| SVC-SYS-EVENT-01       | イベント処理サービス | イベント処理とサービス間連携 | -             | Lambda, SNS, SQS, EventBridge       | -                 | 各種イベント（注文確定、在庫更新など） | -                            | すべてのイベント駆動型機能         | -                           | イベントトレース、メッセージ追跡、デッドレターキュー監視 |
 
 ## 1.3. API一覧
 
 ### 1.3.1. 商品カタログAPI
 
-| API-ID         | エンドポイント                  | メソッド | 説明                                                | MVP | 完成版 |
-| -------------- | ------------------------------- | -------- | --------------------------------------------------- | --- | ------ |
-| API-PRODUCT-01 | `/api/products`                 | GET      | 商品一覧取得（ページネーション/フィルタリング対応） | ✅   | ✅      |
-| API-PRODUCT-02 | `/api/products/{id}`            | GET      | 指定IDの商品詳細取得                                | ✅   | ✅      |
-| API-PRODUCT-03 | `/api/products/categories`      | GET      | 商品カテゴリー一覧取得                              | ✅   | ✅      |
-| API-PRODUCT-04 | `/api/products/categories/{id}` | GET      | 指定カテゴリーの商品一覧取得                        | ✅   | ✅      |
-| API-PRODUCT-05 | `/api/products`                 | POST     | 新規商品登録（管理者向け）                          | ✅   | ✅      |
-| API-PRODUCT-06 | `/api/products/{id}`            | PUT      | 指定IDの商品情報更新（管理者向け）                  | ✅   | ✅      |
-| API-PRODUCT-07 | `/api/products/{id}`            | DELETE   | 指定IDの商品削除（管理者向け）                      | ✅   | ✅      |
-| API-PRODUCT-08 | `/api/products/search`          | GET      | 高度な商品検索                                      | ❌   | ✅      |
-| API-PRODUCT-09 | `/api/products/batch`           | POST     | 商品の一括操作                                      | ❌   | ✅      |
-| API-PRODUCT-10 | `/api/products/export`          | GET      | 商品データのエクスポート                            | ❌   | ✅      |
-| API-PRODUCT-11 | `/api/products/import`          | POST     | 商品データのインポート                              | ❌   | ✅      |
+| API-ID                      | エンドポイント                  | メソッド | 説明                                                | MVP | 完成版 |
+| --------------------------- | ------------------------------- | -------- | --------------------------------------------------- | --- | ------ |
+| API-CORE-PRODUCT-PRODUCTS-LIST   | `/api/products`                 | GET      | 商品一覧取得（ページネーション/フィルタリング対応） | ✅   | ✅      |
+| API-CORE-PRODUCT-PRODUCTS-GET    | `/api/products/{id}`            | GET      | 指定IDの商品詳細取得                                | ✅   | ✅      |
+| API-CORE-PRODUCT-CATEGORIES-LIST | `/api/products/categories`      | GET      | 商品カテゴリー一覧取得                              | ✅   | ✅      |
+| API-CORE-PRODUCT-CATEGORY-LIST   | `/api/products/categories/{id}` | GET      | 指定カテゴリーの商品一覧取得                        | ✅   | ✅      |
+| API-CORE-PRODUCT-PRODUCTS-CREATE | `/api/products`                 | POST     | 新規商品登録（管理者向け）                          | ✅   | ✅      |
+| API-CORE-PRODUCT-PRODUCTS-UPDATE | `/api/products/{id}`            | PUT      | 指定IDの商品情報更新（管理者向け）                  | ✅   | ✅      |
+| API-CORE-PRODUCT-PRODUCTS-DELETE | `/api/products/{id}`            | DELETE   | 指定IDの商品削除（管理者向け）                      | ✅   | ✅      |
+| API-CORE-PRODUCT-SEARCH-GET      | `/api/products/search`          | GET      | 高度な商品検索                                      | ❌   | ✅      |
+| API-CORE-PRODUCT-BATCH-CREATE    | `/api/products/batch`           | POST     | 商品の一括操作                                      | ❌   | ✅      |
+| API-CORE-PRODUCT-EXPORT-GET      | `/api/products/export`          | GET      | 商品データのエクスポート                            | ❌   | ✅      |
+| API-CORE-PRODUCT-IMPORT-CREATE   | `/api/products/import`          | POST     | 商品データのインポート                              | ❌   | ✅      |
 
 ### 1.3.2. 在庫管理API
 
-| API-ID           | エンドポイント                        | メソッド | 説明                               | MVP | 完成版 |
-| ---------------- | ------------------------------------- | -------- | ---------------------------------- | --- | ------ |
-| API-INVENTORY-01 | `/api/inventory/{productId}`          | GET      | 指定商品の在庫状況取得             | ✅   | ✅      |
-| API-INVENTORY-02 | `/api/inventory`                      | GET      | 全商品の在庫状況取得（管理者向け） | ✅   | ✅      |
-| API-INVENTORY-03 | `/api/inventory/{productId}`          | PUT      | 指定商品の在庫数更新（管理者向け） | ✅   | ✅      |
-| API-INVENTORY-04 | `/api/inventory/batch`                | PUT      | 在庫の一括更新                     | ❌   | ✅      |
-| API-INVENTORY-05 | `/api/inventory/{productId}/history`  | GET      | 在庫履歴取得                       | ❌   | ✅      |
-| API-INVENTORY-06 | `/api/inventory/alerts`               | GET      | 在庫アラート一覧取得               | ❌   | ✅      |
-| API-INVENTORY-07 | `/api/inventory/alerts/settings`      | PUT      | アラート設定更新                   | ❌   | ✅      |
-| API-INVENTORY-08 | `/api/inventory/{productId}/forecast` | GET      | 在庫予測データ取得                 | ❌   | ✅      |
+| API-ID                             | エンドポイント                        | メソッド | 説明                               | MVP | 完成版 |
+| ---------------------------------- | ------------------------------------- | -------- | ---------------------------------- | --- | ------ |
+| API-CORE-INVENTORY-PRODUCT-GET     | `/api/inventory/{productId}`          | GET      | 指定商品の在庫状況取得             | ✅   | ✅      |
+| API-CORE-INVENTORY-LIST            | `/api/inventory`                      | GET      | 全商品の在庫状況取得（管理者向け） | ✅   | ✅      |
+| API-CORE-INVENTORY-PRODUCT-UPDATE  | `/api/inventory/{productId}`          | PUT      | 指定商品の在庫数更新（管理者向け） | ✅   | ✅      |
+| API-CORE-INVENTORY-BATCH-UPDATE    | `/api/inventory/batch`                | PUT      | 在庫の一括更新                     | ❌   | ✅      |
+| API-CORE-INVENTORY-HISTORY-GET     | `/api/inventory/{productId}/history`  | GET      | 在庫履歴取得                       | ❌   | ✅      |
+| API-CORE-INVENTORY-ALERTS-LIST     | `/api/inventory/alerts`               | GET      | 在庫アラート一覧取得               | ❌   | ✅      |
+| API-CORE-INVENTORY-SETTINGS-UPDATE | `/api/inventory/alerts/settings`      | PUT      | アラート設定更新                   | ❌   | ✅      |
+| API-CORE-INVENTORY-FORECAST-GET    | `/api/inventory/{productId}/forecast` | GET      | 在庫予測データ取得                 | ❌   | ✅      |
 
 ### 1.3.3. カートAPI
 
-| API-ID      | エンドポイント                       | メソッド | 説明                             | MVP | 完成版 |
-| ----------- | ------------------------------------ | -------- | -------------------------------- | --- | ------ |
-| API-CART-01 | `/api/carts/{userId}`                | GET      | ユーザーのカート情報取得         | ❌   | ✅      |
-| API-CART-02 | `/api/carts/{userId}/items`          | POST     | カートに商品追加                 | ❌   | ✅      |
-| API-CART-03 | `/api/carts/{userId}/items/{itemId}` | PUT      | カート内商品の数量更新           | ❌   | ✅      |
-| API-CART-04 | `/api/carts/{userId}/items/{itemId}` | DELETE   | カートから商品削除               | ❌   | ✅      |
-| API-CART-05 | `/api/carts/{userId}/merge`          | POST     | 未認証カートと認証カートのマージ | ❌   | ✅      |
+| API-ID                   | エンドポイント                       | メソッド | 説明                             | MVP | 完成版 |
+| ------------------------ | ------------------------------------ | -------- | -------------------------------- | --- | ------ |
+| API-CUST-CART-USER-GET   | `/api/carts/{userId}`                | GET      | ユーザーのカート情報取得         | ❌   | ✅      |
+| API-CUST-CART-ITEMS-ADD  | `/api/carts/{userId}/items`          | POST     | カートに商品追加                 | ❌   | ✅      |
+| API-CUST-CART-ITEM-UPDATE | `/api/carts/{userId}/items/{itemId}` | PUT      | カート内商品の数量更新           | ❌   | ✅      |
+| API-CUST-CART-ITEM-DELETE | `/api/carts/{userId}/items/{itemId}` | DELETE   | カートから商品削除               | ❌   | ✅      |
+| API-CUST-CART-MERGE-CREATE | `/api/carts/{userId}/merge`          | POST     | 未認証カートと認証カートのマージ | ❌   | ✅      |
 
 ### 1.3.4. 注文処理API
 
-| API-ID       | エンドポイント               | メソッド | 説明                               | MVP | 完成版 |
-| ------------ | ---------------------------- | -------- | ---------------------------------- | --- | ------ |
-| API-ORDER-01 | `/api/orders`                | POST     | 新規注文作成                       | ✅   | ✅      |
-| API-ORDER-02 | `/api/orders/{id}`           | GET      | 指定IDの注文詳細取得               | ✅   | ✅      |
-| API-ORDER-03 | `/api/orders`                | GET      | 注文一覧取得（フィルタリング付き） | ❌   | ✅      |
-| API-ORDER-04 | `/api/orders/{id}/status`    | PUT      | 注文ステータス更新                 | ❌   | ✅      |
-| API-ORDER-05 | `/api/orders/{id}/payment`   | POST     | 支払い処理                         | ❌   | ✅      |
-| API-ORDER-06 | `/api/orders/{id}/shipping`  | POST     | 配送情報登録                       | ❌   | ✅      |
-| API-ORDER-07 | `/api/users/{userId}/orders` | GET      | ユーザーの注文履歴取得             | ❌   | ✅      |
+| API-ID                       | エンドポイント               | メソッド | 説明                               | MVP | 完成版 |
+| ---------------------------- | ---------------------------- | -------- | ---------------------------------- | --- | ------ |
+| API-CORE-ORDER-ORDERS-CREATE | `/api/orders`                | POST     | 新規注文作成                       | ✅   | ✅      |
+| API-CORE-ORDER-ORDER-GET     | `/api/orders/{id}`           | GET      | 指定IDの注文詳細取得               | ✅   | ✅      |
+| API-CORE-ORDER-ORDERS-LIST   | `/api/orders`                | GET      | 注文一覧取得（フィルタリング付き） | ❌   | ✅      |
+| API-CORE-ORDER-STATUS-UPDATE | `/api/orders/{id}/status`    | PUT      | 注文ステータス更新                 | ❌   | ✅      |
+| API-CORE-ORDER-PAYMENT-CREATE | `/api/orders/{id}/payment`   | POST     | 支払い処理                         | ❌   | ✅      |
+| API-CORE-ORDER-SHIPPING-CREATE | `/api/orders/{id}/shipping`  | POST     | 配送情報登録                       | ❌   | ✅      |
+| API-CORE-ORDER-USER-ORDERS-LIST | `/api/users/{userId}/orders` | GET      | ユーザーの注文履歴取得             | ❌   | ✅      |
 
 ### 1.3.5. 認証API
 
-| API-ID      | エンドポイント                         | メソッド | 説明                           | MVP            | 完成版 |
-| ----------- | -------------------------------------- | -------- | ------------------------------ | -------------- | ------ |
-| API-AUTH-01 | `/api/auth/login`                      | POST     | ログイン認証                   | ✅ (管理者のみ) | ✅      |
-| API-AUTH-02 | `/api/auth/logout`                     | POST     | ログアウト                     | ✅ (管理者のみ) | ✅      |
-| API-AUTH-03 | `/api/auth/register`                   | POST     | ユーザー登録                   | ❌              | ✅      |
-| API-AUTH-04 | `/api/auth/refresh`                    | POST     | トークンリフレッシュ           | ❌              | ✅      |
-| API-AUTH-05 | `/api/auth/password/reset`             | POST     | パスワードリセット             | ❌              | ✅      |
-| API-AUTH-06 | `/api/auth/social/{provider}`          | GET      | ソーシャルログイン開始         | ❌              | ✅      |
-| API-AUTH-07 | `/api/auth/social/{provider}/callback` | GET      | ソーシャルログインコールバック | ❌              | ✅      |
-| API-AUTH-08 | `/api/auth/mfa/setup`                  | POST     | 多要素認証設定                 | ❌              | ✅      |
-| API-AUTH-09 | `/api/auth/mfa/verify`                 | POST     | 多要素認証検証                 | ❌              | ✅      |
+| API-ID                      | エンドポイント                         | メソッド | 説明                           | MVP            | 完成版 |
+| --------------------------- | -------------------------------------- | -------- | ------------------------------ | -------------- | ------ |
+| API-CORE-AUTH-SESSION-CREATE | `/api/auth/login`                      | POST     | ログイン認証                   | ✅ (管理者のみ) | ✅      |
+| API-CORE-AUTH-SESSION-DELETE | `/api/auth/logout`                     | POST     | ログアウト                     | ✅ (管理者のみ) | ✅      |
+| API-CORE-AUTH-USER-CREATE    | `/api/auth/register`                   | POST     | ユーザー登録                   | ❌              | ✅      |
+| API-CORE-AUTH-TOKEN-REFRESH  | `/api/auth/refresh`                    | POST     | トークンリフレッシュ           | ❌              | ✅      |
+| API-CORE-AUTH-PASSWORD-RESET | `/api/auth/password/reset`             | POST     | パスワードリセット             | ❌              | ✅      |
+| API-CORE-AUTH-SOCIAL-INIT    | `/api/auth/social/{provider}`          | GET      | ソーシャルログイン開始         | ❌              | ✅      |
+| API-CORE-AUTH-SOCIAL-CALLBACK | `/api/auth/social/{provider}/callback` | GET      | ソーシャルログインコールバック | ❌              | ✅      |
+| API-CORE-AUTH-MFA-SETUP      | `/api/auth/mfa/setup`                  | POST     | 多要素認証設定                 | ❌              | ✅      |
+| API-CORE-AUTH-MFA-VERIFY     | `/api/auth/mfa/verify`                 | POST     | 多要素認証検証                 | ❌              | ✅      |
 
 ### 1.3.6. ユーザー管理API
 
-| API-ID      | エンドポイント                          | メソッド | 説明                     | MVP | 完成版 |
-| ----------- | --------------------------------------- | -------- | ------------------------ | --- | ------ |
-| API-USER-01 | `/api/users/{id}`                       | GET      | ユーザープロフィール取得 | ❌   | ✅      |
-| API-USER-02 | `/api/users/{id}`                       | PUT      | ユーザープロフィール更新 | ❌   | ✅      |
-| API-USER-03 | `/api/users/{id}/addresses`             | GET      | 配送先住所一覧取得       | ❌   | ✅      |
-| API-USER-04 | `/api/users/{id}/addresses`             | POST     | 新規配送先住所追加       | ❌   | ✅      |
-| API-USER-05 | `/api/users/{id}/addresses/{addressId}` | PUT      | 配送先住所更新           | ❌   | ✅      |
-| API-USER-06 | `/api/users/{id}/addresses/{addressId}` | DELETE   | 配送先住所削除           | ❌   | ✅      |
-| API-USER-07 | `/api/users/{id}/preferences`           | GET      | ユーザー設定取得         | ❌   | ✅      |
-| API-USER-08 | `/api/users/{id}/preferences`           | PUT      | ユーザー設定更新         | ❌   | ✅      |
+| API-ID                        | エンドポイント                          | メソッド | 説明                     | MVP | 完成版 |
+| ----------------------------- | --------------------------------------- | -------- | ------------------------ | --- | ------ |
+| API-CORE-USER-PROFILE-GET     | `/api/users/{id}`                       | GET      | ユーザープロフィール取得 | ❌   | ✅      |
+| API-CORE-USER-PROFILE-UPDATE  | `/api/users/{id}`                       | PUT      | ユーザープロフィール更新 | ❌   | ✅      |
+| API-CORE-USER-ADDRESSES-LIST  | `/api/users/{id}/addresses`             | GET      | 配送先住所一覧取得       | ❌   | ✅      |
+| API-CORE-USER-ADDRESS-CREATE  | `/api/users/{id}/addresses`             | POST     | 新規配送先住所追加       | ❌   | ✅      |
+| API-CORE-USER-ADDRESS-UPDATE  | `/api/users/{id}/addresses/{addressId}` | PUT      | 配送先住所更新           | ❌   | ✅      |
+| API-CORE-USER-ADDRESS-DELETE  | `/api/users/{id}/addresses/{addressId}` | DELETE   | 配送先住所削除           | ❌   | ✅      |
+| API-CORE-USER-PREFERENCES-GET | `/api/users/{id}/preferences`           | GET      | ユーザー設定取得         | ❌   | ✅      |
+| API-CORE-USER-PREFERENCES-UPDATE | `/api/users/{id}/preferences`           | PUT      | ユーザー設定更新         | ❌   | ✅      |
 
 ### 1.3.7. ヘルスチェックAPI
 
-| API-ID        | エンドポイント           | メソッド | 説明                         | MVP | 完成版 |
-| ------------- | ------------------------ | -------- | ---------------------------- | --- | ------ |
-| API-HEALTH-01 | `/api/health`            | GET      | 基本的なヘルスステータス確認 | ✅   | ✅      |
-| API-HEALTH-02 | `/api/health/details`    | GET      | 詳細なシステム状態確認       | ❌   | ✅      |
-| API-HEALTH-03 | `/api/health/subsystems` | GET      | サブシステムごとの状態確認   | ❌   | ✅      |
-| API-HEALTH-04 | `/api/health/database`   | GET      | データベース接続の詳細確認   | ❌   | ✅      |
+| API-ID                       | エンドポイント           | メソッド | 説明                         | MVP | 完成版 |
+| ---------------------------- | ------------------------ | -------- | ---------------------------- | --- | ------ |
+| API-SYS-HEALTH-GET           | `/api/health`            | GET      | 基本的なヘルスステータス確認 | ✅   | ✅      |
+| API-SYS-HEALTH-DETAILS-GET   | `/api/health/details`    | GET      | 詳細なシステム状態確認       | ❌   | ✅      |
+| API-SYS-HEALTH-SUBSYSTEMS-GET | `/api/health/subsystems` | GET      | サブシステムごとの状態確認   | ❌   | ✅      |
+| API-SYS-HEALTH-DATABASE-GET  | `/api/health/database`   | GET      | データベース接続の詳細確認   | ❌   | ✅      |
 
 ### 1.3.8. メトリクスAPI
 
-| API-ID         | エンドポイント           | メソッド | 説明                                   | MVP | 完成版 |
-| -------------- | ------------------------ | -------- | -------------------------------------- | --- | ------ |
-| API-METRICS-01 | `/api/metrics`           | GET      | 基本的なアプリケーションメトリクス取得 | ✅   | ✅      |
-| API-METRICS-02 | `/api/metrics/system`    | GET      | システムリソースメトリクス取得         | ❌   | ✅      |
-| API-METRICS-03 | `/api/metrics/business`  | GET      | ビジネスメトリクス取得                 | ❌   | ✅      |
-| API-METRICS-04 | `/api/metrics/anomalies` | GET      | 異常検出結果取得                       | ❌   | ✅      |
+| API-ID                       | エンドポイント           | メソッド | 説明                                   | MVP | 完成版 |
+| ---------------------------- | ------------------------ | -------- | -------------------------------------- | --- | ------ |
+| API-OBS-METRICS-GET          | `/api/metrics`           | GET      | 基本的なアプリケーションメトリクス取得 | ✅   | ✅      |
+| API-OBS-METRICS-SYSTEM-GET   | `/api/metrics/system`    | GET      | システムリソースメトリクス取得         | ❌   | ✅      |
+| API-OBS-METRICS-BUSINESS-GET | `/api/metrics/business`  | GET      | ビジネスメトリクス取得                 | ❌   | ✅      |
+| API-OBS-METRICS-ANOMALIES-GET | `/api/metrics/anomalies` | GET      | 異常検出結果取得                       | ❌   | ✅      |
 
 ### 1.3.9. 通知API
 
-| API-ID       | エンドポイント                            | メソッド | 説明                     | MVP | 完成版 |
-| ------------ | ----------------------------------------- | -------- | ------------------------ | --- | ------ |
-| API-NOTIF-01 | `/api/notifications/send`                 | POST     | 通知送信                 | ❌   | ✅      |
-| API-NOTIF-02 | `/api/notifications/templates`            | GET      | 通知テンプレート一覧取得 | ❌   | ✅      |
-| API-NOTIF-03 | `/api/notifications/history`              | GET      | 通知履歴取得             | ❌   | ✅      |
-| API-NOTIF-04 | `/api/notifications/preferences/{userId}` | GET      | 通知設定取得             | ❌   | ✅      |
-| API-NOTIF-05 | `/api/notifications/preferences/{userId}` | PUT      | 通知設定更新             | ❌   | ✅      |
+| API-ID                       | エンドポイント                            | メソッド | 説明                     | MVP | 完成版 |
+| ---------------------------- | ----------------------------------------- | -------- | ------------------------ | --- | ------ |
+| API-CORE-NOTIF-MESSAGES-CREATE | `/api/notifications/send`                 | POST     | 通知送信                 | ❌   | ✅      |
+| API-CORE-NOTIF-TEMPLATES-LIST  | `/api/notifications/templates`            | GET      | 通知テンプレート一覧取得 | ❌   | ✅      |
+| API-CORE-NOTIF-HISTORY-LIST    | `/api/notifications/history`              | GET      | 通知履歴取得             | ❌   | ✅      |
+| API-CORE-NOTIF-PREFERENCES-GET | `/api/notifications/preferences/{userId}` | GET      | 通知設定取得             | ❌   | ✅      |
+| API-CORE-NOTIF-PREFERENCES-UPDATE | `/api/notifications/preferences/{userId}` | PUT      | 通知設定更新             | ❌   | ✅      |
 
 ## 1.4. マイクロサービスアーキテクチャの進化
 

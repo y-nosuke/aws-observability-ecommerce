@@ -147,36 +147,6 @@ mkdir -p backend/internal/db/migrations
 cd backend/internal/db/migrations
 ```
 
-migration CLIを使用するための環境を設定します。MySQLのDSNを作成するスクリプトを作成します。
-
-```bash
-# マイグレーション用のヘルパースクリプトを作成
-touch ../../scripts/migrate.sh
-chmod +x ../../scripts/migrate.sh
-```
-
-`migrate.sh`スクリプトを以下の内容で作成します。
-
-```bash
-#!/bin/bash
-
-# MySQL接続情報
-DB_USER=${MYSQL_USER:-ecommerce_user}
-DB_PASSWORD=${MYSQL_PASSWORD:-ecommerce_password}
-DB_HOST=${MYSQL_HOST:-localhost}
-DB_PORT=${MYSQL_PORT:-3306}
-DB_NAME=${MYSQL_DATABASE:-ecommerce}
-
-# MySQLのDSN
-MYSQL_DSN="mysql://${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}"
-
-# マイグレーションファイルのパス
-MIGRATIONS_PATH="backend/internal/db/migrations"
-
-# 実行するmigrationコマンド
-migrate -path ${MIGRATIONS_PATH} -database "${MYSQL_DSN}" "$@"
-```
-
 ### 1.4.3. マイグレーションファイルの作成（テーブル作成）
 
 golang-migrateを使って、テーブルを作成するための最初のマイグレーションファイルを作成します。
@@ -477,8 +447,8 @@ eコマースシステムではしばしば、パフォーマンスとのバラ�
 4. マイグレーションをロールバックして順序を修正し、再度適用する：
 
    ```bash
-   ./backend/scripts/migrate.sh down
-   ./backend/scripts/migrate.sh up
+   migrate -path ${MIGRATIONS_PATH} -database "${MYSQL_DSN}" down
+   migrate -path ${MIGRATIONS_PATH} -database "${MYSQL_DSN}" up
    ```
 
 ### 1.7.3. 問題3: 文字セットと照合順序の問題
@@ -554,12 +524,6 @@ export MYSQL_PASSWORD=ecommerce_password
 
 # golang-migrate用のDSN
 export MYSQL_DSN="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(${MYSQL_HOST}:${MYSQL_PORT})/${MYSQL_DATABASE}"
-
-# PATH設定（必要に応じて）
-export PATH=$PATH:$(go env GOPATH)/bin
-
-# プロジェクト固有の環境変数
-export PROJECT_ROOT=$(pwd)
 ```
 
 `.gitignore`ファイルに`.envrc`を追加して、誤ってコミットしないようにしてください。

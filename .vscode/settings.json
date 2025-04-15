@@ -23,5 +23,21 @@
     "editor.defaultFormatter": "hashicorp.terraform"
   },
   "typescript.tsdk": "frontend/node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "cSpell.words": [
+    "awslocal",
+    "dbname",
+    "direnv",
+    "ecommerce",
+    "envrc",
+    "GOPATH",
+    "Inno",
+    "labstack",
+    "ogen",
+    "sqlboiler",
+    "sslmode",
+    "tfstate",
+    "varchar",
+    "volatiletech"
+  ]
 }

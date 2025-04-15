@@ -110,3 +110,19 @@ tasks:
     desc: S3バケットを一覧表示
     cmds:
       - awslocal s3 ls
+
+  migrate:up:
+    desc: データベースのマイグレーションを実行
+    cmds:
+      - migrate -path "${MIGRATIONS_PATH}" -database "${MYSQL_DSN}" up
+
+  migrate:down:
+    desc: データベースのマイグレーションをロールバック
+    cmds:
+      - migrate -path ${MIGRATIONS_PATH} -database "${MYSQL_DSN}" down
+
+  generate:models:
+    desc: SQLBoilerでモデルを生成
+    dir: backend
+    cmds:
+      - sqlboiler mysql

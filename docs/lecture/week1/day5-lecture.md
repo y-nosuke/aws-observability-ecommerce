@@ -452,21 +452,21 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: yourusername/ecommerce-backend:latest
+          tags: y-nosuke/aws-observability-ecommerce-backend:latest
 
       - name: Build and push frontend-customer
         uses: docker/build-push-action@v4
         with:
           context: ./frontend-customer
           push: true
-          tags: yourusername/ecommerce-frontend-customer:latest
+          tags: y-nosuke/aws-observability-ecommerce-frontend-customer:latest
 
       - name: Build and push frontend-admin
         uses: docker/build-push-action@v4
         with:
           context: ./frontend-admin
           push: true
-          tags: yourusername/ecommerce-frontend-admin:latest
+          tags: y-nosuke/aws-observability-ecommerce-frontend-admin:latest
 
   # デプロイステップは実際の環境に合わせて実装
 ```
@@ -1083,10 +1083,6 @@ direnvを使用している場合、以下のような.envrcファイルを作�
 
 ```bash
 # .envrc
-# プロジェクト設定
-export PROJECT_NAME=ecommerce-app
-export COMPOSE_PROJECT_NAME=$PROJECT_NAME
-
 # AWS/LocalStack設定
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test

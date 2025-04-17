@@ -8,6 +8,10 @@
     "Prisma.prisma",
     "Prisma.prisma-insider",
     "github.vscode-github-actions",
-    "golang.go"
+    "golang.go",
+    "42crunch.vscode-openapi",
+    "mermade.openapi-lint",
+    "philosowaffle.openapi-designer",
+    "proohit.openapi-snippets"
   ]
 }

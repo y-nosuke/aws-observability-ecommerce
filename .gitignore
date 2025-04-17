@@ -8,6 +8,7 @@
 logs
 
 backend/internal/db/models
+backend/internal/api/openapi
 
 # Test binary, built with `go test -c`
 *.test

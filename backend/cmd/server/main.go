@@ -44,6 +44,14 @@ func main() {
 	// ヘルスチェックエンドポイント
 	api.GET("/health", healthHandler.HandleHealthCheck)
 
+	if err := handlers.RegisterHandlers(api); err != nil {
+		log.Fatalf("Failed to register handlers: %v", err)
+	}
+
+	e.Static("/swagger", "static/swagger-ui")
+	e.File("/swagger", "static/swagger-ui/index.html")
+	e.File("/openapi.yaml", "openapi.yaml")
+
 	// コンテキストの初期化（シグナルハンドリング）
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

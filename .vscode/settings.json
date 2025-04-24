@@ -23,5 +23,34 @@
     "editor.defaultFormatter": "hashicorp.terraform"
   },
   "typescript.tsdk": "frontend/node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "cSpell.words": [
+    "awscli",
+    "awslocal",
+    "Cheatsheets",
+    "codegen",
+    "dbname",
+    "direnv",
+    "ecommerce",
+    "envrc",
+    "Fargate",
+    "Fatalf",
+    "getkin",
+    "GOARCH",
+    "GOPATH",
+    "Inno",
+    "Knative",
+    "labstack",
+    "localstack",
+    "nosuke",
+    "oapi",
+    "oapimiddleware",
+    "ogen",
+    "scrollbars",
+    "sqlboiler",
+    "sslmode",
+    "tfstate",
+    "varchar",
+    "volatiletech"
+  ]
 }

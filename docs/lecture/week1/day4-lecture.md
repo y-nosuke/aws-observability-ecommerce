@@ -1399,11 +1399,6 @@ http:
 ```bash
 # .envrc サンプル
 
-# プロジェクト全体設定
-export PROJECT_ROOT=$(pwd)
-export COMPOSE_FILE=docker-compose.yml
-export COMPOSE_PROJECT_NAME=aws-observability-ecommerce
-
 # バックエンド環境変数
 export BACKEND_PORT=8000
 export BACKEND_HOST="backend.localhost"

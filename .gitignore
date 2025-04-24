@@ -7,6 +7,10 @@
 *.dylib
 logs
 
+backend/internal/db/models
+backend/internal/api/openapi
+backend/build
+
 # Test binary, built with `go test -c`
 *.test
 

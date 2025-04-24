@@ -7,6 +7,11 @@
     "oouo-diogo-perdigao.docthis",
     "Prisma.prisma",
     "Prisma.prisma-insider",
-    "github.vscode-github-actions"
+    "github.vscode-github-actions",
+    "golang.go",
+    "42crunch.vscode-openapi",
+    "mermade.openapi-lint",
+    "philosowaffle.openapi-designer",
+    "proohit.openapi-snippets"
   ]
 }

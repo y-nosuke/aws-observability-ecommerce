@@ -1,0 +1,324 @@
+openapi: 3.0.3
+info:
+  title: Eコマース API
+  description: AWS オブザーバビリティ学習のための Eコマースアプリケーション API
+  version: 0.1.0
+  contact:
+    name: Your Name
+    email: your.email@example.com
+servers:
+  - url: http://backend.localhost/api
+    description: ローカル開発サーバー
+paths:
+  /products:
+    get:
+      summary: 商品一覧の取得
+      description: オプションのフィルタリングを使用した、ページネーション対応の商品一覧を返します
+      operationId: listProducts
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/CategoryIdParam'
+      responses:
+        "200":
+          description: 成功した操作
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+        "400":
+          description: 無効なパラメータ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /products/{id}:
+    get:
+      summary: IDによる商品の取得
+      description: 指定されたIDの単一商品を返します
+      operationId: getProductById
+      parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
+      responses:
+        "200":
+          description: 成功した操作
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: 商品が見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categories:
+    get:
+      summary: カテゴリー一覧の取得
+      description: 商品カテゴリーの一覧を返します
+      operationId: listCategories
+      responses:
+        "200":
+          description: 成功した操作
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryList"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categories/{id}/products:
+    get:
+      summary: カテゴリー別商品の取得
+      description: 特定のカテゴリーに属する商品のページネーション対応リストを返します
+      operationId: listProductsByCategory
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdPathParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        "200":
+          description: 成功した操作
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+        "404":
+          description: カテゴリーが見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: ページ番号（1ベース）
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    
+    PageSizeParam:
+      name: pageSize
+      in: query
+      description: 1ページあたりのアイテム数
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+    
+    CategoryIdParam:
+      name: categoryId
+      in: query
+      description: カテゴリIDによる商品フィルタリング
+      schema:
+        type: integer
+        format: int64
+    
+    ProductIdParam:
+      name: id
+      in: path
+      description: 商品ID
+      required: true
+      schema:
+        type: integer
+        format: int64
+    
+    CategoryIdPathParam:
+      name: id
+      in: path
+      description: カテゴリーID
+      required: true
+      schema:
+        type: integer
+        format: int64
+  
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - categoryId
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 商品の一意識別子
+        name:
+          type: string
+          description: 商品名
+        description:
+          type: string
+          description: 商品説明
+        price:
+          type: number
+          format: float
+          description: 商品価格
+        imageUrl:
+          type: string
+          description: 商品画像のURL
+        inStock:
+          type: boolean
+          description: 在庫があるかどうか
+        categoryId:
+          type: integer
+          format: int64
+          description: カテゴリー識別子
+        categoryName:
+          type: string
+          description: カテゴリー名
+        createdAt:
+          type: string
+          format: date-time
+          description: 作成タイムスタンプ
+        updatedAt:
+          type: string
+          format: date-time
+          description: 最終更新タイムスタンプ
+
+    ProductList:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+          description: 商品リスト
+        total:
+          type: integer
+          description: 商品の総数
+        page:
+          type: integer
+          description: 現在のページ番号
+        pageSize:
+          type: integer
+          description: 1ページあたりのアイテム数
+        totalPages:
+          type: integer
+          description: 総ページ数
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: カテゴリーの一意識別子
+        name:
+          type: string
+          description: カテゴリー名
+        description:
+          type: string
+          description: カテゴリーの説明
+        imageUrl:
+          type: string
+          description: カテゴリー画像のURL
+        productCount:
+          type: integer
+          description: このカテゴリーの商品数
+
+    CategoryList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+          description: カテゴリーリスト
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "invalid_parameter"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "Invalid parameter value"
+        details:
+          type: object
+          additionalProperties: true
+          description: 追加のエラー詳細
+          example:
+            field: "page"
+            value: "-1"
+            reason: "must be greater than or equal to 1"
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生タイムスタンプ
+          example: "2024-03-14T12:34:56Z"
+        traceId:
+          type: string
+          description: デバッグ用のリクエストトレースID
+          example: "abc123def456"

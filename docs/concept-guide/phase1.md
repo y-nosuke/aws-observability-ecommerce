@@ -861,9 +861,7 @@ npm test
 │   │   ├── logger/              # ログユーティリティ
 │   │   └── validator/           # バリデーションユーティリティ
 │   │
-│   ├── api/                     # API仕様
-│   │   └── openapi.yaml         # OpenAPI仕様ファイル
-│   │
+│   ├── openapi.yaml             # OpenAPI仕様ファイル
 │   ├── Dockerfile               # バックエンドDockerfile
 │   ├── go.mod                   # Goモジュール定義
 │   ├── go.sum                   # Goモジュールロック

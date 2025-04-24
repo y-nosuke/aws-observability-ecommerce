@@ -193,7 +193,7 @@ services:
     container_name: localstack
     restart: unless-stopped
     environment:
-      - SERVICES=s3,cloudwatch,logs,events,sns,sqs,lambda
+      - SERVICES=s3,cloudwatch,logs,events,sns,sqs,lambda,iam
       - LAMBDA_EXECUTOR=docker
       - DEFAULT_REGION=ap-northeast-1
       - AWS_DEFAULT_REGION=ap-northeast-1

@@ -25,12 +25,14 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
-      - name: Go to backend directory
-        run: cd backend
-
-      - name: Test
+      - name: Test (api)
         run: |
-          cd backend
+          cd backend-api
+          go test -v ./...
+
+      - name: Test (image-processor)
+        run: |
+          cd backend-image-processor
           go test -v ./...
 
   frontend-test:

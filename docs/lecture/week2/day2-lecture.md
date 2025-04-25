@@ -233,8 +233,8 @@ import (
  "github.com/volatiletech/sqlboiler/v4/boil"
  "github.com/volatiletech/sqlboiler/v4/queries/qm"
 
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository"
 )
 
 // Repository は商品リポジトリのインターフェース
@@ -352,8 +352,8 @@ import (
  "github.com/volatiletech/sqlboiler/v4/boil"
  "github.com/volatiletech/sqlboiler/v4/queries/qm"
 
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository"
 )
 
 // Repository はカテゴリーリポジトリのインターフェース
@@ -439,9 +439,9 @@ import (
  "database/sql"
  "fmt"
 
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository/product"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository/product"
 )
 
 // ProductService は商品サービスの実装
@@ -509,7 +509,7 @@ import (
  "github.com/shopspring/decimal"
  "github.com/stretchr/testify/assert"
  "github.com/volatiletech/null/v8"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
 
  _ "github.com/go-sql-driver/mysql"
 )

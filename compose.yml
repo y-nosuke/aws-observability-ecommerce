@@ -23,11 +23,11 @@ services:
           memory: 256M
 
   # バックエンドAPIサービス
-  backend:
+  backend-api:
     build:
-      context: ./backend
+      context: ./backend-api
       dockerfile: Dockerfile
-    container_name: backend
+    container_name: backend-api
     restart: unless-stopped
     expose:
       - "8000"
@@ -37,7 +37,7 @@ services:
       - APP_ENV=development
       - PORT=8000
     volumes:
-      - ./backend:/app # ホットリロード用
+      - ./backend-api:/app # ホットリロード用
     depends_on:
       mysql:
         condition: service_healthy
@@ -49,10 +49,10 @@ services:
       start_period: 10s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`backend.localhost`)"
-      - "traefik.http.routers.backend.entrypoints=web"
-      - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "traefik.http.routers.backend.middlewares=secure-headers@file,cors@file"
+      - "traefik.http.routers.backend-api.rule=Host(`backend-api.localhost`)"
+      - "traefik.http.routers.backend-api.entrypoints=web"
+      - "traefik.http.services.backend-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.backend-api.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
 
@@ -64,7 +64,7 @@ services:
     container_name: frontend-customer
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api
+      - NEXT_PUBLIC_API_URL=http://backend-api:8000/api
     volumes:
       - ./frontend-customer:/app # ホットリロード用
       - /app/node_modules # node_modulesはコンテナ内のまま
@@ -72,7 +72,7 @@ services:
     expose:
       - "3000"
     depends_on:
-      - backend
+      - backend-api
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.customer.rule=Host(`customer.localhost`)"
@@ -100,14 +100,14 @@ services:
     container_name: frontend-admin
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api
+      - NEXT_PUBLIC_API_URL=http://backend-api:8000/api
     volumes:
       - ./frontend-admin:/app
       - /app/node_modules
     expose:
       - "3000"
     depends_on:
-      - backend
+      - backend-api
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.admin.rule=Host(`admin.localhost`)"

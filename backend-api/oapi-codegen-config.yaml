@@ -4,4 +4,4 @@ generate:
   echo-server: true
   client: false
   embedded-spec: true
-output: backend/internal/api/openapi/oapi-codegen-config.gen.go
+output: internal/api/openapi/oapi-codegen-config.gen.go

@@ -20,7 +20,7 @@ func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
 	awsEndpoint := "http://localstack:4566"
 
 	// AWS SDK v2 のカスタム設定を作成
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...any) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			URL:               awsEndpoint,
 			HostnameImmutable: true,

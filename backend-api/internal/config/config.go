@@ -46,6 +46,7 @@ func Load() error {
 	if err := viper.BindEnv("server.port", "PORT"); err != nil {
 		return err
 	}
+
 	// 設定ファイルの読み込み（存在する場合）
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

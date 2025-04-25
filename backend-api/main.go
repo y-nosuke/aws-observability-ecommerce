@@ -13,8 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/handlers"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/config"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
 )
 
 func main() {
@@ -37,12 +37,6 @@ func main() {
 
 	// APIグループ
 	api := e.Group("/api")
-
-	// ハンドラーの作成
-	healthHandler := handlers.NewHealthHandler()
-
-	// ヘルスチェックエンドポイント
-	api.GET("/health", healthHandler.HandleHealthCheck)
 
 	if err := handlers.RegisterHandlers(api); err != nil {
 		log.Fatalf("Failed to register handlers: %v", err)

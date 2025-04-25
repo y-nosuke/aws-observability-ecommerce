@@ -599,7 +599,7 @@ export AWS_ENDPOINT_URL=http://localhost:4566
 各言語のAWS SDKでLocalStackを使用するには、エンドポイント設定を変更します。GoのAWS SDK v2の例:
 
 ```go
-customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...any) (aws.Endpoint, error) {
     return aws.Endpoint{
         URL:           "http://localhost:4566",
         SigningRegion: region,

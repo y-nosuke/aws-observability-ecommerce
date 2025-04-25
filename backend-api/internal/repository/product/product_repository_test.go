@@ -9,7 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
 
 	_ "github.com/go-sql-driver/mysql"
 )

@@ -88,7 +88,7 @@ mkdir -p backend/pkg/logger
 cd backend
 
 # Go Modulesの初期化
-go mod init github.com/y-nosuke/aws-observability-ecommerce/backend
+go mod init github.com/y-nosuke/aws-observability-ecommerce/backend-api
 ```
 
 `go.mod`ファイルが作成されたことを確認してください。必要な依存関係を追加します。
@@ -130,8 +130,8 @@ import (
  "github.com/labstack/echo/v4"
  "github.com/labstack/echo/v4/middleware"
 
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/handlers"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/config"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
 )
 
 func main() {
@@ -290,7 +290,7 @@ import (
 
  "github.com/labstack/echo/v4"
 
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/config"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
 )
 
 // HealthResponse はヘルスチェックの応答を表す構造体
@@ -299,8 +299,8 @@ type HealthResponse struct {
  Timestamp string                 `json:"timestamp"`
  Version   string                 `json:"version"`
  Uptime    int64                  `json:"uptime"`
- Resources map[string]interface{} `json:"resources"`
- Services  map[string]interface{} `json:"services"`
+ Resources map[string]any `json:"resources"`
+ Services  map[string]any `json:"services"`
 }
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体
@@ -327,7 +327,7 @@ func (h *HealthHandler) HandleHealthCheck(c echo.Context) error {
  )
 
  // サービスの状態をチェック（ここでは簡易的にすべて稼働中とする）
- services := map[string]interface{}{
+ services := map[string]any{
   "api": map[string]string{
    "name":   config.App.Name,
    "status": "up",
@@ -340,8 +340,8 @@ func (h *HealthHandler) HandleHealthCheck(c echo.Context) error {
  var memStats runtime.MemStats
  runtime.ReadMemStats(&memStats)
 
- resources := map[string]interface{}{
-  "memory": map[string]interface{}{
+ resources := map[string]any{
+  "memory": map[string]any{
    "allocated": memStats.Alloc,
    "total":     memStats.TotalAlloc,
    "system":    memStats.Sys,
@@ -381,7 +381,7 @@ func (h *HealthHandler) HandleHealthCheck(c echo.Context) error {
 // main.go内のルート設定部分を置き換え
 import (
  // 既存のインポート
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/handlers"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
 )
 
 // ルートの設定部分
@@ -826,7 +826,7 @@ Goプロジェクトの構成に関しては、いくつかのベストプラク
 
     ```go
     // 正しいインポート例
-    import "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/config"
+    import "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
     ```
 
 3. GOPATHやGOROOTの設定が適切か確認します。

@@ -1,8 +1,5 @@
 version: "3"
 
-vars:
-  PROJECT_NAME: ecommerce-app
-
 tasks:
   default:
     desc: プロジェクトのヘルプを表示
@@ -13,13 +10,21 @@ tasks:
   setup:
     desc: プロジェクトのセットアップ
     cmds:
-      - task: setup:backend
+      - task: setup:backend-api
+      - task: setup:backend-image-processor
       - task: setup:frontend-customer
       - task: setup:frontend-admin
 
-  setup:backend:
+  setup:backend-api:
     desc: バックエンドのセットアップ
-    dir: backend
+    dir: backend-api
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  setup:backend-image-processor:
+    desc: バックエンドのセットアップ
+    dir: backend-image-processor
     cmds:
       - go mod tidy
       - go mod verify
@@ -36,80 +41,207 @@ tasks:
     cmds:
       - npm install
 
-  up:
-    desc: 開発環境を起動
+  start:
+    desc: Docker Compose環境を起動します
     cmds:
       - docker compose up -d
+      - cmd: 'echo "環境が起動しました。以下のURLでアクセスできます:"'
+        silent: true
+      - cmd: 'echo "- フロントエンド（顧客向け）: http://customer.localhost"'
+        silent: true
+      - cmd: 'echo "- フロントエンド（管理者向け）: http://admin.localhost"'
+        silent: true
+      - cmd: 'echo "- バックエンドAPI: http://backend-api.localhost"'
+        silent: true
+      - cmd: 'echo "- PhpMyAdmin: http://phpmyadmin.localhost"'
+        silent: true
+      - cmd: 'echo "- Traefikダッシュボード: http://traefik.localhost:8080"'
+        silent: true
 
-  down:
-    desc: 開発環境を停止
+  stop:
+    desc: Docker Compose環境を停止します
     cmds:
       - docker compose down
+      - cmd: 'echo "環境を停止しました"'
+        silent: true
+
+  restart:
+    desc: Docker Compose環境を再起動します
+    cmds:
+      - docker compose restart
+      - cmd: 'echo "環境を再起動しました"'
+        silent: true
+
+  restart:backend-api:
+    desc: バックエンドコンテナを再起動します
+    cmds:
+      - docker compose restart backend-api
+
+  clean:
+    desc: 環境をクリーンアップします（ボリュームも削除）
+    cmds:
+      - docker compose down -v
+      - cmd: 'echo "環境をクリーンアップしました（ボリュームも削除されました）"'
+        silent: true
 
   logs:
-    desc: コンテナのログを表示
+    desc: 全コンテナのログを表示します
     cmds:
-      - docker compose logs -f {{.CLI_ARGS | default ""}}
+      - docker compose logs -f
 
-  lint:
-    desc: コードの静的解析を実行
+  logs:backend-api:
+    desc: バックエンドコンテナのログを表示します
     cmds:
-      - task: lint:backend
-      - task: lint:frontend-customer
-      - task: lint:frontend-admin
+      - docker compose logs -f backend-api
 
-  lint:backend:
-    desc: バックエンドのlintを実行
-    dir: backend
+  logs:frontend-customer:
+    desc: 顧客向けフロントエンドコンテナのログを表示します
     cmds:
-      - golangci-lint run ./...
+      - docker compose logs -f frontend-customer
 
-  lint:frontend-customer:
-    desc: 顧客向けフロントエンドのlintを実行
-    dir: frontend-customer
+  logs:frontend-admin:
+    desc: 管理者向けフロントエンドコンテナのログを表示します
     cmds:
-      - npm run lint
+      - docker compose logs -f frontend-admin
 
-  lint:frontend-admin:
-    desc: 管理者向けフロントエンドのlintを実行
-    dir: frontend-admin
+  logs:traefik:
+    desc: Traefikコンテナのログを表示します
     cmds:
-      - npm run lint
+      - docker compose logs -f traefik
 
-  test:
-    desc: テストを実行
+  logs:localstack:
+    desc: LocalStackコンテナのログを表示します
     cmds:
-      - task: test:backend
-      - task: test:frontend-customer
-      - task: test:frontend-admin
+      - docker compose logs -f localstack
 
-  test:backend:
-    desc: バックエンドのテストを実行
-    dir: backend
+  traefik:dashboard:
+    desc: Traefikダッシュボードをブラウザで開きます
     cmds:
-      - go test ./... -v
+      - cmd: open http://traefik.localhost:8080 || xdg-open http://traefik.localhost:8080 || 'echo "http://traefik.localhost:8080 にアクセスしてください"'
+        silent: true
+
+  traefik:check:
+    desc: Traefikの設定を確認します
+    cmds:
+      - docker compose exec traefik traefik healthcheck
+
+  test:backend-api:
+    desc: バックエンドのテストを実行します
+    cmds:
+      - docker compose exec backend-api go test ./tests/...
+
+  test:backend-api:handlers:
+    desc: バックエンドのハンドラーテストを実行します
+    cmds:
+      - docker compose exec backend-api go test ./tests/unit/api/handlers/...
+
+  test:backend-api:coverage:
+    desc: バックエンドのテストカバレッジを生成します
+    cmds:
+      - docker compose exec backend-api bash -c "go test ./tests/... -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html"
+      - docker compose cp backend-api:/app/coverage.html ./
+      - cmd: 'echo "カバレッジレポートが ./coverage.html に保存されました"'
+        silent: true
 
   test:frontend-customer:
-    desc: 顧客向けフロントエンドのテストを実行
-    dir: frontend-customer
+    desc: 顧客向けフロントエンドのテストを実行します
     cmds:
-      - npm test
+      - docker compose exec frontend-customer npm test
+
+  test:frontend-customer:component:
+    desc: 顧客向けフロントエンドの特定のコンポーネントテストを実行します
+    cmds:
+      - docker compose exec frontend-customer npm test -- {{.CLI_ARGS}}
 
   test:frontend-admin:
-    desc: 管理者向けフロントエンドのテストを実行
-    dir: frontend-admin
+    desc: 管理者向けフロントエンドのテストを実行します
     cmds:
-      - npm test
+      - docker compose exec frontend-admin npm test
 
-  localstack:create-bucket:
-    desc: S3バケットを作成
+  # golangci-lint タスク - バックエンド用
+  lint:backend-api:
+    desc: バックエンドのコードをlintでチェックします
     cmds:
-      - awslocal s3 mb s3://product-images
+      - docker compose exec backend-api golangci-lint run ./...
 
-  localstack:list-buckets:
-    desc: S3バケットを一覧表示
+  lint:backend-api:fast:
+    desc: バックエンドのコードを高速モードでlintチェックします
     cmds:
-      - awslocal s3 ls
+      - docker compose exec backend-api golangci-lint run --fast ./...
+
+  lint:backend-api:fix:
+    desc: 自動修正可能な問題を修正します
+    cmds:
+      - docker compose exec backend-api golangci-lint run --fix ./...
+
+  lint:backend-api:specific:
+    desc: 特定のリンターのみでチェックします
+    cmds:
+      - docker compose exec backend-api golangci-lint run --disable-all --enable={{.CLI_ARGS}} ./...
+      - cmd: 'echo "使用例: task lint:backend-api:specific -- errcheck,gosimple"'
+        silent: true
+
+  # ESLint/Prettier タスク - フロントエンド用
+  lint:frontend-customer:
+    desc: 顧客向けフロントエンドのコードをlintでチェックします
+    cmds:
+      - docker compose exec frontend-customer npm run lint
+
+  lint:frontend-customer:fix:
+    desc: 顧客向けフロントエンドの自動修正可能な問題を修正します
+    cmds:
+      - docker compose exec frontend-customer npm run lint:fix
+
+  lint:frontend-customer:style:
+    desc: 顧客向けフロントエンドのコードスタイルをチェックします
+    cmds:
+      - docker compose exec frontend-customer npm run prettier:check
+
+  lint:frontend-customer:style:fix:
+    desc: 顧客向けフロントエンドのコードスタイルを修正します
+    cmds:
+      - docker compose exec frontend-customer npm run prettier:write
+
+  lint:frontend-admin:
+    desc: 管理者向けフロントエンドのコードをlintでチェックします
+    cmds:
+      - docker compose exec frontend-admin npm run lint
+
+  lint:frontend-admin:fix:
+    desc: 管理者向けフロントエンドの自動修正可能な問題を修正します
+    cmds:
+      - docker compose exec frontend-admin npm run lint:fix
+
+  lint:frontend-admin:style:
+    desc: 管理者向けフロントエンドのコードスタイルをチェックします
+    cmds:
+      - docker compose exec frontend-admin npm run prettier:check
+
+  lint:frontend-admin:style:fix:
+    desc: 管理者向けフロントエンドのコードスタイルを修正します
+    cmds:
+      - docker compose exec frontend-admin npm run prettier:write
+
+  # 全体のlintチェック
+  lint:all:
+    desc: すべてのコードをlintでチェックします
+    cmds:
+      - task: lint:backend-api
+      - task: lint:frontend-customer
+      - task: lint:frontend-admin
+      - cmd: 'echo "すべてのコードのlintチェックが完了しました"'
+        silent: true
+
+  lint:all:fix:
+    desc: すべてのコードの自動修正可能な問題を修正します
+    cmds:
+      - task: lint:backend-api:fix
+      - task: lint:frontend-customer:fix
+      - task: lint:frontend-admin:fix
+      - task: lint:frontend-customer:style:fix
+      - task: lint:frontend-admin:style:fix
+      - cmd: 'echo "すべてのコードの自動修正が完了しました"'
+        silent: true
 
   migrate:up:
     desc: データベースのマイグレーションを実行
@@ -123,6 +255,13 @@ tasks:
 
   generate:models:
     desc: SQLBoilerでモデルを生成
-    dir: backend
+    dir: backend-api
     cmds:
       - sqlboiler mysql
+
+  generate:openapi:
+    desc: SQLBoilerでモデルを生成
+    dir: backend-api
+    cmds:
+      - mkdir -p internal/api/openapi
+      - oapi-codegen --config oapi-codegen-config.yaml openapi.yaml

@@ -38,6 +38,7 @@
     "getkin",
     "GOARCH",
     "GOPATH",
+    "goroutines",
     "Inno",
     "Knative",
     "labstack",
@@ -50,6 +51,7 @@
     "sqlboiler",
     "sslmode",
     "tfstate",
+    "Traefik",
     "varchar",
     "volatiletech"
   ]

@@ -481,7 +481,7 @@ import (
 
  "github.com/labstack/echo/v4"
  "github.com/labstack/echo/v4/middleware"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/openapi"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/openapi"
  oapimiddleware "github.com/oapi-codegen/echo-middleware"
  "github.com/getkin/kin-openapi/openapi3filter"
 )
@@ -654,7 +654,7 @@ import (
 
  "github.com/labstack/echo/v4"
  "github.com/labstack/echo/v4/middleware"
- "github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/handlers"
+ "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
 )
 
 func main() {
@@ -868,7 +868,7 @@ if params.Page < 1 {
     errorResponse := openapi.ErrorResponse{
         Code:    "invalid_parameter",
         Message: "ページ番号は1以上である必要があります",
-        Details: map[string]interface{}{
+        Details: map[string]any{
             "parameter": "page",
             "value":     params.Page,
             "reason":    "must be greater than or equal to 1",

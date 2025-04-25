@@ -3,11 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
-	oapimiddleware "github.com/oapi-codegen/echo-middleware"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/api/openapi"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/openapi"
 )
 
 // ProductHandler はoapi-codegenで生成されたサーバーインターフェースを実装する構造体
@@ -115,41 +113,4 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 		TotalPages: 1,
 	}
 	return ctx.JSON(http.StatusOK, response)
-}
-
-// RegisterHandlers はEchoルーターにAPIハンドラーを登録する
-func RegisterHandlers(g *echo.Group) error {
-	swagger, err := openapi.GetSwagger()
-	if err != nil {
-		return err
-	}
-
-	handler := NewProductHandler()
-
-	// すべてのAPIエンドポイントに対するバリデーターミドルウェアを追加
-	options := &oapimiddleware.Options{
-		Options: openapi3filter.Options{
-			AuthenticationFunc: openapi3filter.NoopAuthenticationFunc,
-		},
-		SilenceServersWarning: true,
-	}
-	g.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, options))
-
-	// ルーターにハンドラーを登録
-	openapi.RegisterHandlers(g, handler)
-
-	return nil
-}
-
-// 補助関数
-func stringPtr(s string) *string {
-	return &s
-}
-
-func intPtr(i int) *int {
-	return &i
-}
-
-func boolPtr(b bool) *bool {
-	return &b
 }

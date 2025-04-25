@@ -8,8 +8,8 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository"
 )
 
 // Repository は商品リポジトリのインターフェース

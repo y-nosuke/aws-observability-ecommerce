@@ -7,18 +7,47 @@ info:
     name: Your Name
     email: your.email@example.com
 servers:
-  - url: http://backend.localhost/api
+  - url: http://backend-api.localhost/api
     description: ローカル開発サーバー
 paths:
+  /health:
+    get:
+      summary: サービスヘルスチェック
+      description: APIサービスの稼働状態と基本的な健全性情報を提供します
+      operationId: healthCheck
+      tags:
+        - system
+      responses:
+        "200":
+          description: サービスは正常に稼働しています
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /products:
     get:
       summary: 商品一覧の取得
       description: オプションのフィルタリングを使用した、ページネーション対応の商品一覧を返します
       operationId: listProducts
+      tags:
+        - product
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/CategoryIdParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+        - $ref: "#/components/parameters/CategoryIdParam"
       responses:
         "200":
           description: 成功した操作
@@ -50,8 +79,10 @@ paths:
       summary: IDによる商品の取得
       description: 指定されたIDの単一商品を返します
       operationId: getProductById
+      tags:
+        - product
       parameters:
-        - $ref: '#/components/parameters/ProductIdParam'
+        - $ref: "#/components/parameters/ProductIdParam"
       responses:
         "200":
           description: 成功した操作
@@ -83,6 +114,8 @@ paths:
       summary: カテゴリー一覧の取得
       description: 商品カテゴリーの一覧を返します
       operationId: listCategories
+      tags:
+        - category
       responses:
         "200":
           description: 成功した操作
@@ -108,10 +141,12 @@ paths:
       summary: カテゴリー別商品の取得
       description: 特定のカテゴリーに属する商品のページネーション対応リストを返します
       operationId: listProductsByCategory
+      tags:
+        - product
       parameters:
-        - $ref: '#/components/parameters/CategoryIdPathParam'
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: "#/components/parameters/CategoryIdPathParam"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
       responses:
         "200":
           description: 成功した操作
@@ -148,7 +183,7 @@ components:
         type: integer
         default: 1
         minimum: 1
-    
+
     PageSizeParam:
       name: pageSize
       in: query
@@ -158,7 +193,7 @@ components:
         default: 20
         minimum: 1
         maximum: 100
-    
+
     CategoryIdParam:
       name: categoryId
       in: query
@@ -166,7 +201,7 @@ components:
       schema:
         type: integer
         format: int64
-    
+
     ProductIdParam:
       name: id
       in: path
@@ -175,7 +210,7 @@ components:
       schema:
         type: integer
         format: int64
-    
+
     CategoryIdPathParam:
       name: id
       in: path
@@ -184,7 +219,7 @@ components:
       schema:
         type: integer
         format: int64
-  
+
   schemas:
     Product:
       type: object
@@ -291,6 +326,104 @@ components:
             $ref: "#/components/schemas/Category"
           description: カテゴリーリスト
 
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - version
+        - uptime
+        - resources
+        - services
+      properties:
+        status:
+          type: string
+          description: サービスの状態
+          example: "ok"
+        version:
+          type: string
+          description: APIのバージョン
+          example: "0.1.0"
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンスタイムスタンプ
+          example: "2024-03-14T12:34:56Z"
+        uptime:
+          type: integer
+          format: int64
+          description: サーバーの稼働時間（ミリ秒）
+          example: 86400500
+        resources:
+          $ref: "#/components/schemas/SystemResources"
+        services:
+          $ref: "#/components/schemas/DependentServices"
+
+    SystemResources:
+      type: object
+      description: システムリソースの状態
+      additionalProperties:
+        type: object
+        properties:
+          memory:
+            $ref: "#/components/schemas/MemoryStats"
+          goroutines:
+            type: integer
+            description: 実行中のゴルーチン数
+        required:
+          - memory
+          - goroutines
+      example:
+        system:
+          memory:
+            allocated: 8192000
+            total: 16384000
+            system: 32768000
+          goroutines: 10
+
+    MemoryStats:
+      type: object
+      properties:
+        allocated:
+          type: integer
+          format: uint64
+          description: 割り当てられたメモリ量（バイト）
+        total:
+          type: integer
+          format: uint64
+          description: 合計割り当てメモリ量（バイト）
+        system:
+          type: integer
+          format: uint64
+          description: システムメモリ使用量（バイト）
+      required:
+        - allocated
+        - total
+        - system
+
+    DependentServices:
+      type: object
+      description: 依存サービスの状態
+      additionalProperties:
+        $ref: "#/components/schemas/ServiceStatus"
+      example:
+        api:
+          name: "aws-observability-ecommerce"
+          status: "up"
+
+    ServiceStatus:
+      type: object
+      properties:
+        name:
+          type: string
+          description: サービス名
+        status:
+          type: string
+          description: サービスの状態（up/downなど）
+      required:
+        - name
+        - status
+
     ErrorResponse:
       type: object
       required:
@@ -322,3 +455,9 @@ components:
           type: string
           description: デバッグ用のリクエストトレースID
           example: "abc123def456"
+
+tags:
+  - name: system
+    description: システムの状態や健全性に関するAPI。サーバーのヘルスチェック、リソース情報、メトリクスなどを含む。
+  - name: product
+    description: 商品カタログ関連のAPI。商品一覧の取得、商品詳細、カテゴリー情報など、eコマースの主要商品データにアクセスするためのエンドポイント。

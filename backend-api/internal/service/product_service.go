@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/db/models"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend/internal/repository/product"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/repository/product"
 )
 
 // ProductService は商品サービスの実装

@@ -10,6 +10,23 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ecommerce
+          MYSQL_USER: ecommerce_user
+          MYSQL_PASSWORD: ecommerce_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v3
 
@@ -25,7 +42,33 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
 
+      - name: Install oapi-codegen
+        run: go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+
+      - name: Install sqlboiler
+        run: go install github.com/volatiletech/sqlboiler/v4@latest && go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@latest
+
+      - name: Install golang-migrate
+        run: go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+      - name: Generate code (api)
+        run: |
+          cd backend-api
+          mkdir -p internal/api/openapi
+          oapi-codegen -config oapi-codegen-config.yaml openapi.yaml
+
+      - name: Generate code (sqlboiler)
+        run: |
+          cd backend-api
+          # Run database migrations
+          migrate -path internal/db/migrations -database "mysql://ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" up
+
+          # Generate models
+          sqlboiler mysql
+
       - name: Test (api)
+        env:
+          DB_DSN: ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce
         run: |
           cd backend-api
           go test -v ./...

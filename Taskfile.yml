@@ -128,17 +128,17 @@ tasks:
   test:backend-api:
     desc: バックエンドのテストを実行します
     cmds:
-      - docker compose exec backend-api go test ./tests/...
+      - docker compose exec backend-api go test ./...
 
   test:backend-api:handlers:
     desc: バックエンドのハンドラーテストを実行します
     cmds:
-      - docker compose exec backend-api go test ./tests/unit/api/handlers/...
+      - docker compose exec backend-api go test internal/api/handlers/...
 
   test:backend-api:coverage:
     desc: バックエンドのテストカバレッジを生成します
     cmds:
-      - docker compose exec backend-api bash -c "go test ./tests/... -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html"
+      - docker compose exec backend-api bash -c "go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html"
       - docker compose cp backend-api:/app/coverage.html ./
       - cmd: 'echo "カバレッジレポートが ./coverage.html に保存されました"'
         silent: true

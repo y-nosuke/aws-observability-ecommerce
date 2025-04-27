@@ -28,8 +28,6 @@
 - テスト駆動開発（TDD）の基本原則と実践的な適用方法を習得する
 - AWSサーバーレス関数（Lambda）の基本概念と実装パターンを学ぶ
 - S3を活用した画像保存・取得のワークフローを実装できるようになる
-- Next.jsの基本ルーティング設計と構造を理解する
-- APIとフロントエンドの効果的な連携方法を習得する
 
 ### 1.2.2. 完了時の成果物
 
@@ -54,10 +52,6 @@
   - S3バケット連携機能
   - 画像アップロード・取得フロー
 
-- **Next.js基本設定**
-  - ページルーティング構造
-  - APIクライアント設定
-
 ### 1.2.3. 前提知識
 
 - Go言語の基本構文と標準ライブラリの使用経験
@@ -65,8 +59,6 @@
 - sqlboilerによるデータベース操作の基礎知識（Week 2で学習済み）
 - RESTful APIの基本概念（リソース、HTTPメソッド、ステータスコード）
 - AWS基本概念（IAM、リージョン、サービス連携）
-- JavaScript/TypeScriptの基本知識
-- Next.jsの基本概念の理解
 
 ## 1.3. 各日の概要
 
@@ -104,11 +96,6 @@ oapi-codgenを使ったOpenAPI仕様からのコード生成、go-playground/val
   - AWS S3
   - LocalStack (AWSエミュレーション)
 
-- **フロントエンド**
-  - Next.js
-  - TypeScript
-  - React
-
 - **開発環境**
   - Docker & Docker Compose
   - AWS CLI
@@ -122,7 +109,6 @@ oapi-codgenを使ったOpenAPI仕様からのコード生成、go-playground/val
 - Go言語の開発環境が整っていること
 - LocalStackの設定が完了していること（S3、Lambda関連）
 - AWS CLIがインストールされ、設定されていること
-- Next.jsプロジェクトが作成済みであること
 
 ## 1.6. 学習のポイント
 
@@ -145,7 +131,6 @@ oapi-codgenを使ったOpenAPI仕様からのコード生成、go-playground/val
   - [Echo Webフレームワーク](https://echo.labstack.com/guide)
   - [AWS Lambda開発者ガイド](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
   - [AWS S3開発者ガイド](https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html)
-  - [Next.js公式ドキュメント](https://nextjs.org/docs)
   - [LocalStack公式ドキュメント](https://docs.localstack.cloud/overview/)
 
 - **チュートリアルと参考資料**
@@ -153,7 +138,6 @@ oapi-codgenを使ったOpenAPI仕様からのコード生成、go-playground/val
   - [Go言語でのテスト駆動開発入門](https://quii.gitbook.io/learn-go-with-tests/)
   - [サーバーレスアーキテクチャ入門](https://www.serverless.com/blog/serverless-architecture-code-patterns)
   - [AWS Well-Architected Labs: Serverless](https://www.wellarchitectedlabs.com/serverless/)
-  - [Next.jsルーティング完全ガイド](https://nextjs.org/docs/routing/introduction)
 
 - **ブログと記事**
   - [GoでのRESTfulサービス実装パターン](https://eli.thegreenplace.net/2021/rest-servers-in-go-part-1-standard-library/)

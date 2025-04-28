@@ -832,15 +832,12 @@ npm test
 │   └── workflows/               # GitHub Actions設定
 │       └── ci.yml               # CI設定
 │
-├── backend/                     # バックエンドアプリケーション
-│   ├── cmd/                     # アプリケーションエントリーポイント
-│   │   └── server/              # サーバー起動処理
-│   │       └── main.go          # メインエントリポイント
-│   │
+├── backend-api/                 # バックエンドAPIアプリケーション
 │   ├── internal/                # 非公開パッケージ
 │   │   ├── api/                 # API定義と実装
 │   │   │   ├── handlers/        # APIハンドラー
-│   │   │   └── middleware/      # ミドルウェア
+│   │   │   ├── models/          # APIモデル
+│   │   │   └── openapi/         # OpenAPI生成コード
 │   │   │
 │   │   ├── config/              # 設定関連
 │   │   │   └── config.go        # 設定管理
@@ -849,86 +846,98 @@ npm test
 │   │   │   ├── models/          # sqlboiler生成モデル
 │   │   │   └── migrations/      # マイグレーションファイル
 │   │   │
-│   │   ├── domain/              # ドメインモデル
-│   │   │   ├── product/         # 商品ドメイン
-│   │   │   └── category/        # カテゴリードメイン
+│   │   ├── repository/          # リポジトリパターン実装
+│   │   │   ├── product/         # 商品リポジトリ
+│   │   │   └── category/        # カテゴリーリポジトリ
 │   │   │
-│   │   └── repository/          # リポジトリパターン実装
-│   │       ├── product/         # 商品リポジトリ
-│   │       └── category/        # カテゴリーリポジトリ
+│   │   └── service/             # サービスレイヤー
 │   │
-│   ├── pkg/                     # 公開パッケージ
-│   │   ├── logger/              # ログユーティリティ
-│   │   └── validator/           # バリデーションユーティリティ
+│   ├── static/                  # 静的ファイル
+│   │   └── swagger-ui/          # Swagger UI
 │   │
+│   ├── tmp/                     # 一時ファイル
+│   │
+│   ├── main.go                  # メインエントリポイント
 │   ├── openapi.yaml             # OpenAPI仕様ファイル
+│   ├── oapi-codegen-config.yaml # OpenAPI生成設定
 │   ├── Dockerfile               # バックエンドDockerfile
 │   ├── go.mod                   # Goモジュール定義
 │   ├── go.sum                   # Goモジュールロック
 │   └── sqlboiler.toml           # sqlboiler設定
 │
+├── backend-image-processor/     # 画像処理サービス
+│   └── main.go                  # メインエントリポイント
+│
 ├── frontend-customer/           # 顧客向けフロントエンドアプリケーション
-│   ├── components/              # Reactコンポーネント
-│   │   ├── common/              # 共通コンポーネント
-│   │   ├── layout/              # レイアウトコンポーネント
-│   │   └── product/             # 商品関連コンポーネント
-│   │
-│   ├── lib/                     # ユーティリティ
-│   │   ├── api/                 # APIクライアント
-│   │   └── helpers/             # ヘルパー関数
-│   │
-│   ├── pages/                   # Next.jsページ
-│   │   ├── index.js             # トップページ
+│   ├── app/                     # Next.js App Router
 │   │   └── products/            # 商品ページ
 │   │
 │   ├── public/                  # 静的ファイル
 │   │
-│   ├── styles/                  # スタイル定義
-│   │   └── globals.css          # グローバルCSS
+│   ├── src/                     # ソースコード
+│   │   ├── components/          # Reactコンポーネント
+│   │   │   ├── layout/          # レイアウトコンポーネント
+│   │   │   └── ui/              # UIコンポーネント
+│   │   │
+│   │   ├── lib/                 # ユーティリティ
+│   │   │   └── api/             # APIクライアント
+│   │   │
+│   │   └── types/               # 型定義
 │   │
-│   ├── next.config.js           # Next.js設定
-│   ├── package.json             # npmパッケージ定義
-│   ├── tailwind.config.js       # TailwindCSS設定
-│   ├── Dockerfile               # フロントエンドDockerfile
-│   └── .env.local               # 環境変数（git管理外）
+│   ├── node_modules/            # npmパッケージ（git管理外）
+│   └── package.json             # npmパッケージ定義
 │
 ├── frontend-admin/              # 管理画面フロントエンドアプリケーション
-│   ├── components/              # Reactコンポーネント
-│   │   ├── common/              # 共通コンポーネント
-│   │   ├── layout/              # レイアウトコンポーネント
-│   │   └── admin/               # 管理画面コンポーネント
-│   │
-│   ├── lib/                     # ユーティリティ
-│   │   ├── api/                 # APIクライアント
-│   │   ├── auth/                # 認証関連
-│   │   └── helpers/             # ヘルパー関数
-│   │
-│   ├── pages/                   # Next.jsページ
-│   │   ├── index.js             # 管理画面トップ
-│   │   ├── login.js             # ログインページ
-│   │   ├── products/            # 商品管理ページ
-│   │   └── categories/          # カテゴリー管理ページ
+│   ├── app/                     # Next.js App Router
 │   │
 │   ├── public/                  # 静的ファイル
 │   │
-│   ├── styles/                  # スタイル定義
-│   │   └── globals.css          # グローバルCSS
+│   ├── src/                     # ソースコード
+│   │   ├── components/          # Reactコンポーネント
+│   │   │   ├── layout/          # レイアウトコンポーネント
+│   │   │   └── ui/              # UIコンポーネント
+│   │   │
+│   │   ├── lib/                 # ユーティリティ
+│   │   │   ├── api/             # APIクライアント
+│   │   │   └── auth/            # 認証関連
+│   │   │
+│   │   └── types/               # 型定義
 │   │
-│   ├── next.config.js           # Next.js設定
-│   ├── package.json             # npmパッケージ定義
-│   ├── tailwind.config.js       # TailwindCSS設定
-│   ├── Dockerfile               # 管理画面Dockerfile
-│   └── .env.local               # 環境変数（git管理外）
+│   ├── node_modules/            # npmパッケージ（git管理外）
+│   └── package.json             # npmパッケージ定義
+│
+├── docs/                        # ドキュメント
+│   ├── concept-guide/           # 概念ガイド
+│   ├── design/                  # 設計ドキュメント
+│   ├── lecture/                 # 講義資料
+│   ├── lecture-request/         # 講義リクエスト
+│   ├── notion/                  # Notion関連
+│   └── template/                # テンプレート
 │
 ├── infra/                       # インフラ関連
+│   ├── localstack/              # LocalStack設定
+│   │   └── init-scripts/        # 初期化スクリプト
+│   │
 │   ├── mysql/                   # MySQL設定
-│   ├── traefik/                 # Traefik設定
-│   └── localstack/              # LocalStack設定
+│   │   ├── conf.d/              # MySQL設定ファイル
+│   │   └── initdb.d/            # 初期化スクリプト
+│   │
+│   ├── scripts/                 # スクリプト
+│   │   └── aws/                 # AWS関連スクリプト
+│   │
+│   └── traefik/                 # Traefik設定
+│       ├── config/              # 静的設定
+│       └── dynamic/             # 動的設定
 │
-├── compose.yml           # Docker Compose設定
+├── logs/                        # ログファイル
+│   └── traefik/                 # Traefikログ
+│
+├── prh-rules/                   # 文章校正ルール
+│
+├── compose.yml                  # Docker Compose設定
 ├── Taskfile.yml                 # go-task設定
 ├── .gitignore                   # Git除外設定
 └── README.md                    # プロジェクト説明
 ```
 
-この構造は、クリーンアーキテクチャの考え方に基づいており、関心の分離と層の明確化を意識しています。実装の過程で必要に応じて調整しながら進めていくことをお勧めします。
+この構造は、関心の分離と層の明確化を意識しています。バックエンド、フロントエンド、インフラがそれぞれ独立したディレクトリに分かれており、マイクロサービスアーキテクチャの考え方を反映しています。

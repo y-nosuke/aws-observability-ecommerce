@@ -9,13 +9,15 @@ import (
 type Handler struct {
 	*HealthHandler
 	*ProductHandler
+	*CategoryHandler
 }
 
 // NewProductHandler はProductHandlerのインスタンスを生成する
 func NewHandler() *Handler {
 	return &Handler{
-		HealthHandler:  NewHealthHandler(),
-		ProductHandler: NewProductHandler(),
+		HealthHandler:   NewHealthHandler(),
+		ProductHandler:  NewProductHandler(),
+		CategoryHandler: NewCategoryHandler(),
 	}
 }
 

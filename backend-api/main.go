@@ -15,6 +15,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
+	dbconfig "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/config" // 追加
 )
 
 func main() {
@@ -23,6 +24,18 @@ func main() {
 		log.Printf("Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
+
+	// データベース接続の初期化 - 追加
+	if err := dbconfig.InitDatabase(); err != nil {
+		log.Printf("Failed to initialize database: %v\n", err)
+		os.Exit(1)
+	}
+	// defer でアプリケーション終了時にデータベース接続をクローズ - 追加
+	defer func() {
+		if err := dbconfig.CloseDatabase(); err != nil {
+			log.Printf("Failed to close database: %v\n", err)
+		}
+	}()
 
 	// Echoインスタンスを作成
 	e := echo.New()

@@ -1,20 +1,20 @@
 -- カテゴリーのテストデータ
-INSERT INTO categories (name, slug) VALUES
-('電子機器', 'electronics'),
-('洋服', 'clothing'),
-('書籍', 'books'),
-('ホーム＆キッチン', 'home-kitchen');
+INSERT INTO categories (name, slug, description, image_url) VALUES
+('電子機器', 'electronics', '最新の電子機器製品', 'https://example.com/images/electronics.jpg'),
+('洋服', 'clothing', 'トレンドの洋服コレクション', 'https://example.com/images/clothing.jpg'),
+('書籍', 'books', '書籍、電子書籍など', 'https://example.com/images/books.jpg'),
+('ホーム＆キッチン', 'home-kitchen', '家庭用品とキッチン用品', 'https://example.com/images/home-kitchen.jpg');
 
 -- 電子機器のサブカテゴリー
-INSERT INTO categories (name, slug, parent_id) VALUES
-('スマートフォン', 'smartphones', 1),
-('ノートパソコン', 'laptops', 1),
-('タブレット', 'tablets', 1);
+INSERT INTO categories (name, slug, description, image_url, parent_id) VALUES
+('スマートフォン', 'smartphones', '最新のスマートフォン', 'https://example.com/images/smartphones.jpg', 1),
+('ノートパソコン', 'laptops', '高性能ノートPC', 'https://example.com/images/laptops.jpg', 1),
+('タブレット', 'tablets', 'タブレット端末', 'https://example.com/images/tablets.jpg', 1);
 
 -- 洋服のサブカテゴリー
-INSERT INTO categories (name, slug, parent_id) VALUES
-('メンズ', 'mens-clothing', 2),
-('レディース', 'womens-clothing', 2);
+INSERT INTO categories (name, slug, description, image_url, parent_id) VALUES
+('メンズ', 'mens-clothing', 'メンズファッション', 'https://example.com/images/mens-clothing.jpg', 2),
+('レディース', 'womens-clothing', 'レディースファッション', 'https://example.com/images/womens-clothing.jpg', 2);
 
 -- 商品のテストデータ
 INSERT INTO products (name, description, price, category_id, sku, image_url) VALUES

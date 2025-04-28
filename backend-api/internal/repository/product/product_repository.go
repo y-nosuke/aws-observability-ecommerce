@@ -49,25 +49,45 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*models.Produ
 	return models.FindProduct(ctx, r.DB(), id)
 }
 
-// FindAll は商品一覧を取得します
+// FindAll は商品一覧を取得します（ページネーション対応）
 func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int) ([]*models.Product, error) {
+	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
 		qm.Limit(limit),
 		qm.Offset(offset),
 		qm.OrderBy("created_at DESC"),
+		// 商品とカテゴリーを結合して取得
+		qm.Load("Category"),
 	}
-	return models.Products(mods...).All(ctx, r.DB())
+
+	// SQLBoilerを使用して商品を取得
+	products, err := models.Products(mods...).All(ctx, r.DB())
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch products: %w", err)
+	}
+
+	return products, nil
 }
 
-// FindByCategory は指定カテゴリーの商品一覧を取得します
+// FindByCategory は指定カテゴリーの商品一覧を取得します（ページネーション対応）
 func (r *ProductRepository) FindByCategory(ctx context.Context, categoryID int, limit, offset int) ([]*models.Product, error) {
+	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
 		qm.Where("category_id = ?", categoryID),
 		qm.Limit(limit),
 		qm.Offset(offset),
 		qm.OrderBy("created_at DESC"),
+		// 商品とカテゴリーを結合して取得
+		qm.Load("Category"),
 	}
-	return models.Products(mods...).All(ctx, r.DB())
+
+	// SQLBoilerを使用して商品を取得
+	products, err := models.Products(mods...).All(ctx, r.DB())
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch products by category: %w", err)
+	}
+
+	return products, nil
 }
 
 // Create は新しい商品を作成します

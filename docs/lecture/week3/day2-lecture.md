@@ -25,7 +25,6 @@
     - [1.8.2. 問題2: 関連データの取得でN+1問題が発生する](#182-問題2-関連データの取得でn1問題が発生する)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -1008,28 +1007,3 @@ Go言語では、`oapi-codegen`や`go-swagger`などのツールを使用してO
    - 画像処理ライブラリ（imaging）の基本的な使い方
 
 これらの知識を事前に確認しておくことで、次回のLambda関数とS3連携の実装をスムーズに進めることができます。
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル
-export DB_HOST="localhost"
-export DB_PORT="3306"
-export DB_USER="root"
-export DB_PASSWORD="password"
-export DB_NAME="ecommerce"
-
-export API_PORT="8080"
-export API_HOST="localhost"
-
-# LocalStack設定
-export AWS_ACCESS_KEY_ID="test"
-export AWS_SECRET_ACCESS_KEY="test"
-export AWS_REGION="ap-northeast-1"
-export AWS_ENDPOINT_URL="http://localhost:4566"
-
-# デバッグ設定
-export LOG_LEVEL="debug"
-```

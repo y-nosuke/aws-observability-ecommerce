@@ -29,7 +29,6 @@
     - [1.8.2. 問題2: MySQLの接続エラー](#182-問題2-mysqlの接続エラー)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -654,28 +653,3 @@ docker run --rm -v aws-observability-ecommerce_mysql_data:/source -v $(pwd)/back
 4. **依存関係管理ツール**: Goのモジュール管理（go.modとgo.sum）について理解しておくと良いでしょう。
 
 次回はこれらの知識をベースに、バックエンドの基本構造を実装していきます。
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル
-# direnvがインストールされている場合、このディレクトリに入ると自動的に環境変数が設定されます
-# このファイルはgitにコミットしないでください
-
-# MySQL設定
-export MYSQL_ROOT_PASSWORD=rootpassword
-export MYSQL_DATABASE=ecommerce
-export MYSQL_USER=ecommerce_user
-export MYSQL_PASSWORD=ecommerce_password
-
-# 開発環境設定
-export ENVIRONMENT=development
-```
-
-.gitignoreファイルに.envrcを追加して、誤ってコミットしないようにしましょう：
-
-```bash
-echo ".envrc" >> .gitignore
-```

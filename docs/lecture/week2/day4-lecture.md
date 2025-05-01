@@ -27,7 +27,6 @@
     - [1.8.3. 問題3: S3トリガーが動作しない](#183-問題3-s3トリガーが動作しない)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -1030,30 +1029,3 @@ Week 2 - Day 5では、Reactコンポーネントの基礎に焦点を当てま�
    - 既存のコンポーネントがあれば概要を把握
 
 次回はこれらの知識を基に、実際にReactコンポーネントを作成し、状態管理やイベントハンドリングなどの基本概念を学びます。
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル - gitにコミットしないでください
-export AWS_ENDPOINT_URL=http://localhost:4566
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export LOCALSTACK_HOSTNAME=localhost
-export DEBUG=1  # デバッグログを有効化
-
-# Lambda関数ビルド用
-export GOOS=linux
-export GOARCH=amd64
-
-# S3バケット名
-export BUCKET_NAME=product-images
-
-# awslocalコマンドの省略形を設定（便利です）
-alias s3ls="awslocal s3 ls"
-alias lambdalist="awslocal lambda list-functions"
-```
-
-direnvを使用している場合は、このファイルを`.envrc`として保存し、`direnv allow`を実行することで環境変数が自動的に読み込まれます。

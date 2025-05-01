@@ -29,7 +29,6 @@
     - [1.8.2. 問題2: OpenAPI仕様の検証エラー](#182-問題2-openapi仕様の検証エラー)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -994,31 +993,3 @@ OpenAPI仕様には複数のバージョンがあります。現在の主要な�
 4. LocalStackの基本的な使い方とAWS CLIの設定方法
 
 また、今日実装したOpenAPI仕様とoapi-codegenで生成したコードを再確認し、データベースアクセスとの連携方法を考えておくとよいでしょう。
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル
-export GO111MODULE=on
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOPATH/bin
-
-# oapi-codegenへのパスを追加
-export PATH=$PATH:$GOPATH/bin
-
-# APIサーバーの設定
-export API_SERVER_PORT=8080
-export API_SERVER_HOST=localhost
-
-# データベース接続情報
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD="your_db_password_here"
-export DB_NAME=ecommerce
-
-# 開発環境フラグ
-export APP_ENV=development
-```

@@ -31,7 +31,6 @@
     - [1.8.2. 問題2: GitHub Actionsワークフローが失敗する](#182-問題2-github-actionsワークフローが失敗する)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -1076,36 +1075,3 @@ Week 2ではデータベースのセットアップとデータモデルの設�
 1. MySQLクライアント（CLI/GUI）
 2. データベース設計ツール（例: dbdiagram.io、MySQL Workbench）
 3. sqlboiler（Go用のORM）のインストール
-
-## 1.11. 【.envrc サンプル】
-
-direnvを使用している場合、以下のような.envrcファイルを作成すると便利です。
-
-```bash
-# .envrc
-# AWS/LocalStack設定
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=ap-northeast-1
-export AWS_ENDPOINT_URL=http://localhost:4566
-
-# データベース設定
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_NAME=ecommerce
-export DB_USER=ecommerce_user
-export DB_PASSWORD=ecommerce_password
-
-# バックエンド設定
-export BACKEND_PORT=8080
-export BACKEND_DEBUG=true
-
-# フロントエンド設定
-export FRONTEND_CUSTOMER_PORT=3000
-export FRONTEND_ADMIN_PORT=3001
-
-# PASSを通すために使用
-export PATH="$PWD/node_modules/.bin:$PATH"
-```
-
-これにディレクトリに入ると自動的に環境変数が設定されるため、各種コマンドを実行しやすくなります。

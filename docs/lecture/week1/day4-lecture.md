@@ -45,7 +45,6 @@
     - [1.8.3. 問題3: HTTPSリダイレクトで無限リダイレクトループが発生する](#183-問題3-httpsリダイレクトで無限リダイレクトループが発生する)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -1391,32 +1390,3 @@ http:
    - 全サービスが正常に起動し、連携できているか確認
 
 上記の準備が整っていれば、次回の管理画面実装とTailwindCSSによるスタイリングにスムーズに進むことができます。
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル
-
-# バックエンド環境変数
-export BACKEND_PORT=8000
-export BACKEND_HOST="backend.localhost"
-
-# フロントエンド環境変数
-export CUSTOMER_FRONTEND_PORT=3000
-export CUSTOMER_FRONTEND_HOST="customer.localhost"
-export ADMIN_FRONTEND_PORT=3000
-export ADMIN_FRONTEND_HOST="admin.localhost"
-
-# DB環境変数
-export DB_HOST="localhost"
-export DB_PORT=3306
-export DB_NAME="ecommerce"
-export DB_USER="ecommerce_user"
-export DB_PASSWORD="password"
-
-# 開発環境設定
-export NODE_ENV="development"
-export GO_ENV="development"
-```

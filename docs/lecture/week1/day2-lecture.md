@@ -32,7 +32,6 @@
     - [1.8.3. 問題3: Dockerコンテナが正常に起動しない](#183-問題3-dockerコンテナが正常に起動しない)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -923,25 +922,3 @@ Goプロジェクトの構成に関しては、いくつかのベストプラク
 - [MySQL Documentation](https://dev.mysql.com/doc/)
 - [golang-migrate GitHub](https://github.com/golang-migrate/migrate)
 - [sqlboiler Documentation](https://github.com/volatiletech/sqlboiler)
-
-## 1.11. 【.envrc サンプル】
-
-以下は本日の実装で使用する.envrcのサンプルです。ご自身の環境に合わせて修正して使用してください。このファイルはgitにコミットしないようにしてください。
-
-```bash
-# .envrc サンプル - このファイルをバックエンドディレクトリに.envrcとして保存しgitにコミットしないでください
-export APP_NAME=development
-export APP_VERSION=development
-export APP_ENV=development
-export PORT=8000
-
-# 後で使用するデータベース関連の環境変数
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD=password
-export DB_NAME=ecommerce
-
-# direnvを使用している場合は、以下のコマンドで有効化してください
-# direnv allow .
-```

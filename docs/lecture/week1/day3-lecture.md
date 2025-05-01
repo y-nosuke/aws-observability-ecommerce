@@ -33,7 +33,6 @@
     - [1.8.3. TailwindCSSのスタイルが反映されない問題](#183-tailwindcssのスタイルが反映されない問題)
   - [1.9. 【今日の重要なポイント】](#19-今日の重要なポイント)
   - [1.10. 【次回の準備】](#110-次回の準備)
-  - [1.11. 【.envrc サンプル】](#111-envrc-サンプル)
 
 ## 1.2. 【要点】
 
@@ -1998,33 +1997,3 @@ docker-compose -f docker-compose.frontend.yml restart frontend-customer frontend
 3. ChromeやFirefoxの開発者ツールの使い方を復習しておくと、次回のデバッグが容易になります。特にネットワークタブでのリクエスト確認や、Reactデベロッパーツールの基本操作を確認しておきましょう。
 
 4. 次回は、Traefikを使ったリバースプロキシを設定し、`shop.localhost`と`admin.localhost`というホスト名ベースのルーティングを実装します。ローカルホストファイル（`/etc/hosts`または`C:\Windows\System32\drivers\etc\hosts`）を編集する権限があることを確認しておいてください。
-
-## 1.11. 【.envrc サンプル】
-
-開発環境で必要な環境変数のサンプルです。このファイルはリポジトリにコミットしないでください。
-
-```bash
-# .envrc
-# このファイルはギットにはコミットしないでください
-
-# バックエンドAPIのURL
-export NEXT_PUBLIC_API_URL="http://localhost:8000/api"
-
-# 開発サーバーのポート設定
-export PORT=3000
-export ADMIN_PORT=3010
-```
-
-各プロジェクトのルートディレクトリに`.env.local`ファイルを作成して使用することもできます：
-
-```bash
-# frontend-customer/.env.local
-# このファイルはギットにはコミットしないでください
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-```
-
-```bash
-# frontend-admin/.env.local
-# このファイルはギットにはコミットしないでください
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-```

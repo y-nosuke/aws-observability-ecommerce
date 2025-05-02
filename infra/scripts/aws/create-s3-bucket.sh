@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# LocalStackのエンドポイントを設定
-export AWS_ENDPOINT_URL=http://localhost:4566
+set -e
 
 # バケット名
 BUCKET_NAME="product-images"
@@ -29,7 +28,16 @@ else
 EOF
 
   # CORSの適用
-  awslocal s3api put-bucket-cors --bucket ${BUCKET_NAME} --cors-configuration file:///tmp/cors-config.json
+  awslocal s3api put-bucket-cors --bucket ${BUCKET_NAME} --cors-configuration '{
+    "CORSRules": [
+      {
+        "AllowedHeaders": ["*"],
+        "AllowedMethods": ["GET", "PUT", "POST", "DELETE"],
+        "AllowedOrigins": ["*"],
+        "ExposeHeaders": ["ETag"]
+      }
+    ]
+  }'
   echo "バケット ${BUCKET_NAME} にCORS設定を適用しました。"
 
   # パブリックアクセスの設定

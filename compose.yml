@@ -42,6 +42,11 @@ services:
       - DB_USER=${MYSQL_USER:-ecommerce_user}
       - DB_PASSWORD=${MYSQL_PASSWORD:-ecommerce_password}
       - DB_DSN=ecommerce_user:ecommerce_password@tcp(mysql:3306)/ecommerce
+      - AWS_USE_LOCALSTACK=true
+      - AWS_REGION=ap-northeast-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     volumes:
       - ./backend-api:/app # ホットリロード用
     depends_on:

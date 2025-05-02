@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# LocalStackのエンドポイントを設定
-export AWS_ENDPOINT_URL=http://localhost:4566
+set -e
 
 # Lambda関数名
 FUNCTION_NAME="image-processor"
@@ -13,7 +12,7 @@ cat > /tmp/lambda-test-payload.json << EOF
     {
       "s3": {
         "bucket": {
-          "name": "product-images"
+          "name": "uploads/product-images"
         },
         "object": {
           "key": "test-image.jpg"

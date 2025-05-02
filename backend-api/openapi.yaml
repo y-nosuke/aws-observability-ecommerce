@@ -109,6 +109,121 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /products/{id}/image:
+    post:
+      summary: 商品画像のアップロード
+      description: 指定された商品IDに画像をアップロードします（管理者のみ）
+      operationId: uploadProductImage
+      tags:
+        - product
+        - admin
+      parameters:
+        - $ref: "#/components/parameters/ProductIdParam"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: アップロードする画像ファイル
+              required:
+                - image
+      responses:
+        "200":
+          description: 画像が正常にアップロードされました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    description: アップロードされた画像のURL
+                  thumbnailUrl:
+                    type: string
+                    description: サムネイル画像のURL
+                  mediumUrl:
+                    type: string
+                    description: 中サイズ画像のURL
+                  largeUrl:
+                    type: string
+                    description: 大サイズ画像のURL
+        "400":
+          description: 無効なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: 権限エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: 商品画像の取得
+      description: 指定された商品IDの画像を取得します
+      operationId: getProductImage
+      tags:
+        - product
+      parameters:
+        - $ref: "#/components/parameters/ProductIdParam"
+        - name: size
+          in: query
+          description: 画像サイズ（thumbnail, medium, large）
+          schema:
+            type: string
+            enum: [thumbnail, medium, large]
+            default: medium
+      responses:
+        "200":
+          description: 画像が正常に取得されました
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: 画像が見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 内部サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: 予期しないエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /categories:
     get:
       summary: カテゴリー一覧の取得

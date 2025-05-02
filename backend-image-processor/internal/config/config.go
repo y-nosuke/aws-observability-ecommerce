@@ -14,14 +14,7 @@ type Config struct {
 		Environment string
 	}
 	Server struct {
-		Port int
-	}
-	Database struct {
-		Host     string
-		Port     int
-		User     string
-		Password string
-		Name     string
+		Port string
 	}
 	AWS struct {
 		UseLocalStack bool
@@ -35,11 +28,10 @@ type Config struct {
 
 // アプリケーション設定インスタンス
 var (
-	config   Config
-	App      = &config.App
-	Server   = &config.Server
-	Database = &config.Database
-	AWS      = &config.AWS
+	config Config
+	App    = &config.App
+	Server = &config.Server
+	AWS    = &config.AWS
 )
 
 // Load は環境変数と設定ファイルから設定をロードします
@@ -49,13 +41,7 @@ func Load() error {
 	viper.SetDefault("app.version", "1.0.0")
 	viper.SetDefault("app.environment", "development")
 
-	viper.SetDefault("server.port", "8000")
-
-	viper.SetDefault("database.host", "localhost")
-	viper.SetDefault("database.port", 3306)
-	viper.SetDefault("database.user", "root")
-	viper.SetDefault("database.password", "password")
-	viper.SetDefault("database.name", "ecommerce")
+	viper.SetDefault("server.port", "8080")
 
 	// AWS関連のデフォルト設定
 	viper.SetDefault("aws.useLocalStack", false)               // デフォルトはLocalStack無効
@@ -75,24 +61,7 @@ func Load() error {
 	if err := viper.BindEnv("app.environment", "APP_ENV"); err != nil {
 		return err
 	}
-
 	if err := viper.BindEnv("server.port", "PORT"); err != nil {
-		return err
-	}
-
-	if err := viper.BindEnv("database.host", "DB_HOST"); err != nil {
-		return err
-	}
-	if err := viper.BindEnv("database.port", "DB_PORT"); err != nil {
-		return err
-	}
-	if err := viper.BindEnv("database.name", "DB_NAME"); err != nil {
-		return err
-	}
-	if err := viper.BindEnv("database.user", "DB_USER"); err != nil {
-		return err
-	}
-	if err := viper.BindEnv("database.password", "DB_PASSWORD"); err != nil {
 		return err
 	}
 

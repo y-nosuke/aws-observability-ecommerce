@@ -14,14 +14,33 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/api/handlers"
+	awsconfig "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/config"
-	dbconfig "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/config" // 追加
+	dbconfig "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/db/config"
 )
 
 func main() {
 	// 設定をロード
 	if err := config.Load(); err != nil {
 		log.Printf("Failed to load configuration: %v\n", err)
+		os.Exit(1)
+	}
+
+	// AWS設定オプションの準備
+	awsOptions := awsconfig.Options{
+		UseLocalStack: config.AWS.UseLocalStack,
+		Region:        config.AWS.Region,
+		Endpoint:      config.AWS.Endpoint,
+		Credentials: awsconfig.Credentials{
+			AccessKey: config.AWS.AccessKey,
+			SecretKey: config.AWS.SecretKey,
+			Token:     config.AWS.Token,
+		},
+	}
+
+	awsConfig, err := awsconfig.NewAWSConfig(context.Background(), awsOptions)
+	if err != nil {
+		log.Printf("AWS設定エラー: %v", err)
 		os.Exit(1)
 	}
 
@@ -51,7 +70,7 @@ func main() {
 	// APIグループ
 	api := e.Group("/api")
 
-	if err := handlers.RegisterHandlers(api); err != nil {
+	if err := handlers.RegisterHandlers(api, awsConfig); err != nil {
 		log.Fatalf("Failed to register handlers: %v", err)
 	}
 

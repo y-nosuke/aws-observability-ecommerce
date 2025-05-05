@@ -195,6 +195,7 @@ assignees: ''
 
 - **並び順**：手動で調整（優先順に）
 - **レイアウト**：Board
+- **Filter by**：Type is Epic
 - **表示項目**：Title, Type, Status, Story Points
 
 ### 1.5.5. ストーリービュー

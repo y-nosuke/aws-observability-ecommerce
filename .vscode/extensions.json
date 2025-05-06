@@ -12,6 +12,7 @@
     "42crunch.vscode-openapi",
     "mermade.openapi-lint",
     "philosowaffle.openapi-designer",
-    "proohit.openapi-snippets"
+    "proohit.openapi-snippets",
+    "ms-python.python"
   ]
 }

@@ -26,69 +26,7 @@
 
 以下の図は、MVP時点での主要コンポーネントと基本的な連携、およびオブザーバビリティデータの流れを示します。
 
-```mermaid
-graph TD
-    subgraph "ユーザー"
-        Client[Browser / Mobile App]
-    end
-
-    subgraph "AWS Cloud"
-        %% Frontend Delivery
-        CloudFront --> S3_Frontend[S3 Bucket: Frontend Assets]
-        Client --> CloudFront[CloudFront]
-
-        %% API Layer
-        subgraph "API & Auth"
-            API_GW[API Gateway: REST API]
-            Cognito["Amazon Cognito: User Pools (OIDC Provider)"]
-            API_GW -- Authorize --> Cognito
-        end
-        CloudFront --> API_GW
-
-        %% Backend Compute
-        subgraph "Backend Services"
-            Lambda_Order["Lambda: Order API (Go)"]
-            Lambda_Product["Lambda: Product API (Go)"]
-            Fargate_Stock["Fargate: Stock Service (Go)"]
-            SQS[SQS: Order Queue]
-        end
-        API_GW -- /products --> Lambda_Product
-        API_GW -- /orders --> Lambda_Order
-        Lambda_Order -- Invoke --> Fargate_Stock["Stock Check API"]
-        Lambda_Order -- SendMsg --> SQS
-
-        %% Data & Storage
-        subgraph "Data Stores"
-            RDS[RDS: MySQL/PostgreSQL]
-            S3_Images[S3 Bucket: Product Images]
-        end
-        Lambda_Product --> RDS
-        Lambda_Order --> RDS
-        Fargate_Stock --> RDS
-        Lambda_Product --> S3_Images["Read Image Info"]
-        Fargate_Stock -- Consume --> SQS
-
-        %% Observability
-        subgraph "Observability Tools"
-            CloudWatch[CloudWatch: Logs, Metrics, Alarms, Dashboards]
-            XRay[AWS X-Ray]
-        end
-        CloudFront -- Logs/Metrics --> CloudWatch
-        API_GW -- Logs/Metrics/Traces --> CloudWatch & XRay
-        Lambda_Order -- Logs/Metrics/Traces --> CloudWatch & XRay
-        Lambda_Product -- Logs/Metrics/Traces --> CloudWatch & XRay
-        Fargate_Stock -- Logs/Metrics/Traces --> CloudWatch & XRay
-        SQS -- Metrics --> CloudWatch
-        RDS -- Logs/Metrics --> CloudWatch
-        Cognito -- Logs --> CloudWatch
-    end
-
-    %% Annotations
-    style Cognito fill:#D4AADC,stroke:#333,stroke-width:2px
-    style SQS fill:#F7A154,stroke:#333,stroke-width:2px
-    style CloudWatch fill:#2E73B8,stroke:#333,stroke-width:2px
-    style XRay fill:#8A2BE2,stroke:#333,stroke-width:2px
-```
+![アーキテクチャ](./diagram_project/aws_observability_ecommerce_architecture.svg)
 
 **主要な流れとポイント:**
 

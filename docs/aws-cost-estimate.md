@@ -1,8 +1,8 @@
-# 1. AWSオブザーバビリティ学習用eコマースアプリ - AWS料金見積もり（Go Echo+sqlboiler+ALB+両オブザーバビリティパターン）
+# 1. AWS料金見積もり（Go Echo+sqlboiler+ALB+両オブザーバビリティパターン）
 
 このAWS料金見積もりでは、指定された技術スタック（Go Echo、sqlboiler、slog、Next.js）と直接ALBを使用する構成（API Gateway不要）に基づいて、MVPと全機能実装のそれぞれのシナリオにおける料金を算出しています。また、オブザーバビリティの両パターン（AWS SDK v2とOpenTelemetry）の違いも考慮しています。
 
-- [1. AWSオブザーバビリティ学習用eコマースアプリ - AWS料金見積もり（Go Echo+sqlboiler+ALB+両オブザーバビリティパターン）](#1-awsオブザーバビリティ学習用eコマースアプリ---aws料金見積もりgo-echosqlboileralb両オブザーバビリティパターン)
+- [1. AWS料金見積もり（Go Echo+sqlboiler+ALB+両オブザーバビリティパターン）](#1-aws料金見積もりgo-echosqlboileralb両オブザーバビリティパターン)
   - [1.1. MVP実装の料金（API Gateway不要）](#11-mvp実装の料金api-gateway不要)
     - [1.1.1. コンピューティング](#111-コンピューティング)
     - [1.1.2. データストア](#112-データストア)

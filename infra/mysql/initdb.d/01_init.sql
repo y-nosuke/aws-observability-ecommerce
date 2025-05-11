@@ -1,5 +1,4 @@
 -- 基本的な初期化スクリプト
--- 詳細なテーブル定義は Week 2 で実装します
 
 -- データベースが存在しない場合は作成
 CREATE DATABASE IF NOT EXISTS `ecommerce`;

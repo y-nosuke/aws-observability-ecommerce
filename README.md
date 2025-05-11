@@ -16,7 +16,9 @@ AWSオブザーバビリティのパターンを学習するためのeコマー�
 - Node.js 23以上
 - AWS CLI
 - Git
-- Terraform (オプション)
+- Terraform
+- LocalStack CLI (`pip install localstack`)
+- LocalStack Desktop（[ダウンロードページ](https://app.localstack.cloud/resources/desktop)からインストール）
 
 ## プロジェクト構成
 
@@ -102,3 +104,63 @@ MVP（最小実装）には、以下の機能が含まれています：
 ## ライセンス
 
 MITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+
+## LocalStackを使用したCloudWatch Logsのセットアップ
+
+### セットアップ手順
+
+1. LocalStackの起動
+
+    ```bash
+    docker-compose up -d localstack
+    ```
+
+2. CloudWatch Logsロググループの作成
+
+    ```bash
+    cd infra/terraform
+    tflocal init
+    tflocal apply
+    ```
+
+3. ログストリームの作成:
+
+    ```bash
+    awslocal logs create-log-stream \
+      --log-group-name /my-app/logs \
+      --log-stream-name test-stream
+    ```
+
+4. ログの送信テスト
+
+    ```bash
+    # JSON形式のログを送信
+    awslocal logs put-log-events \
+      --log-group-name /my-app/logs \
+      --log-stream-name test-stream \
+      --log-events '[{"timestamp":'$(date +%s000)',"message":"{\"level\":\"info\",\"message\":\"テストログ\"}"}]'
+    ```
+
+5. ログの確認方法
+
+      - LocalStack Desktop UIを使用する場合:
+        - LocalStack Desktopアプリケーションを起動
+        - LocalStack Desktopのダッシュボードを開く
+        - 左側のメニューから「CloudWatch」を選択
+        - 「Logs」セクションでロググループとログストリームを確認
+
+      - AWS CLIを使用する場合:
+
+      ```bash
+      awslocal logs get-log-events \
+        --log-group-name /my-app/logs \
+        --log-stream-name test-stream
+      ```
+
+### トラブルシューティング
+
+- LocalStackの状態確認:
+
+```bash
+awslocal logs describe-log-groups
+```

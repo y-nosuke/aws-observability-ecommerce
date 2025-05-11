@@ -41,11 +41,26 @@ tasks:
     cmds:
       - npm install
 
-  start:
+  up:
     desc: Docker Compose環境を起動します
     cmds:
       - docker compose up -d
-      - cmd: 'echo "環境が起動しました。以下のURLでアクセスできます:"'
+
+  down:
+    desc: Docker Compose環境を停止します
+    cmds:
+      - docker compose down
+
+  start:
+    desc: Docker Compose環境を起動し、必要なセットアップを実行します
+    cmds:
+      - task: up
+      - cmd: 'echo "環境が起動しました。セットアップを開始します..."'
+        silent: true
+      - task: migrate:up
+      - task: generate:models
+      - task: generate:openapi
+      - cmd: 'echo "セットアップが完了しました。以下のURLでアクセスできます:"'
         silent: true
       - cmd: 'echo "- フロントエンド（顧客向け）: http://customer.localhost"'
         silent: true
@@ -61,7 +76,7 @@ tasks:
   stop:
     desc: Docker Compose環境を停止します
     cmds:
-      - docker compose down
+      - task: down
       - cmd: 'echo "環境を停止しました"'
         silent: true
 
@@ -260,7 +275,7 @@ tasks:
       - sqlboiler mysql
 
   generate:openapi:
-    desc: SQLBoilerでモデルを生成
+    desc: OpenAPIでモデルを生成
     dir: backend-api
     cmds:
       - mkdir -p internal/api/openapi

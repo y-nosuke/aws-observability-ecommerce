@@ -368,7 +368,7 @@
 - **機能単位のエラーバウンダリ**
 
   ```tsx
-  // app/features/products/error.tsx
+  // app/(features)/products/error.tsx
   'use client'
 
   export default function ProductsError({

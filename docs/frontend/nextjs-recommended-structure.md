@@ -5,31 +5,40 @@
 - [1. Next.js 15 Container/Presentationalパターンの推奨ディレクトリ構成](#1-nextjs-15-containerpresentationalパターンの推奨ディレクトリ構成)
   - [1.1. 目次](#11-目次)
   - [1.2. 推奨ディレクトリ構成](#12-推奨ディレクトリ構成)
-  - [1.3. テストコードの推奨配置場所](#13-テストコードの推奨配置場所)
-    - [1.3.1. コンポーネントに隣接したテスト（推奨）](#131-コンポーネントに隣接したテスト推奨)
-    - [1.3.2. プロジェクトルートのテスト](#132-プロジェクトルートのテスト)
-  - [1.4. テスト戦略](#14-テスト戦略)
-    - [1.4.1. Presentationalコンポーネントのテスト（Client Components）](#141-presentationalコンポーネントのテストclient-components)
-    - [1.4.2. Presentationalコンポーネントのテスト（Server Components）](#142-presentationalコンポーネントのテストserver-components)
-  - [1.5. ベストプラクティス](#15-ベストプラクティス)
+  - [1.3. ディレクトリ構造の詳細な説明](#13-ディレクトリ構造の詳細な説明)
+    - [1.3.1. グループディレクトリ `(features)`](#131-グループディレクトリ-features)
+    - [1.3.2. ルートパス (`/`) の扱い方](#132-ルートパス--の扱い方)
+    - [1.3.3. Container/Presentationalパターンの実装](#133-containerpresentationalパターンの実装)
+  - [1.4. テストコードの推奨配置場所](#14-テストコードの推奨配置場所)
+    - [1.4.1. コンポーネントに隣接したテスト（推奨）](#141-コンポーネントに隣接したテスト推奨)
+    - [1.4.2. プロジェクトルートのテスト](#142-プロジェクトルートのテスト)
+  - [1.5. テスト戦略](#15-テスト戦略)
+    - [1.5.1. Presentationalコンポーネントのテスト（Client Components）](#151-presentationalコンポーネントのテストclient-components)
+    - [1.5.2. Presentationalコンポーネントのテスト（Server Components）](#152-presentationalコンポーネントのテストserver-components)
+  - [1.6. ベストプラクティス](#16-ベストプラクティス)
 
 ## 1.2. 推奨ディレクトリ構成
 
 ```text
 src/
 ├── app/                             # Next.js App Router
-│   ├── features/                    # 機能別ディレクトリ
-│   │   └── products/                # 製品機能
+│   ├── (features)/                  # 機能別ディレクトリグループ (URLパスには含まれない)
+│   │   ├── products/                # 商品関連機能
+│   │   │   ├── page.tsx             # Server Component (Container)
+│   │   │   ├── client.tsx           # Presentational Component
+│   │   │   ├── loading.tsx          # ローディングUI
+│   │   │   └── components/          # 機能固有の小さなコンポーネント
+│   │   │       ├── ProductCard.tsx
+│   │   │       └── ProductFilter.tsx
+│   │   └── home/                    # ホームページ機能
 │   │       ├── page.tsx             # Server Component (Container)
-│   │       ├── client.tsx           # メインのPresentational
-│   │       ├── loading.tsx          # ローディングUI
-│   │       └── components/          # 機能固有の小さなコンポーネント
-│   │           ├── ProductCard.tsx
-│   │           └── ProductFilter.tsx
+│   │       └── client.tsx           # Presentational Component
 │   ├── api/                         # API Routes
 │   │   └── products/
 │   │       └── route.ts
-│   └── layout.tsx                   # ルートレイアウト
+│   ├── page.tsx                     # ルートページ (/) のContainer
+│   ├── layout.tsx                   # ルートレイアウト
+│   └── globals.css                  # グローバルスタイル
 ├── components/                      # グローバル共通コンポーネント
 │   ├── ui/                          # 汎用UIコンポーネント
 │   │   ├── button.tsx
@@ -58,16 +67,88 @@ src/
         └── products.ts              # 製品モックデータ
 ```
 
-## 1.3. テストコードの推奨配置場所
+## 1.3. ディレクトリ構造の詳細な説明
+
+### 1.3.1. グループディレクトリ `(features)`
+
+- **括弧 `()` の意味**: Next.jsでは、括弧で囲まれたディレクトリ名はルーティングパスに含まれません。これを利用して機能をグループ化します。
+- **URLマッピング例**:
+  - `/` → `src/app/page.tsx` (ルートパス)
+  - `/products` → `src/app/(features)/products/page.tsx`
+  - `/products/[id]` → `src/app/(features)/products/[id]/page.tsx`
+
+### 1.3.2. ルートパス (`/`) の扱い方
+
+`src/app/page.tsx` はルートURL (`/`) にアクセスしたときに表示されるページです。
+このファイルには、以下のような実装パターンがあります：
+
+1. **ホームページコンポーネントのインポート** (推奨アプローチ)
+
+   ```tsx
+   // /src/app/page.tsx
+   import HomePage from "./(features)/home/page";
+
+   export default function Home() {
+     return <HomePage />;
+   }
+   ```
+
+   これにより、ホームページの実装が他の機能と同じパターンで `(features)/home` ディレクトリに格納され、一貫性のある構造を維持できます。
+
+2. **リダイレクトパターン** (必要な場合のみ)
+
+   ```tsx
+   // 「/」→「/home」へリダイレクトが必要な場合
+   import { redirect } from 'next/navigation';
+   export default function Home() { redirect('/home'); }
+   ```
+
+### 1.3.3. Container/Presentationalパターンの実装
+
+各機能ディレクトリは以下のパターンに従います：
+
+1. **Container (page.tsx)**:
+   - サーバーコンポーネント
+   - データ取得ロジックを含む
+   - Presentationalコンポーネントにデータを渡す
+
+   ```tsx
+   // src/app/(features)/products/page.tsx
+   export default async function ProductsPage() {
+     const products = await fetchProducts();  // データ取得
+     return <ProductsClient products={products} />;  // データを渡す
+   }
+   ```
+
+2. **Presentational (client.tsx)**:
+   - クライアントコンポーネント (`"use client"` 宣言)
+   - UIとユーザーインタラクションを処理
+   - Containerから受け取ったデータを表示
+
+   ```tsx
+   // src/app/(features)/products/client.tsx
+   "use client";
+
+   export default function ProductsClient({ products }) {
+     // クライアントサイドの状態管理、イベントハンドリング
+     return (
+       // ユーザーインターフェースの実装
+     );
+   }
+   ```
+
+この分離により、サーバーサイドの処理とクライアントサイドの処理を明確に区別でき、パフォーマンスとテスト容易性が向上します。
+
+## 1.4. テストコードの推奨配置場所
 
 次の2つのアプローチがあります：
 
-### 1.3.1. コンポーネントに隣接したテスト（推奨）
+### 1.4.1. コンポーネントに隣接したテスト（推奨）
 
 ```text
 src/
 ├── app/
-│   └── features/
+│   └── (features)/
 │       └── products/
 │           ├── client.tsx
 │           ├── __tests__/                 # ディレクトリ単位のテスト
@@ -79,7 +160,7 @@ src/
 │                   └── ProductCard.test.tsx
 ```
 
-### 1.3.2. プロジェクトルートのテスト
+### 1.4.2. プロジェクトルートのテスト
 
 大規模プロジェクトでは、以下のように分離することも有効：
 
@@ -102,9 +183,9 @@ src/
             └── products.spec.ts
 ```
 
-## 1.4. テスト戦略
+## 1.5. テスト戦略
 
-### 1.4.1. Presentationalコンポーネントのテスト（Client Components）
+### 1.5.1. Presentationalコンポーネントのテスト（Client Components）
 
 ```tsx
 // client.test.tsx
@@ -144,20 +225,20 @@ describe('ProductsClient', () => {
 });
 ```
 
-### 1.4.2. Presentationalコンポーネントのテスト（Server Components）
+### 1.5.2. Presentationalコンポーネントのテスト（Server Components）
 
 Server Componentsのテストは少し複雑です。Next.jsの`jest-environment-jsdom`環境では完全なテストは難しいため、以下のようなアプローチを取ります：
 
 1. **ロジック部分のみを分離してテスト**：
 
     ```tsx
-    // src/app/features/products/actions.ts
+    // src/app/(features)/products/actions.ts
     export async function fetchProducts() {
       // データ取得ロジック
       return [...productsData];
     }
 
-    // src/app/features/products/page.tsx
+    // src/app/(features)/products/page.tsx
     import { ProductsList } from './client';
     import { fetchProducts } from './actions';
 
@@ -190,7 +271,7 @@ Server Componentsのテストは少し複雑です。Next.jsの`jest-environment
     import { test, expect } from '@playwright/test';
 
     test('製品ページが正しくレンダリングされる', async ({ page }) => {
-      await page.goto('/features/products');
+      await page.goto('/products');
 
       // ページが正しくロードされたことを確認
       await expect(page.getByRole('heading', { name: '製品リスト' })).toBeVisible();
@@ -205,7 +286,7 @@ Server Componentsのテストは少し複雑です。Next.jsの`jest-environment
     });
     ```
 
-## 1.5. ベストプラクティス
+## 1.6. ベストプラクティス
 
 1. **テスト優先の構成**:
    - Presentational（client.tsx）コンポーネントは純粋な関数として実装し、テスト容易性を確保

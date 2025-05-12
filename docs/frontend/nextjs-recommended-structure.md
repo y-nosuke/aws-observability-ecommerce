@@ -1,6 +1,19 @@
-# Next.js 15 Container/Presentationalパターンの推奨ディレクトリ構成
+# 1. Next.js 15 Container/Presentationalパターンの推奨ディレクトリ構成
 
-## 推奨ディレクトリ構成
+## 1.1. 目次
+
+- [1. Next.js 15 Container/Presentationalパターンの推奨ディレクトリ構成](#1-nextjs-15-containerpresentationalパターンの推奨ディレクトリ構成)
+  - [1.1. 目次](#11-目次)
+  - [1.2. 推奨ディレクトリ構成](#12-推奨ディレクトリ構成)
+  - [1.3. テストコードの推奨配置場所](#13-テストコードの推奨配置場所)
+    - [1.3.1. コンポーネントに隣接したテスト（推奨）](#131-コンポーネントに隣接したテスト推奨)
+    - [1.3.2. プロジェクトルートのテスト](#132-プロジェクトルートのテスト)
+  - [1.4. テスト戦略](#14-テスト戦略)
+    - [1.4.1. Presentationalコンポーネントのテスト（Client Components）](#141-presentationalコンポーネントのテストclient-components)
+    - [1.4.2. Presentationalコンポーネントのテスト（Server Components）](#142-presentationalコンポーネントのテストserver-components)
+  - [1.5. ベストプラクティス](#15-ベストプラクティス)
+
+## 1.2. 推奨ディレクトリ構成
 
 ```text
 src/
@@ -45,11 +58,11 @@ src/
         └── products.ts              # 製品モックデータ
 ```
 
-## テストコードの推奨配置場所
+## 1.3. テストコードの推奨配置場所
 
 次の2つのアプローチがあります：
 
-### 1. コンポーネントに隣接したテスト（推奨）
+### 1.3.1. コンポーネントに隣接したテスト（推奨）
 
 ```text
 src/
@@ -66,7 +79,7 @@ src/
 │                   └── ProductCard.test.tsx
 ```
 
-### 2. プロジェクトルートのテスト
+### 1.3.2. プロジェクトルートのテスト
 
 大規模プロジェクトでは、以下のように分離することも有効：
 
@@ -89,9 +102,9 @@ src/
             └── products.spec.ts
 ```
 
-## テスト戦略
+## 1.4. テスト戦略
 
-### Presentationalコンポーネントのテスト（Client Components）
+### 1.4.1. Presentationalコンポーネントのテスト（Client Components）
 
 ```tsx
 // client.test.tsx
@@ -131,7 +144,7 @@ describe('ProductsClient', () => {
 });
 ```
 
-### Presentationalコンポーネントのテスト（Server Components）
+### 1.4.2. Presentationalコンポーネントのテスト（Server Components）
 
 Server Componentsのテストは少し複雑です。Next.jsの`jest-environment-jsdom`環境では完全なテストは難しいため、以下のようなアプローチを取ります：
 
@@ -192,7 +205,7 @@ Server Componentsのテストは少し複雑です。Next.jsの`jest-environment
     });
     ```
 
-## ベストプラクティス
+## 1.5. ベストプラクティス
 
 1. **テスト優先の構成**:
    - Presentational（client.tsx）コンポーネントは純粋な関数として実装し、テスト容易性を確保

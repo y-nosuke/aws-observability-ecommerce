@@ -1,43 +1,69 @@
-# Next.js 15におけるContainer/Presentationalパターンガイド
+# 1. Next.js 15におけるContainer/Presentationalパターンガイド
 
-## 1. Container/Presentationalパターンの基本
+## 1.1. 目次
+
+- [1. Next.js 15におけるContainer/Presentationalパターンガイド](#1-nextjs-15におけるcontainerpresentationalパターンガイド)
+  - [1.1. 目次](#11-目次)
+  - [1.2. Container/Presentationalパターンの基本](#12-containerpresentationalパターンの基本)
+    - [1.2.1. Presentationalコンポーネント（表示担当）](#121-presentationalコンポーネント表示担当)
+    - [1.2.2. Containerコンポーネント（ロジック担当）](#122-containerコンポーネントロジック担当)
+  - [1.3. Next.js 15とReact Server Components](#13-nextjs-15とreact-server-components)
+    - [1.3.1. Server Components = Containerの自然な形](#131-server-components--containerの自然な形)
+    - [1.3.2. Client Components = Presentationalの自然な形](#132-client-components--presentationalの自然な形)
+  - [1.4. 実装パターン例](#14-実装パターン例)
+    - [1.4.1. Containerコンポーネント (page.tsx)](#141-containerコンポーネント-pagetsx)
+    - [1.4.2. Presentationalコンポーネント (presentation.tsx)](#142-presentationalコンポーネント-presentationtsx)
+  - [1.5. 相性の良いディレクトリ構成](#15-相性の良いディレクトリ構成)
+    - [1.5.1. 4.1 基本的なページ単位のパターン](#151-41-基本的なページ単位のパターン)
+    - [1.5.2. 4.2 コンポーネント分離型](#152-42-コンポーネント分離型)
+    - [1.5.3. 4.3 日本語資料で見られた実装パターン](#153-43-日本語資料で見られた実装パターン)
+    - [1.5.4. 4.4 テストを考慮したパターン](#154-44-テストを考慮したパターン)
+    - [1.5.5. 4.5 機能モジュール型](#155-45-機能モジュール型)
+    - [1.5.6. 4.6 Next.js 15に最適化されたハイブリッドパターン](#156-46-nextjs-15に最適化されたハイブリッドパターン)
+  - [1.6. srcディレクトリの使用について](#16-srcディレクトリの使用について)
+    - [1.6.1. srcディレクトリを使用するメリット](#161-srcディレクトリを使用するメリット)
+    - [1.6.2. srcディレクトリを使用した推奨構成](#162-srcディレクトリを使用した推奨構成)
+  - [1.7. Next.js 15でのContainer/Presentationalパターンのメリット](#17-nextjs-15でのcontainerpresentationalパターンのメリット)
+  - [1.8. 適用時の注意点](#18-適用時の注意点)
+
+## 1.2. Container/Presentationalパターンの基本
 
 Container/Presentationalパターンは、ReactアプリケーションにおいてロジックとUIを分離するための設計パターンです。このパターンでは、コンポーネントを2つの役割に分けます：
 
-### Presentationalコンポーネント（表示担当）
+### 1.2.1. Presentationalコンポーネント（表示担当）
 
 - UIの見た目のみに責任を持つ
 - データをpropsを通じてのみ受け取る
 - 基本的に状態を持たない（UIに関する状態のみ例外的に許容）
 - 再利用しやすい純粋なコンポーネント
 
-### Containerコンポーネント（ロジック担当）
+### 1.2.2. Containerコンポーネント（ロジック担当）
 
 - データの取得やビジネスロジックを担当
 - APIや状態管理と連携
 - 取得したデータをPresentationalコンポーネントにpropsとして渡す
 
-## 2. Next.js 15とReact Server Components
+## 1.3. Next.js 15とReact Server Components
 
 Next.js 15はReact 19に対応し、App Routerを通じてReact Server Components（RSC）を採用しています。React Server Componentsの導入により、Container/Presentationalパターンの適用方法も進化しました。
 
-### Server Components = Containerの自然な形
+### 1.3.1. Server Components = Containerの自然な形
 
 - サーバー側で実行され、データベースへの直接アクセスが可能
 - APIからのデータ取得を行う
 - 大きなライブラリを含められる（クライアントにJavaScriptを送信せずに済む）
 - 機密情報を安全に扱える
 
-### Client Components = Presentationalの自然な形
+### 1.3.2. Client Components = Presentationalの自然な形
 
 - クライアント側で実行され、インタラクティブな要素を担当
 - ファイルの先頭に`'use client'`ディレクティブを追加
 - useStateやuseEffectなどのReact Hooksを利用可能
 - UIの表示に専念
 
-## 3. 実装パターン例
+## 1.4. 実装パターン例
 
-### Containerコンポーネント (page.tsx)
+### 1.4.1. Containerコンポーネント (page.tsx)
 
 ```tsx
 // Server Componentとしてデータ取得を担当
@@ -53,7 +79,7 @@ export default async function ProductsPage() {
 }
 ```
 
-### Presentationalコンポーネント (presentation.tsx)
+### 1.4.2. Presentationalコンポーネント (presentation.tsx)
 
 ```tsx
 'use client'; // Client Componentを明示
@@ -97,9 +123,9 @@ export function ProductsList({ products }: ProductsListProps) {
 }
 ```
 
-## 4. 相性の良いディレクトリ構成
+## 1.5. 相性の良いディレクトリ構成
 
-### 4.1 基本的なページ単位のパターン
+### 1.5.1. 4.1 基本的なページ単位のパターン
 
 ```text
 src/app/
@@ -110,7 +136,7 @@ src/app/
 │       └── loading.tsx       # ローディング状態のUI
 ```
 
-### 4.2 コンポーネント分離型
+### 1.5.2. 4.2 コンポーネント分離型
 
 ```text
 src/app/
@@ -124,7 +150,7 @@ src/app/
 │       └── loading.tsx
 ```
 
-### 4.3 日本語資料で見られた実装パターン
+### 1.5.3. 4.3 日本語資料で見られた実装パターン
 
 ```text
 src/app/
@@ -135,7 +161,7 @@ src/app/
 │       └── loading.tsx
 ```
 
-### 4.4 テストを考慮したパターン
+### 1.5.4. 4.4 テストを考慮したパターン
 
 ```text
 src/app/
@@ -149,7 +175,7 @@ src/app/
 
 React Testing LibraryはServer Componentsに対応していないため、テスト容易性を考慮すると、presentation.tsxは純粋なReactコンポーネントとして実装することが重要です。
 
-### 4.5 機能モジュール型
+### 1.5.5. 4.5 機能モジュール型
 
 ```text
 src/
@@ -172,7 +198,7 @@ src/
     └── ui/                 # 共通UIコンポーネント
 ```
 
-### 4.6 Next.js 15に最適化されたハイブリッドパターン
+### 1.5.6. 4.6 Next.js 15に最適化されたハイブリッドパターン
 
 ```text
 src/app/
@@ -191,11 +217,11 @@ src/app/
 └── lib/                  # ユーティリティ関数やヘルパー
 ```
 
-## 5. srcディレクトリの使用について
+## 1.6. srcディレクトリの使用について
 
 Container/Presentationalパターンを適用する場合、srcディレクトリの使用をお勧めします。
 
-### srcディレクトリを使用するメリット
+### 1.6.1. srcディレクトリを使用するメリット
 
 1. **ソースコードの整理**:
    - ソースコードと設定ファイルを明確に分離
@@ -212,7 +238,7 @@ Container/Presentationalパターンを適用する場合、srcディレクト�
 4. **コードベースのクリーンさ**:
    - テストファイル、型定義、ユーティリティなどを整理しやすい
 
-### srcディレクトリを使用した推奨構成
+### 1.6.2. srcディレクトリを使用した推奨構成
 
 ```text
 /
@@ -236,7 +262,7 @@ Container/Presentationalパターンを適用する場合、srcディレクト�
 └── ...その他の設定ファイル
 ```
 
-## 6. Next.js 15でのContainer/Presentationalパターンのメリット
+## 1.7. Next.js 15でのContainer/Presentationalパターンのメリット
 
 1. **サーバーとクライアントの責務明確化**:
    - Server Components（Container）はデータ取得とロジックを担当
@@ -253,7 +279,7 @@ Container/Presentationalパターンを適用する場合、srcディレクト�
 4. **テスト容易性**:
    - UIとビジネスロジックが分離されているため、テストが書きやすい
 
-## 7. 適用時の注意点
+## 1.8. 適用時の注意点
 
 1. **過剰な分離を避ける**:
    - 小規模なコンポーネントではシンプルな構成が望ましい場合も

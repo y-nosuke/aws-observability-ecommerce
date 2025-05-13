@@ -1,7 +1,7 @@
-import Link from "next/link";
 import AnimateInView from "@/components/ui/AnimateInView";
+import ProductCard from "@/components/ui/ProductCard";
 import { Product } from "@/services/products/types";
-import ProductCard from "./ProductCard";
+import Link from "next/link";
 
 interface FeaturedProductsSectionProps {
   products: Product[];
@@ -45,8 +45,20 @@ export default function FeaturedProductsSection({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product, index) => (
-            <AnimateInView key={product.id} direction="up" delay={200 + (index * 100)}>
-              <ProductCard product={product} />
+            <AnimateInView
+              key={product.id}
+              direction="up"
+              delay={200 + index * 100}
+            >
+              <ProductCard
+                id={product.id}
+                name={product.name}
+                description={product.description}
+                price={product.price}
+                salePrice={product.salePrice}
+                isNew={product.isNew}
+                imageUrl={product.imageUrl}
+              />
             </AnimateInView>
           ))}
         </div>

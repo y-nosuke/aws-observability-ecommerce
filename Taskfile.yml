@@ -51,6 +51,20 @@ tasks:
     cmds:
       - docker compose down
 
+  urls:
+    desc: アプリケーションのURLを表示します
+    cmds:
+      - cmd: 'echo "- フロントエンド（顧客向け）: http://customer.localhost"'
+        silent: true
+      - cmd: 'echo "- フロントエンド（管理者向け）: http://admin.localhost"'
+        silent: true
+      - cmd: 'echo "- バックエンドAPI: http://backend-api.localhost"'
+        silent: true
+      - cmd: 'echo "- PhpMyAdmin: http://phpmyadmin.localhost"'
+        silent: true
+      - cmd: 'echo "- Traefikダッシュボード: http://traefik.localhost:8080"'
+        silent: true
+
   start:
     desc: Docker Compose環境を起動し、必要なセットアップを実行します
     cmds:
@@ -62,16 +76,7 @@ tasks:
       - task: generate:openapi
       - cmd: 'echo "セットアップが完了しました。以下のURLでアクセスできます:"'
         silent: true
-      - cmd: 'echo "- フロントエンド（顧客向け）: http://customer.localhost"'
-        silent: true
-      - cmd: 'echo "- フロントエンド（管理者向け）: http://admin.localhost"'
-        silent: true
-      - cmd: 'echo "- バックエンドAPI: http://backend-api.localhost"'
-        silent: true
-      - cmd: 'echo "- PhpMyAdmin: http://phpmyadmin.localhost"'
-        silent: true
-      - cmd: 'echo "- Traefikダッシュボード: http://traefik.localhost:8080"'
-        silent: true
+      - task: urls
 
   stop:
     desc: Docker Compose環境を停止します

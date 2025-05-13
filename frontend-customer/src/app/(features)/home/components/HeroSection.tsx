@@ -1,6 +1,5 @@
-import Link from "next/link";
 import AnimateInView from "@/components/ui/AnimateInView";
-import { Product } from "@/services/products/types";
+import Link from "next/link";
 
 interface HeroSectionProps {
   primaryButtonLink: string;

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import AnimateInView from "@/components/ui/AnimateInView";
 
 interface CampaignCardProps {
   title: string;
   description: string;
   badgeText: string;
-  badgeColor: 'blue' | 'red' | 'green' | 'purple' | 'yellow';
+  badgeColor: "blue" | "red" | "green" | "purple" | "yellow";
   bgGradient: string;
   linkText: string;
   linkUrl: string;
@@ -30,7 +29,7 @@ export default function CampaignCard({
   };
 
   return (
-    <div 
+    <div
       className={`${bgGradient} rounded-2xl shadow-lg overflow-hidden card-hover`}
     >
       <div className="p-6 md:p-8 flex flex-col h-full">
@@ -40,9 +39,7 @@ export default function CampaignCard({
         <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
           {title}
         </h3>
-        <p className="text-white/80 mb-6">
-          {description}
-        </p>
+        <p className="text-white/80 mb-6">{description}</p>
         <Link
           href={linkUrl}
           className="mt-auto inline-block bg-white text-primary px-6 py-2 rounded-full font-medium hover:bg-opacity-90 transition-colors self-start"

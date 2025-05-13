@@ -93,5 +93,6 @@
     "usecase",
     "varchar",
     "volatiletech"
-  ]
+  ],
+  "explorer.autoReveal": "focusNoScroll"
 }

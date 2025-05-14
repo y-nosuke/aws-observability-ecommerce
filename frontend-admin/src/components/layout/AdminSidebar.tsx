@@ -14,7 +14,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
   const navigationItems = [
     {
       name: "ダッシュボード",
-      href: "/admin",
+      href: "/",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +34,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
     },
     {
       name: "商品管理",
-      href: "/admin/products",
+      href: "/products",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +54,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
     },
     {
       name: "カテゴリー管理",
-      href: "/admin/categories",
+      href: "/categories",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -74,7 +74,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
     },
     {
       name: "注文管理",
-      href: "/admin/orders",
+      href: "/orders",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +94,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
     },
     {
       name: "在庫管理",
-      href: "/admin/inventory",
+      href: "/inventory",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -139,9 +139,17 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           <nav>
             <ul className="space-y-2">
               {navigationItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  pathname?.startsWith(`${item.href}/`);
+                // 活性状態判定ロジックの改善
+                let isActive = false;
+
+                if (item.href === "/") {
+                  // ルートページの場合は完全一致の場合のみアクティブ
+                  isActive = pathname === "/";
+                } else {
+                  // その他のページの場合はパスの前方一致でアクティブ判定
+                  isActive = pathname.startsWith(item.href);
+                }
+
                 return (
                   <li key={item.name}>
                     <Link
@@ -174,7 +182,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/admin/settings"
+                  href="/settings"
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-indigo-700/20 hover:text-white transition-all duration-200 ease-in-out hover:translate-x-1"
                 >
                   <svg
@@ -201,7 +209,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
               </li>
               <li>
                 <Link
-                  href="/admin/help"
+                  href="/help"
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-indigo-700/20 hover:text-white transition-all duration-200 ease-in-out hover:translate-x-1"
                 >
                   <svg

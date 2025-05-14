@@ -40,7 +40,7 @@ export default function AdminHeader({ toggleSidebar }: AdminHeaderProps) {
               />
             </svg>
           </button>
-          <Link href="/admin" className="text-xl font-bold flex items-center">
+          <Link href="/" className="text-xl font-bold flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -94,7 +94,7 @@ export default function AdminHeader({ toggleSidebar }: AdminHeaderProps) {
           {isProfileMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 text-gray-800 dark:text-gray-200 z-10 border border-gray-100 dark:border-gray-700 overflow-hidden">
               <Link
-                href="/admin/profile"
+                href="/profile"
                 className="flex items-center px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
               >
                 <svg
@@ -114,7 +114,7 @@ export default function AdminHeader({ toggleSidebar }: AdminHeaderProps) {
                 <span className="font-medium">プロフィール</span>
               </Link>
               <Link
-                href="/admin/settings"
+                href="/settings"
                 className="flex items-center px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
               >
                 <svg
@@ -144,7 +144,7 @@ export default function AdminHeader({ toggleSidebar }: AdminHeaderProps) {
                 onClick={() => {
                   // ログアウト処理
                   if (typeof window !== "undefined") {
-                    window.location.href = "/admin/login";
+                    window.location.href = "/login";
                   }
                 }}
                 className="flex w-full items-center px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group text-left"

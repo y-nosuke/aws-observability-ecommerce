@@ -55,7 +55,7 @@ export default function InventoryAlertsTable({
       </div>
       <div className="text-right">
         <a
-          href="/admin/inventory"
+          href="/inventory"
           className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
         >
           在庫管理へ →

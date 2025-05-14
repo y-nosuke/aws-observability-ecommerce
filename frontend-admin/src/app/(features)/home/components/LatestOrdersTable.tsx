@@ -53,7 +53,7 @@ export default function LatestOrdersTable({ orders }: LatestOrdersTableProps) {
       </div>
       <div className="text-right">
         <a
-          href="/admin/orders"
+          href="/orders"
           className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
         >
           すべての注文を表示 →

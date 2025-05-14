@@ -51,7 +51,7 @@ export default function PopularProductsTable({
       </div>
       <div className="text-right">
         <a
-          href="/admin/products"
+          href="/products"
           className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
         >
           すべての商品を表示 →

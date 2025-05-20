@@ -27,8 +27,9 @@
 
 - **users (管理者):** システム管理者。MVPで必要。
 - **customers (顧客):** ログインする顧客情報。MVPスコープ外。
-- **categories:** 商品カテゴリ。MVPで必要。
-- **products:** 商品情報。MVPで必要。
+- **categories:** 商品カテゴリ。階層構造をサポート（親カテゴリを持てる）。MVPで必要。
+- **products:** 商品情報。在庫数量は別テーブルで管理。MVPで必要。
+- **inventory:** 商品在庫情報。MVPで必要。
 - **product_reviews:** 商品レビュー。MVPスコープ外。
 - **carts:** 顧客のショッピングカート情報（ヘッダー）。MVPスコープ外（MVPでは非永続化）。
 - **cart_items:** カート内の商品明細。MVPスコープ外。
@@ -48,12 +49,13 @@ erDiagram
     CATEGORIES ||--|{ PRODUCTS : "contains"
     PRODUCTS ||--|{ ORDER_ITEMS : "included in"
     PRODUCTS ||--|{ CART_ITEMS : "added to"
-    PRODUCTS ||--o{ PRODUCT_REVIEWS : "has"
+    PRODUCTS ||--|| INVENTORY : "has"
     ORDERS ||--|{ ORDER_ITEMS : "consists of"
-    ORDERS ||--o{ APPLIED_PROMOTIONS : "has"
+    PRODUCTS ||--o{ PRODUCT_REVIEWS : "has"
     CARTS ||--|{ CART_ITEMS : "contains"
-    PROMOTIONS ||--o{ APPLIED_PROMOTIONS : "applied as"
+    ORDERS ||--o{ APPLIED_PROMOTIONS : "has"
 
+    PROMOTIONS ||--o{ APPLIED_PROMOTIONS : "applied as"
     USERS {
         VARCHAR(255) id PK "(MVP ✅) UUID or Cognito Sub"
         VARCHAR(255) email UK "(MVP ✅)"
@@ -74,7 +76,11 @@ erDiagram
 
     CATEGORIES {
         INT id PK "(MVP ✅)"
-        VARCHAR(255) name UK "(MVP ✅)"
+        VARCHAR(255) name "(MVP ✅)"
+        VARCHAR(255) slug UK "(MVP ✅) URLフレンドリーな識別子"
+        TEXT description "(MVP ✅)"
+        VARCHAR(2048) image_url "(MVP ✅)"
+        INT parent_id FK "(MVP ✅) 自己参照、NULL=ルートカテゴリ"
         DATETIME created_at "(MVP ✅)"
         DATETIME updated_at "(MVP ✅)"
     }
@@ -83,12 +89,22 @@ erDiagram
         INT id PK "(MVP ✅)"
         VARCHAR(255) name "(MVP ✅)"
         TEXT description "(MVP ✅)"
-        DECIMAL(10,2) price "(MVP ✅)"
-        INT stock_quantity "(MVP ✅)"
+        DECIMAL(10_2) price "(MVP ✅)"
+        DECIMAL(10_2) sale_price "(MVP ✅) 特価がある場合"
+        VARCHAR(100) sku UK "(MVP ✅) 商品識別コード"
         INT category_id FK "(MVP ✅)"
-        VARCHAR(255) image_url "(MVP ✅)"
-        BOOLEAN is_active "(MVP ✅)"
+        VARCHAR(2048) image_url "(MVP ✅)"
+        BOOLEAN is_new "(MVP ✅) 新商品表示用"
+        BOOLEAN is_featured "(MVP ✅) おすすめ商品表示用"
         FLOAT average_rating "(Future ⚪️)"
+        DATETIME created_at "(MVP ✅)"
+        DATETIME updated_at "(MVP ✅)"
+    }
+
+    INVENTORY {
+        INT id PK "(MVP ✅)"
+        INT product_id FK "(MVP ✅)"
+        INT quantity "(MVP ✅) 在庫数量"
         DATETIME created_at "(MVP ✅)"
         DATETIME updated_at "(MVP ✅)"
     }
@@ -122,9 +138,9 @@ erDiagram
         VARCHAR(255) customer_id FK "(Future ⚪️) Nullable for guest MVP"
         VARCHAR(255) guest_email "(MVP ✅) Required if customer_id is null"
         TEXT shipping_address "(MVP ✅)"
-        DECIMAL(10,2) subtotal_amount "(Future ⚪️)"
-        DECIMAL(10,2) discount_amount "(Future ⚪️)"
-        DECIMAL(10,2) total_amount "(MVP ✅)"
+        DECIMAL(10_2) subtotal_amount "(Future ⚪️)"
+        DECIMAL(10_2) discount_amount "(Future ⚪️)"
+        DECIMAL(10_2) total_amount "(MVP ✅)"
         VARCHAR(50) status "(MVP ✅) e.g., pending, processing, shipped"
         VARCHAR(255) tracking_number "(Future ⚪️)"
         DATETIME created_at "(MVP ✅)"
@@ -137,7 +153,7 @@ erDiagram
         INT order_id FK "(MVP ✅)"
         INT product_id FK "(MVP ✅)"
         INT quantity "(MVP ✅)"
-        DECIMAL(10,2) price_at_purchase "(MVP ✅)"
+        DECIMAL(10_2) price_at_purchase "(MVP ✅)"
         DATETIME created_at "(MVP ✅)"
         DATETIME updated_at "(MVP ✅)"
     }
@@ -147,7 +163,7 @@ erDiagram
         VARCHAR(255) code UK "(Future ⚪️) e.g., SUMMER20"
         TEXT description "(Future ⚪️)"
         VARCHAR(50) type "(Future ⚪️) e.g., PERCENTAGE, FIXED_AMOUNT"
-        DECIMAL(10,2) value "(Future ⚪️)"
+        DECIMAL(10_2) value "(Future ⚪️)"
         DATETIME start_date "(Future ⚪️)"
         DATETIME end_date "(Future ⚪️)"
         BOOLEAN is_active "(Future ⚪️)"
@@ -157,14 +173,14 @@ erDiagram
         INT id PK "(Future ⚪️)"
         INT order_id FK "(Future ⚪️)"
         INT promotion_id FK "(Future ⚪️)"
-        DECIMAL(10,2) discount_applied "(Future ⚪️)"
+        DECIMAL(10_2) discount_applied "(Future ⚪️)"
     }
 
 ```
 
 **データモデル注記 (MVP):**
 
-- MVPでは `users`, `categories`, `products`, `orders`, `order_items` テーブルを実装します。
+- MVPでは `users`, `categories`, `products`, `inventory`, `orders`, `order_items` テーブルを実装します。
 - `orders.customer_id` は将来の顧客ログイン機能のために用意しますが、MVPでは NULL 許容とし、代わりに `guest_email`, `shipping_address` にゲスト情報を格納します。
 - カート関連テーブル (`carts`, `cart_items`) はMVPでは作成せず、カート情報はクライアントサイドまたは一時的なサーバーサイドストレージで管理します。
 - レビュー (`product_reviews`)、プロモーション (`promotions`, `applied_promotions`) 関連テーブルはMVPスコープ外です。

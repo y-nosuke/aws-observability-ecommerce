@@ -4,11 +4,11 @@ import StatusFilter from "./StatusFilter";
 
 interface FilterSidebarProps {
   categories: Array<{
-    id: string;
+    id: number;
     name: string;
   }>;
-  activeCategory: string;
-  onCategoryChange: (categoryId: string) => void;
+  activeCategory: number;
+  onCategoryChange: (categoryId: number) => void;
   selectedPriceRanges: string[];
   onPriceFilterChange: (priceRanges: string[]) => void;
   selectedStatuses: string[];

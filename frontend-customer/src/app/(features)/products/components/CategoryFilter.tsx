@@ -1,10 +1,10 @@
 interface CategoryFilterProps {
   categories: Array<{
-    id: string;
+    id: number;
     name: string;
   }>;
-  activeCategory: string;
-  onCategoryChange: (categoryId: string) => void;
+  activeCategory: number;
+  onCategoryChange: (categoryId: number) => void;
 }
 
 export default function CategoryFilter({

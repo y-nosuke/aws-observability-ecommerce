@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface ProductCardProps {
-  id: string;
+  id: number;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   salePrice?: number | null;
   isNew?: boolean;

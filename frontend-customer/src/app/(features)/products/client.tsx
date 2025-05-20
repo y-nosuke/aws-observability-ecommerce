@@ -15,7 +15,7 @@ interface ProductsClientProps {
 
 export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
   // クライアントサイドの状態管理
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeCategory, setActiveCategory] = useState<number>(0);
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -67,7 +67,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
   }, [activeCategory, sortOption, selectedPriceRanges, selectedStatuses, initialProducts]);
 
   // シンプルにした各ハンドラー
-  const handleCategoryChange = (categoryId: string) => {
+  const handleCategoryChange = (categoryId: number) => {
     setActiveCategory(categoryId);
   };
 

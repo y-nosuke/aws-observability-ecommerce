@@ -1,17 +1,27 @@
 export interface Product {
-  id: string;
+  id: number;
   name: string;
-  description: string;
+  description?: string;
+  sku?: string;
   price: number;
-  salePrice: number | null;
-  category: string;
+  salePrice?: number | null;
+  imageUrl?: string | null;
+  inStock: boolean;
+  stockQuantity?: number;
+  categoryId: number;
+  categoryName?: string;
   isNew: boolean;
-  imageUrl: string | null;
+  isFeatured?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
+  description?: string;
+  imageUrl?: string;
+  productCount?: number;
 }
 
 export type SortOption = 'recommended' | 'newest' | 'price-asc' | 'price-desc';

@@ -343,6 +343,7 @@ components:
         - name
         - price
         - categoryId
+        - inStock
       properties:
         id:
           type: integer
@@ -354,16 +355,26 @@ components:
         description:
           type: string
           description: 商品説明
+        sku:
+          type: string
+          description: SKUコード
         price:
           type: number
           format: float
           description: 商品価格
+        salePrice:
+          type: number
+          format: float
+          description: セール価格
         imageUrl:
           type: string
           description: 商品画像のURL
         inStock:
           type: boolean
           description: 在庫があるかどうか
+        stockQuantity:
+          type: integer
+          description: 在庫数
         categoryId:
           type: integer
           format: int64
@@ -371,6 +382,12 @@ components:
         categoryName:
           type: string
           description: カテゴリー名
+        isNew:
+          type: boolean
+          description: 新着商品かどうか
+        isFeatured:
+          type: boolean
+          description: おすすめ商品かどうか
         createdAt:
           type: string
           format: date-time

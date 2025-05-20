@@ -50,12 +50,20 @@ func (h *CategoryHandler) ListCategories(ctx echo.Context) error {
 	for _, c := range categories {
 		// 商品数を取得
 		productCount := int(c.ProductCount)
+		// 親カテゴリIDの処理
+		var parentId *int64
+		if c.Category.ParentID.Valid {
+			id := int64(c.Category.ParentID.Int)
+			parentId = &id
+		}
 
 		items = append(items, openapi.Category{
 			Id:           int64(c.Category.ID),
 			Name:         c.Category.Name,
+			Slug:         c.Category.Slug,
 			Description:  stringPtr(c.Category.Description.String),
 			ImageUrl:     stringPtr(c.Category.ImageURL.String),
+			ParentId:     parentId,
 			ProductCount: &productCount,
 		})
 	}

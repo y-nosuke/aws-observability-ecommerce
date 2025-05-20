@@ -142,12 +142,52 @@ const MOCK_PRODUCTS: Product[] = [
 
 // カテゴリーデータ
 const CATEGORIES: Category[] = [
-  { id: 0, name: "すべて" },
-  { id: 1, name: "コンピューター", description: "ノートPC、タブレット、デスクトップなど" },
-  { id: 2, name: "スマートフォン", description: "最新のスマートフォン" },
-  { id: 3, name: "オーディオ", description: "イヤホン、スピーカー、オーディオ機器" },
-  { id: 4, name: "ウェアラブル", description: "スマートウォッチ、フィットネストラッカーなど" },
-  { id: 5, name: "アクセサリー", description: "各種デバイスのアクセサリー" },
+  { 
+    id: 0, 
+    name: "すべて", 
+    slug: "all", 
+    productCount: MOCK_PRODUCTS.length 
+  },
+  { 
+    id: 1, 
+    name: "コンピューター", 
+    slug: "computers", 
+    description: "ノートPC、タブレット、デスクトップなど", 
+    imageUrl: "/images/categories/computers.jpg",
+    productCount: MOCK_PRODUCTS.filter(p => p.categoryId === 1).length 
+  },
+  { 
+    id: 2, 
+    name: "スマートフォン", 
+    slug: "smartphones", 
+    description: "最新のスマートフォン", 
+    imageUrl: "/images/categories/smartphones.jpg",
+    productCount: MOCK_PRODUCTS.filter(p => p.categoryId === 2).length
+  },
+  { 
+    id: 3, 
+    name: "オーディオ", 
+    slug: "audio", 
+    description: "イヤホン、スピーカー、オーディオ機器", 
+    imageUrl: "/images/categories/audio.jpg",
+    productCount: MOCK_PRODUCTS.filter(p => p.categoryId === 3).length
+  },
+  { 
+    id: 4, 
+    name: "ウェアラブル", 
+    slug: "wearables", 
+    description: "スマートウォッチ、フィットネストラッカーなど", 
+    imageUrl: "/images/categories/wearables.jpg",
+    productCount: MOCK_PRODUCTS.filter(p => p.categoryId === 4).length 
+  },
+  { 
+    id: 5, 
+    name: "アクセサリー", 
+    slug: "accessories", 
+    description: "各種デバイスのアクセサリー", 
+    imageUrl: "/images/categories/accessories.jpg",
+    productCount: MOCK_PRODUCTS.filter(p => p.categoryId === 5).length 
+  },
 ];
 
 // 商品一覧の取得

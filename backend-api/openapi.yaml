@@ -429,6 +429,7 @@ components:
       required:
         - id
         - name
+        - slug
       properties:
         id:
           type: integer
@@ -437,12 +438,22 @@ components:
         name:
           type: string
           description: カテゴリー名
+        slug:
+          type: string
+          description: カテゴリーのURL用スラッグ（一意）
         description:
           type: string
+          nullable: true
           description: カテゴリーの説明
         imageUrl:
           type: string
+          nullable: true
           description: カテゴリー画像のURL
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 親カテゴリーのID（階層構造用）
         productCount:
           type: integer
           description: このカテゴリーの商品数

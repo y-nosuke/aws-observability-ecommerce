@@ -16,13 +16,13 @@ import (
 type Repository interface {
 	repository.Repository
 	FindByID(ctx context.Context, id int) (*models.Product, error)
-	FindAll(ctx context.Context, limit, offset int) ([]*models.Product, error)
-	FindByCategory(ctx context.Context, categoryID int, limit, offset int) ([]*models.Product, error)
+	FindAll(ctx context.Context, limit, offset int, keyword *string) ([]*models.Product, error)
+	FindByCategory(ctx context.Context, categoryID int, limit, offset int, keyword *string) ([]*models.Product, error)
 	Create(ctx context.Context, product *models.Product) error
 	Update(ctx context.Context, product *models.Product) error
 	Delete(ctx context.Context, id int) error
-	Count(ctx context.Context) (int64, error)
-	CountByCategory(ctx context.Context, categoryID int) (int64, error)
+	Count(ctx context.Context, keyword *string) (int64, error)
+	CountByCategory(ctx context.Context, categoryID int, keyword *string) (int64, error)
 }
 
 // ProductRepository は商品リポジトリの実装
@@ -50,7 +50,7 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*models.Produ
 }
 
 // FindAll は商品一覧を取得します（ページネーション対応）
-func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int) ([]*models.Product, error) {
+func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int, keyword *string) ([]*models.Product, error) {
 	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
 		qm.Limit(limit),
@@ -58,6 +58,10 @@ func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int) ([]*
 		qm.OrderBy("created_at DESC"),
 		// 商品とカテゴリーを結合して取得
 		qm.Load("Category"),
+	}
+
+	if keyword != nil && *keyword != "" {
+		mods = append(mods, qm.Where("name LIKE ? OR description LIKE ?", "%"+*keyword+"%", "%"+*keyword+"%"))
 	}
 
 	// SQLBoilerを使用して商品を取得
@@ -70,7 +74,7 @@ func (r *ProductRepository) FindAll(ctx context.Context, limit, offset int) ([]*
 }
 
 // FindByCategory は指定カテゴリーの商品一覧を取得します（ページネーション対応）
-func (r *ProductRepository) FindByCategory(ctx context.Context, categoryID int, limit, offset int) ([]*models.Product, error) {
+func (r *ProductRepository) FindByCategory(ctx context.Context, categoryID int, limit, offset int, keyword *string) ([]*models.Product, error) {
 	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
 		qm.Where("category_id = ?", categoryID),
@@ -79,6 +83,10 @@ func (r *ProductRepository) FindByCategory(ctx context.Context, categoryID int, 
 		qm.OrderBy("created_at DESC"),
 		// 商品とカテゴリーを結合して取得
 		qm.Load("Category"),
+	}
+
+	if keyword != nil && *keyword != "" {
+		mods = append(mods, qm.Where("name LIKE ? OR description LIKE ?", "%"+*keyword+"%", "%"+*keyword+"%"))
 	}
 
 	// SQLBoilerを使用して商品を取得
@@ -115,14 +123,21 @@ func (r *ProductRepository) Delete(ctx context.Context, id int) error {
 }
 
 // Count は商品の総数を取得します
-func (r *ProductRepository) Count(ctx context.Context) (int64, error) {
-	return models.Products().Count(ctx, r.DB())
+func (r *ProductRepository) Count(ctx context.Context, keyword *string) (int64, error) {
+	mods := []qm.QueryMod{}
+	if keyword != nil && *keyword != "" {
+		mods = append(mods, qm.Where("name LIKE ? OR description LIKE ?", "%"+*keyword+"%", "%"+*keyword+"%"))
+	}
+	return models.Products(mods...).Count(ctx, r.DB())
 }
 
 // CountByCategory は指定カテゴリーの商品数を取得します
-func (r *ProductRepository) CountByCategory(ctx context.Context, categoryID int) (int64, error) {
+func (r *ProductRepository) CountByCategory(ctx context.Context, categoryID int, keyword *string) (int64, error) {
 	mods := []qm.QueryMod{
 		qm.Where("category_id = ?", categoryID),
+	}
+	if keyword != nil && *keyword != "" {
+		mods = append(mods, qm.Where("name LIKE ? OR description LIKE ?", "%"+*keyword+"%", "%"+*keyword+"%"))
 	}
 	return models.Products(mods...).Count(ctx, r.DB())
 }

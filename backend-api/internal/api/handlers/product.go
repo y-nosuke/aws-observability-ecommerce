@@ -43,15 +43,21 @@ func (h *ProductHandler) ListProducts(ctx echo.Context, params openapi.ListProdu
 		pageSize = *params.PageSize
 	}
 
+	// キーワードの取得
+	var keyword *string
+	if params.Keyword != nil && *params.Keyword != "" {
+		keyword = params.Keyword
+	}
+
 	var result *service.ProductListResult
 	var err error
 
 	// カテゴリーIDでフィルタリングするかどうかを判定
 	if params.CategoryId != nil {
 		categoryID := int(*params.CategoryId)
-		result, err = h.productService.GetProductsByCategory(ctx.Request().Context(), categoryID, page, pageSize)
+		result, err = h.productService.GetProductsByCategory(ctx.Request().Context(), categoryID, page, pageSize, keyword)
 	} else {
-		result, err = h.productService.GetProducts(ctx.Request().Context(), page, pageSize)
+		result, err = h.productService.GetProducts(ctx.Request().Context(), page, pageSize, keyword)
 	}
 
 	if err != nil {
@@ -235,7 +241,7 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 	}
 
 	// サービスからカテゴリー別商品一覧を取得
-	result, err := h.productService.GetProductsByCategory(ctx.Request().Context(), int(id), page, pageSize)
+	result, err := h.productService.GetProductsByCategory(ctx.Request().Context(), int(id), page, pageSize, nil)
 	if err != nil {
 		// エラーの種類に応じて適切なレスポンスを返す
 		if strings.Contains(err.Error(), "category not found") {

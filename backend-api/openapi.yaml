@@ -48,6 +48,7 @@ paths:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/PageSizeParam"
         - $ref: "#/components/parameters/CategoryIdParam"
+        - $ref: "#/components/parameters/KeywordParam"
       responses:
         "200":
           description: 成功した操作
@@ -334,6 +335,14 @@ components:
       schema:
         type: integer
         format: int64
+
+    KeywordParam:
+      name: keyword
+      in: query
+      description: 商品名や説明に含まれる検索キーワード
+      required: false
+      schema:
+        type: string
 
   schemas:
     Product:

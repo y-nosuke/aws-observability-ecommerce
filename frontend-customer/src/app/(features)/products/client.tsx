@@ -15,59 +15,93 @@ interface ProductsClientProps {
 
 export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
   // クライアントサイドの状態管理
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeCategory, setActiveCategory] = useState<number>(0);
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
+
+  // 価格フィルターに基づいて商品をフィルタリングする関数
+  const applyPriceFilter = (product: Product): boolean => {
+    if (selectedPriceRanges.length === 0) return true;
+    
+    const price = product.salePrice || product.price;
+    
+    return selectedPriceRanges.some(range => {
+      switch (range) {
+        case "under-10000":
+          return price < 10000;
+        case "10000-30000":
+          return price >= 10000 && price < 30000;
+        case "30000-50000":
+          return price >= 30000 && price < 50000;
+        case "over-50000":
+          return price >= 50000;
+        default:
+          return true;
+      }
+    });
+  };
+
+  // 状態フィルターに基づいて商品をフィルタリングする関数
+  const applyStatusFilter = (product: Product): boolean => {
+    if (selectedStatuses.length === 0) return true;
+    
+    return selectedStatuses.some(status => {
+      switch (status) {
+        case "new":
+          return product.isNew;
+        case "sale":
+          return product.salePrice !== null;
+        default:
+          return true;
+      }
+    });
+  };
 
   // フィルター条件が変更されたときに実行されるエフェクト
   useEffect(() => {
+    // 商品のフィルタリング
     let filteredProducts = filterAndSortProducts(initialProducts, activeCategory, sortOption);
     
     // 価格フィルター適用
-    if (selectedPriceRanges.length > 0) {
-      filteredProducts = filteredProducts.filter(product => {
-        const price = product.salePrice || product.price;
-        
-        return selectedPriceRanges.some(range => {
-          switch (range) {
-            case "under-10000":
-              return price < 10000;
-            case "10000-30000":
-              return price >= 10000 && price < 30000;
-            case "30000-50000":
-              return price >= 30000 && price < 50000;
-            case "over-50000":
-              return price >= 50000;
-            default:
-              return true;
-          }
-        });
-      });
-    }
+    filteredProducts = filteredProducts.filter(applyPriceFilter);
     
     // 状態フィルター適用
-    if (selectedStatuses.length > 0) {
-      filteredProducts = filteredProducts.filter(product => {
-        return selectedStatuses.some(status => {
-          switch (status) {
-            case "new":
-              return product.isNew;
-            case "sale":
-              return product.salePrice !== null;
-            default:
-              return true;
-          }
-        });
-      });
-    }
+    filteredProducts = filteredProducts.filter(applyStatusFilter);
 
+    // 商品リストを更新
     setProducts(filteredProducts);
-  }, [activeCategory, sortOption, selectedPriceRanges, selectedStatuses, initialProducts]);
+
+    // カテゴリごとの商品数を再計算
+    const updatedCategories = categories.map(category => {
+      // 「すべて」カテゴリの場合
+      if (category.id === 0) {
+        // すべての商品に対してフィルターだけ適用
+        const count = initialProducts
+          .filter(applyPriceFilter)
+          .filter(applyStatusFilter)
+          .length;
+        return { ...category, productCount: count };
+      }
+      
+      // 特定のカテゴリの場合、そのカテゴリに属する商品のみをカウント
+      const count = initialProducts
+        .filter(product => product.categoryId === category.id)
+        .filter(applyPriceFilter)
+        .filter(applyStatusFilter)
+        .length;
+      
+      return { ...category, productCount: count };
+    });
+    
+    // 更新されたカテゴリ情報をセット
+    setFilteredCategories(updatedCategories);
+  }, [activeCategory, sortOption, selectedPriceRanges, selectedStatuses, initialProducts, categories]);
 
   // シンプルにした各ハンドラー
-  const handleCategoryChange = (categoryId: string) => {
+  const handleCategoryChange = (categoryId: number) => {
     setActiveCategory(categoryId);
   };
 
@@ -88,7 +122,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
       <div className="flex flex-col md:flex-row gap-8">
         {/* フィルターサイドバー */}
         <FilterSidebar
-          categories={categories}
+          categories={filteredCategories}
           activeCategory={activeCategory}
           onCategoryChange={handleCategoryChange}
           selectedPriceRanges={selectedPriceRanges}

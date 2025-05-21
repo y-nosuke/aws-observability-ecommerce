@@ -64,12 +64,12 @@ func TestProductRepository_CRUD(t *testing.T) {
 	assert.Equal(t, "Updated Test Product", updated.Name)
 
 	// FindAll
-	products, err := repo.FindAll(ctx, 10, 0)
+	products, err := repo.FindAll(ctx, 10, 0, nil)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, products)
 
 	// Count
-	count, err := repo.Count(ctx)
+	count, err := repo.Count(ctx, nil)
 	assert.NoError(t, err)
 	assert.NotZero(t, count)
 

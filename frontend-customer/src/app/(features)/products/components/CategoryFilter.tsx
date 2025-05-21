@@ -1,10 +1,12 @@
 interface CategoryFilterProps {
   categories: Array<{
-    id: string;
+    id: number;
     name: string;
+    slug?: string;
+    productCount?: number;
   }>;
-  activeCategory: string;
-  onCategoryChange: (categoryId: string) => void;
+  activeCategory: number;
+  onCategoryChange: (categoryId: number) => void;
 }
 
 export default function CategoryFilter({
@@ -28,6 +30,11 @@ export default function CategoryFilter({
               aria-current={activeCategory === category.id ? "true" : "false"}
             >
               {category.name}
+              {category.productCount !== undefined && (
+                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                  ({category.productCount})
+                </span>
+              )}
             </button>
           </li>
         ))}

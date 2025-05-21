@@ -48,6 +48,7 @@ paths:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/PageSizeParam"
         - $ref: "#/components/parameters/CategoryIdParam"
+        - $ref: "#/components/parameters/KeywordParam"
       responses:
         "200":
           description: 成功した操作
@@ -335,6 +336,14 @@ components:
         type: integer
         format: int64
 
+    KeywordParam:
+      name: keyword
+      in: query
+      description: 商品名や説明に含まれる検索キーワード
+      required: false
+      schema:
+        type: string
+
   schemas:
     Product:
       type: object
@@ -343,6 +352,7 @@ components:
         - name
         - price
         - categoryId
+        - inStock
       properties:
         id:
           type: integer
@@ -354,16 +364,26 @@ components:
         description:
           type: string
           description: 商品説明
+        sku:
+          type: string
+          description: SKUコード
         price:
           type: number
           format: float
           description: 商品価格
+        salePrice:
+          type: number
+          format: float
+          description: セール価格
         imageUrl:
           type: string
           description: 商品画像のURL
         inStock:
           type: boolean
           description: 在庫があるかどうか
+        stockQuantity:
+          type: integer
+          description: 在庫数
         categoryId:
           type: integer
           format: int64
@@ -371,6 +391,12 @@ components:
         categoryName:
           type: string
           description: カテゴリー名
+        isNew:
+          type: boolean
+          description: 新着商品かどうか
+        isFeatured:
+          type: boolean
+          description: おすすめ商品かどうか
         createdAt:
           type: string
           format: date-time
@@ -412,6 +438,7 @@ components:
       required:
         - id
         - name
+        - slug
       properties:
         id:
           type: integer
@@ -420,12 +447,22 @@ components:
         name:
           type: string
           description: カテゴリー名
+        slug:
+          type: string
+          description: カテゴリーのURL用スラッグ（一意）
         description:
           type: string
+          nullable: true
           description: カテゴリーの説明
         imageUrl:
           type: string
+          nullable: true
           description: カテゴリー画像のURL
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 親カテゴリーのID（階層構造用）
         productCount:
           type: integer
           description: このカテゴリーの商品数

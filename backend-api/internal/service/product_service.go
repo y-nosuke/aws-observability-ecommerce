@@ -62,7 +62,7 @@ type ProductListResult struct {
 }
 
 // GetProducts は商品一覧を取得します（ページネーション対応）
-func (s *ProductService) GetProducts(ctx context.Context, page, pageSize int) (*ProductListResult, error) {
+func (s *ProductService) GetProducts(ctx context.Context, page, pageSize int, keyword *string) (*ProductListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -77,7 +77,7 @@ func (s *ProductService) GetProducts(ctx context.Context, page, pageSize int) (*
 	offset := (page - 1) * pageSize
 
 	// 商品の総数を取得
-	total, err := s.productRepo.Count(ctx)
+	total, err := s.productRepo.Count(ctx, keyword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count products: %w", err)
 	}
@@ -89,7 +89,7 @@ func (s *ProductService) GetProducts(ctx context.Context, page, pageSize int) (*
 	}
 
 	// 商品一覧を取得
-	products, err := s.productRepo.FindAll(ctx, pageSize, offset)
+	products, err := s.productRepo.FindAll(ctx, pageSize, offset, keyword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
@@ -104,7 +104,7 @@ func (s *ProductService) GetProducts(ctx context.Context, page, pageSize int) (*
 }
 
 // GetProductsByCategory はカテゴリー別の商品一覧を取得します
-func (s *ProductService) GetProductsByCategory(ctx context.Context, categoryID int, page, pageSize int) (*ProductListResult, error) {
+func (s *ProductService) GetProductsByCategory(ctx context.Context, categoryID int, page, pageSize int, keyword *string) (*ProductListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -119,7 +119,7 @@ func (s *ProductService) GetProductsByCategory(ctx context.Context, categoryID i
 	offset := (page - 1) * pageSize
 
 	// カテゴリー別商品の総数を取得
-	total, err := s.productRepo.CountByCategory(ctx, categoryID)
+	total, err := s.productRepo.CountByCategory(ctx, categoryID, keyword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count products by category: %w", err)
 	}
@@ -131,7 +131,7 @@ func (s *ProductService) GetProductsByCategory(ctx context.Context, categoryID i
 	}
 
 	// カテゴリー別商品一覧を取得
-	products, err := s.productRepo.FindByCategory(ctx, categoryID, pageSize, offset)
+	products, err := s.productRepo.FindByCategory(ctx, categoryID, pageSize, offset, keyword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products by category: %w", err)
 	}

@@ -20,6 +20,11 @@ require (
 )
 
 require (
+	github.com/ericlagergren/decimal v0.0.0-20190420051523-6335edbaa640 // indirect
+	github.com/lib/pq v1.10.6 // indirect
+)
+
+require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67

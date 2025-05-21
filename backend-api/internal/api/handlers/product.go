@@ -43,15 +43,21 @@ func (h *ProductHandler) ListProducts(ctx echo.Context, params openapi.ListProdu
 		pageSize = *params.PageSize
 	}
 
+	// キーワードの取得
+	var keyword *string
+	if params.Keyword != nil && *params.Keyword != "" {
+		keyword = params.Keyword
+	}
+
 	var result *service.ProductListResult
 	var err error
 
 	// カテゴリーIDでフィルタリングするかどうかを判定
 	if params.CategoryId != nil {
 		categoryID := int(*params.CategoryId)
-		result, err = h.productService.GetProductsByCategory(ctx.Request().Context(), categoryID, page, pageSize)
+		result, err = h.productService.GetProductsByCategory(ctx.Request().Context(), categoryID, page, pageSize, keyword)
 	} else {
-		result, err = h.productService.GetProducts(ctx.Request().Context(), page, pageSize)
+		result, err = h.productService.GetProducts(ctx.Request().Context(), page, pageSize, keyword)
 	}
 
 	if err != nil {
@@ -71,8 +77,11 @@ func (h *ProductHandler) ListProducts(ctx echo.Context, params openapi.ListProdu
 	for _, p := range result.Items {
 		// 在庫状態の取得
 		inStock := false
+		var quantity *int
 		if p.R != nil && p.R.Inventories != nil && len(p.R.Inventories) > 0 {
 			inStock = p.R.Inventories[0].Quantity > 0
+			q := p.R.Inventories[0].Quantity
+			quantity = &q
 		}
 
 		// カテゴリー名の取得
@@ -81,18 +90,37 @@ func (h *ProductHandler) ListProducts(ctx echo.Context, params openapi.ListProdu
 			categoryName = &p.R.Category.Name
 		}
 
+		// 価格のパース
 		price, _ := p.Price.Float64()
+
+		// セール価格は値がある場合のみ設定
+		var salePrice *float32
+		if !p.SalePrice.IsZero() {
+			sp, _ := p.SalePrice.Float64()
+			spFloat := float32(sp)
+			salePrice = &spFloat
+		}
+
+		isNew := p.IsNew
+		isFeatured := p.IsFeatured
+		sku := p.Sku
+
 		items = append(items, openapi.Product{
-			Id:           int64(p.ID),
-			Name:         p.Name,
-			Description:  stringPtr(p.Description.String),
-			Price:        float32(price),
-			ImageUrl:     stringPtr(p.ImageURL.String),
-			InStock:      &inStock,
-			CategoryId:   int64(p.CategoryID),
-			CategoryName: categoryName,
-			CreatedAt:    &p.CreatedAt,
-			UpdatedAt:    &p.UpdatedAt,
+			Id:            int64(p.ID),
+			Name:          p.Name,
+			Description:   stringPtr(p.Description.String),
+			Sku:           &sku,
+			Price:         float32(price),
+			SalePrice:     salePrice,
+			ImageUrl:      stringPtr(p.ImageURL.String),
+			InStock:       inStock,
+			StockQuantity: quantity,
+			CategoryId:    int64(p.CategoryID),
+			CategoryName:  categoryName,
+			IsNew:         &isNew,
+			IsFeatured:    &isFeatured,
+			CreatedAt:     &p.CreatedAt,
+			UpdatedAt:     &p.UpdatedAt,
 		})
 	}
 
@@ -149,8 +177,11 @@ func (h *ProductHandler) GetProductById(ctx echo.Context, id int64) error {
 
 	// 在庫状態の取得
 	inStock := false
+	var quantity *int
 	if product.R != nil && product.R.Inventories != nil && len(product.R.Inventories) > 0 {
 		inStock = product.R.Inventories[0].Quantity > 0
+		q := product.R.Inventories[0].Quantity
+		quantity = &q
 	}
 
 	// カテゴリー名の取得
@@ -162,18 +193,35 @@ func (h *ProductHandler) GetProductById(ctx echo.Context, id int64) error {
 	// 価格のパース
 	price, _ := product.Price.Float64()
 
+	// セール価格は値がある場合のみ設定
+	var salePrice *float32
+	if product.SalePrice.IsZero() {
+		sp, _ := product.SalePrice.Float64()
+		spFloat := float32(sp)
+		salePrice = &spFloat
+	}
+
+	isNew := product.IsNew
+	isFeatured := product.IsFeatured
+	sku := product.Sku
+
 	// レスポンスの構築
 	response := openapi.Product{
-		Id:           int64(product.ID),
-		Name:         product.Name,
-		Description:  stringPtr(product.Description.String),
-		Price:        float32(price),
-		ImageUrl:     stringPtr(product.ImageURL.String),
-		InStock:      &inStock,
-		CategoryId:   int64(product.CategoryID),
-		CategoryName: categoryName,
-		CreatedAt:    &product.CreatedAt,
-		UpdatedAt:    &product.UpdatedAt,
+		Id:            int64(product.ID),
+		Name:          product.Name,
+		Description:   stringPtr(product.Description.String),
+		Sku:           &sku,
+		Price:         float32(price),
+		SalePrice:     salePrice,
+		ImageUrl:      stringPtr(product.ImageURL.String),
+		InStock:       inStock,
+		StockQuantity: quantity,
+		CategoryId:    int64(product.CategoryID),
+		CategoryName:  categoryName,
+		IsNew:         &isNew,
+		IsFeatured:    &isFeatured,
+		CreatedAt:     &product.CreatedAt,
+		UpdatedAt:     &product.UpdatedAt,
 	}
 
 	return ctx.JSON(http.StatusOK, response)
@@ -193,7 +241,7 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 	}
 
 	// サービスからカテゴリー別商品一覧を取得
-	result, err := h.productService.GetProductsByCategory(ctx.Request().Context(), int(id), page, pageSize)
+	result, err := h.productService.GetProductsByCategory(ctx.Request().Context(), int(id), page, pageSize, nil)
 	if err != nil {
 		// エラーの種類に応じて適切なレスポンスを返す
 		if strings.Contains(err.Error(), "category not found") {
@@ -223,8 +271,11 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 	for _, p := range result.Items {
 		// 在庫状態の取得
 		inStock := false
+		var quantity *int
 		if p.R != nil && p.R.Inventories != nil && len(p.R.Inventories) > 0 {
 			inStock = p.R.Inventories[0].Quantity > 0
+			q := p.R.Inventories[0].Quantity
+			quantity = &q
 		}
 
 		// カテゴリー名の取得
@@ -233,18 +284,37 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 			categoryName = &p.R.Category.Name
 		}
 
+		// 価格のパース
 		price, _ := p.Price.Float64()
+
+		// セール価格は値がある場合のみ設定
+		var salePrice *float32
+		if p.SalePrice.IsZero() {
+			sp, _ := p.SalePrice.Float64()
+			spFloat := float32(sp)
+			salePrice = &spFloat
+		}
+
+		isNew := p.IsNew
+		isFeatured := p.IsFeatured
+		sku := p.Sku
+
 		items = append(items, openapi.Product{
-			Id:           int64(p.ID),
-			Name:         p.Name,
-			Description:  stringPtr(p.Description.String),
-			Price:        float32(price),
-			ImageUrl:     stringPtr(p.ImageURL.String),
-			InStock:      &inStock,
-			CategoryId:   int64(p.CategoryID),
-			CategoryName: categoryName,
-			CreatedAt:    &p.CreatedAt,
-			UpdatedAt:    &p.UpdatedAt,
+			Id:            int64(p.ID),
+			Name:          p.Name,
+			Description:   stringPtr(p.Description.String),
+			Sku:           &sku,
+			Price:         float32(price),
+			SalePrice:     salePrice,
+			ImageUrl:      stringPtr(p.ImageURL.String),
+			InStock:       inStock,
+			StockQuantity: quantity,
+			CategoryId:    int64(p.CategoryID),
+			CategoryName:  categoryName,
+			IsNew:         &isNew,
+			IsFeatured:    &isFeatured,
+			CreatedAt:     &p.CreatedAt,
+			UpdatedAt:     &p.UpdatedAt,
 		})
 	}
 

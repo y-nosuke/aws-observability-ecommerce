@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Product, Category, SortOption } from "@/services/products/types";
-import { filterAndSortProducts } from "@/services/products/api";
+import { productsApi } from "@/services/products/api";
+import { Category, Product, SortOption } from "@/services/products/types";
+import { useEffect, useState } from "react";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import SortSelector from "./components/SortSelector";
@@ -13,92 +13,39 @@ interface ProductsClientProps {
   categories: Category[];
 }
 
-export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
+export default function ProductsClient({
+  initialProducts,
+  categories,
+}: ProductsClientProps) {
   // クライアントサイドの状態管理
   const [activeCategory, setActiveCategory] = useState<number>(0);
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
-
-  // 価格フィルターに基づいて商品をフィルタリングする関数
-  const applyPriceFilter = (product: Product): boolean => {
-    if (selectedPriceRanges.length === 0) return true;
-    
-    const price = product.salePrice || product.price;
-    
-    return selectedPriceRanges.some(range => {
-      switch (range) {
-        case "under-10000":
-          return price < 10000;
-        case "10000-30000":
-          return price >= 10000 && price < 30000;
-        case "30000-50000":
-          return price >= 30000 && price < 50000;
-        case "over-50000":
-          return price >= 50000;
-        default:
-          return true;
-      }
-    });
-  };
-
-  // 状態フィルターに基づいて商品をフィルタリングする関数
-  const applyStatusFilter = (product: Product): boolean => {
-    if (selectedStatuses.length === 0) return true;
-    
-    return selectedStatuses.some(status => {
-      switch (status) {
-        case "new":
-          return product.isNew;
-        case "sale":
-          return product.salePrice !== null;
-        default:
-          return true;
-      }
-    });
-  };
+  const [filteredCategories, setFilteredCategories] =
+    useState<Category[]>(categories);
 
   // フィルター条件が変更されたときに実行されるエフェクト
   useEffect(() => {
-    // 商品のフィルタリング
-    let filteredProducts = filterAndSortProducts(initialProducts, activeCategory, sortOption);
-    
-    // 価格フィルター適用
-    filteredProducts = filteredProducts.filter(applyPriceFilter);
-    
-    // 状態フィルター適用
-    filteredProducts = filteredProducts.filter(applyStatusFilter);
+    // カテゴリーが変更された場合、サーバーから商品を取得
+    if (activeCategory !== 0) {
+      productsApi
+        .getProductsByCategory(activeCategory)
+        .then((response) => {
+          setProducts(response.items);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch products by category:", error);
+        });
+    } else {
+      // カテゴリーが選択されていない場合は初期商品を表示
+      setProducts(initialProducts);
+    }
 
-    // 商品リストを更新
-    setProducts(filteredProducts);
-
-    // カテゴリごとの商品数を再計算
-    const updatedCategories = categories.map(category => {
-      // 「すべて」カテゴリの場合
-      if (category.id === 0) {
-        // すべての商品に対してフィルターだけ適用
-        const count = initialProducts
-          .filter(applyPriceFilter)
-          .filter(applyStatusFilter)
-          .length;
-        return { ...category, productCount: count };
-      }
-      
-      // 特定のカテゴリの場合、そのカテゴリに属する商品のみをカウント
-      const count = initialProducts
-        .filter(product => product.categoryId === category.id)
-        .filter(applyPriceFilter)
-        .filter(applyStatusFilter)
-        .length;
-      
-      return { ...category, productCount: count };
-    });
-    
-    // 更新されたカテゴリ情報をセット
-    setFilteredCategories(updatedCategories);
-  }, [activeCategory, sortOption, selectedPriceRanges, selectedStatuses, initialProducts, categories]);
+    // カテゴリ情報を更新
+    setFilteredCategories(categories);
+  }, [activeCategory, categories, initialProducts]);
 
   // シンプルにした各ハンドラー
   const handleCategoryChange = (categoryId: number) => {
@@ -106,14 +53,17 @@ export default function ProductsClient({ initialProducts, categories }: Products
   };
 
   const handleSortChange = (option: SortOption) => {
+    // 並び替えはサーバーサイドで行うため、ここでは実装しない
     setSortOption(option);
   };
 
   const handlePriceFilterChange = (priceRanges: string[]) => {
+    // 価格フィルターはサーバーサイドで行うため、ここでは実装しない
     setSelectedPriceRanges(priceRanges);
   };
 
   const handleStatusFilterChange = (statuses: string[]) => {
+    // 状態フィルターはサーバーサイドで行うため、ここでは実装しない
     setSelectedStatuses(statuses);
   };
 
@@ -142,7 +92,7 @@ export default function ProductsClient({ initialProducts, categories }: Products
           </div>
 
           <ProductGrid products={products} />
-          
+
           {/* 商品がない場合のメッセージ */}
           {products.length === 0 && (
             <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">

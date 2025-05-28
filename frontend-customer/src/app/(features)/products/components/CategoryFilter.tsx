@@ -18,6 +18,19 @@ export default function CategoryFilter({
     <div className="mb-8">
       <h2 className="text-xl font-bold mb-4">カテゴリー</h2>
       <ul className="space-y-2">
+        <li>
+          <button
+            onClick={() => onCategoryChange(0)}
+            className={`w-full text-left py-2 px-3 rounded-lg transition-colors ${
+              activeCategory === 0
+                ? "bg-primary text-white font-medium"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+            aria-current={activeCategory === 0 ? "true" : "false"}
+          >
+            すべて
+          </button>
+        </li>
         {categories.map((category) => (
           <li key={category.id}>
             <button

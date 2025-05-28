@@ -289,7 +289,7 @@ func (h *ProductHandler) ListProductsByCategory(ctx echo.Context, id int64, para
 
 		// セール価格は値がある場合のみ設定
 		var salePrice *float32
-		if p.SalePrice.IsZero() {
+		if !p.SalePrice.IsZero() {
 			sp, _ := p.SalePrice.Float64()
 			spFloat := float32(sp)
 			salePrice = &spFloat

@@ -16,6 +16,15 @@ export interface Product {
   updatedAt?: string;
 }
 
+// openapi.yamlのProductListスキーマに対応
+export interface ProductListResponse {
+  items: Product[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -26,4 +35,4 @@ export interface Category {
   productCount?: number;
 }
 
-export type SortOption = 'recommended' | 'newest' | 'price-asc' | 'price-desc';
+export type SortOption = "recommended" | "newest" | "price-asc" | "price-desc";

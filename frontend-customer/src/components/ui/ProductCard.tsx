@@ -37,6 +37,7 @@ export default function ProductCard({
             alt={name}
             width={400}
             height={300}
+            priority={true}
             className="w-full h-full object-cover"
           />
         ) : (

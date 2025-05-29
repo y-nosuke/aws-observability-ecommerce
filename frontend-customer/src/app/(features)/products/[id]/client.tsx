@@ -22,27 +22,40 @@ export default function ProductDetailClient({
     alert(`「${product.name}」を${quantity}個カートに追加しました`);
   };
 
+  // 数量変更時のバリデーションをより厳密に
   const handleQuantityChange = (value: number) => {
-    if (value >= 1 && value <= (product.stockQuantity || 99)) {
-      setQuantity(value);
+    if (isNaN(value) || value < 1) {
+      setQuantity(1);
+      return;
     }
+    const maxQuantity = product.stockQuantity || 99;
+    setQuantity(Math.min(value, maxQuantity));
   };
 
   const displayPrice = product.salePrice || product.price;
   const hasDiscount = product.salePrice && product.salePrice < product.price;
 
+  // 商品説明文のXSS対策
+  const sanitizedDescription = product.description
+    ? product.description.replace(/[<>]/g, "")
+    : "";
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* パンくずナビゲーション */}
-      <nav className="flex mb-8 text-sm">
+      <nav className="flex mb-8 text-sm" aria-label="パンくずリスト">
         <Link href="/" className="text-gray-500 hover:text-gray-700">
           ホーム
         </Link>
-        <span className="mx-2 text-gray-500">/</span>
+        <span className="mx-2 text-gray-500" aria-hidden="true">
+          /
+        </span>
         <Link href="/products" className="text-gray-500 hover:text-gray-700">
           商品一覧
         </Link>
-        <span className="mx-2 text-gray-500">/</span>
+        <span className="mx-2 text-gray-500" aria-hidden="true">
+          /
+        </span>
         <span className="text-gray-900">{product.name}</span>
       </nav>
 
@@ -68,6 +81,7 @@ export default function ProductDetailClient({
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -81,12 +95,20 @@ export default function ProductDetailClient({
 
             {/* バッジ */}
             {product.isNew && (
-              <div className="absolute top-4 left-4 badge bg-blue-500">
+              <div
+                className="absolute top-4 left-4 badge bg-blue-500"
+                role="status"
+                aria-label="新着商品"
+              >
                 新着
               </div>
             )}
             {hasDiscount && (
-              <div className="absolute top-4 right-4 badge bg-red-500">
+              <div
+                className="absolute top-4 right-4 badge bg-red-500"
+                role="status"
+                aria-label="セール中"
+              >
                 SALE
               </div>
             )}
@@ -139,11 +161,11 @@ export default function ProductDetailClient({
           </div>
 
           {/* 商品説明 */}
-          {product.description && (
+          {sanitizedDescription && (
             <div>
               <h2 className="text-lg font-semibold mb-2">商品説明</h2>
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {product.description}
+                {sanitizedDescription}
               </p>
             </div>
           )}
@@ -158,6 +180,7 @@ export default function ProductDetailClient({
                     className="w-4 h-4"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -173,6 +196,7 @@ export default function ProductDetailClient({
                     className="w-4 h-4"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -203,6 +227,7 @@ export default function ProductDetailClient({
                     onClick={() => handleQuantityChange(quantity - 1)}
                     className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                     disabled={quantity <= 1}
+                    aria-label="数量を減らす"
                   >
                     -
                   </button>
@@ -216,11 +241,13 @@ export default function ProductDetailClient({
                       handleQuantityChange(parseInt(e.target.value) || 1)
                     }
                     className="w-16 px-3 py-2 text-center border-x focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label="商品の数量"
                   />
                   <button
                     onClick={() => handleQuantityChange(quantity + 1)}
                     className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                     disabled={quantity >= (product.stockQuantity || 99)}
+                    aria-label="数量を増やす"
                   >
                     +
                   </button>
@@ -230,6 +257,7 @@ export default function ProductDetailClient({
               <button
                 onClick={handleAddToCart}
                 className="w-full bg-primary text-white py-3 px-6 rounded-md font-medium hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label={`${product.name}を${quantity}個カートに追加`}
               >
                 カートに追加 - ¥{(displayPrice * quantity).toLocaleString()}
               </button>

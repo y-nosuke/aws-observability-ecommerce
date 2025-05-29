@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -16,6 +16,8 @@ export default function ImageModal({
   imageUrl,
   altText,
 }: ImageModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Escキーでモーダルを閉じる
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -27,6 +29,16 @@ export default function ImageModal({
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
       document.body.style.overflow = "hidden"; // 背景のスクロールを無効化
+
+      // モーダルが開いたときに最初のフォーカス可能な要素にフォーカス
+      if (modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length > 0) {
+          (focusableElements[0] as HTMLElement).focus();
+        }
+      }
     }
 
     return () => {
@@ -38,11 +50,18 @@ export default function ImageModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="商品画像の拡大表示"
+    >
       {/* オーバーレイ */}
       <div
         className="absolute inset-0 bg-black bg-opacity-75 transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* モーダルコンテンツ */}
@@ -59,6 +78,7 @@ export default function ImageModal({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -83,7 +103,10 @@ export default function ImageModal({
       </div>
 
       {/* 操作ヒント */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm opacity-75">
+      <div
+        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm opacity-75"
+        aria-live="polite"
+      >
         <p>Escキーまたはクリックで閉じる</p>
       </div>
     </div>

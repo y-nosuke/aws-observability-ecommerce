@@ -25,26 +25,35 @@ export default function ProductsClient({
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [filteredCategories, setFilteredCategories] =
     useState<Category[]>(categories);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // フィルター条件が変更されたときに実行されるエフェクト
   useEffect(() => {
-    // カテゴリーが変更された場合、サーバーから商品を取得
-    if (activeCategory !== 0) {
-      productsApi
-        .getProductsByCategory(activeCategory)
-        .then((response) => {
+    const fetchProductsByCategory = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        if (activeCategory !== 0) {
+          const response = await productsApi.getProductsByCategory(
+            activeCategory
+          );
           setProducts(response.items);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch products by category:", error);
-        });
-    } else {
-      // カテゴリーが選択されていない場合は初期商品を表示
-      setProducts(initialProducts);
-    }
+        } else {
+          setProducts(initialProducts);
+        }
+        setFilteredCategories(categories);
+      } catch (error) {
+        console.error("Failed to fetch products by category:", error);
+        setError(
+          "商品データの取得に失敗しました。しばらく時間をおいてから再度お試しください。"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // カテゴリ情報を更新
-    setFilteredCategories(categories);
+    fetchProductsByCategory();
   }, [activeCategory, categories, initialProducts]);
 
   // シンプルにした各ハンドラー
@@ -91,15 +100,36 @@ export default function ProductsClient({
             />
           </div>
 
-          <ProductGrid products={products} />
-
-          {/* 商品がない場合のメッセージ */}
-          {products.length === 0 && (
-            <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
-              <p className="text-gray-600 dark:text-gray-300">
-                条件に一致する商品がありません。フィルターを変更してください。
-              </p>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
+          ) : error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg text-center">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  handleCategoryChange(activeCategory);
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                再試行
+              </button>
+            </div>
+          ) : (
+            <>
+              <ProductGrid products={products} />
+
+              {/* 商品がない場合のメッセージ */}
+              {products.length === 0 && (
+                <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
+                  <p className="text-gray-600 dark:text-gray-300">
+                    条件に一致する商品がありません。フィルターを変更してください。
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

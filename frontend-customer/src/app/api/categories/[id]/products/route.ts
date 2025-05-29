@@ -13,10 +13,11 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const page = searchParams.get("page");
     const pageSize = searchParams.get("pageSize");
+    const { id: categoryId } = await params;
 
     // バックエンドAPIにリクエスト
     const response = await axios.get(
-      `${BACKEND_API_URL}/categories/${params.id}/products`,
+      `${BACKEND_API_URL}/categories/${categoryId}/products`,
       {
         params: {
           page,

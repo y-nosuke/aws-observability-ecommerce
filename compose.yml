@@ -75,7 +75,8 @@ services:
     container_name: frontend-customer
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend-api:8000/api
+      - NEXT_PUBLIC_API_URL=/api
+      - BACKEND_API_URL=http://backend-api:8000/api
     volumes:
       - ./frontend-customer:/app # ホットリロード用
       - /app/node_modules # node_modulesはコンテナ内のまま

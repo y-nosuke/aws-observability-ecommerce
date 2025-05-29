@@ -20,6 +20,51 @@ AWSオブザーバビリティのパターンを学習するためのeコマー�
 - LocalStack CLI (`pip install localstack`)
 - LocalStack Desktop（[ダウンロードページ](https://app.localstack.cloud/resources/desktop)からインストール）
 
+## 環境変数の設定
+
+アプリケーションを動作させるために、以下の環境変数が必要です。`.envrc`ファイルを作成し、以下の内容を設定してください：
+
+```bash
+export APP_NAME=aws-observability-ecommerce
+export APP_VERSION=1.0.0
+export APP_ENV=development
+export PORT=8000
+
+# MySQL設定
+export MYSQL_HOST=localhost
+export MYSQL_PORT=3306
+export MYSQL_ROOT_PASSWORD=rootpassword
+export MYSQL_DATABASE=ecommerce
+export MYSQL_USER=ecommerce_user
+export MYSQL_PASSWORD=ecommerce_password
+
+# AWS設定（LocalStack用）
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=ap-northeast-1
+export AWS_ENDPOINT_URL=http://localhost:4566
+
+# 開発環境設定
+export ENVIRONMENT=development
+
+# データベース接続情報
+export DB_HOST=${MYSQL_HOST}
+export DB_PORT=${MYSQL_PORT}
+export DB_NAME=${MYSQL_DATABASE}
+export DB_USER=${MYSQL_USER}
+export DB_PASSWORD=${MYSQL_PASSWORD}
+export DB_DSN="${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}"
+export MYSQL_DSN="mysql://${DB_DSN}"
+
+export MIGRATIONS_PATH=./backend-api/internal/db/migrations
+```
+
+環境変数を設定した後、以下のコマンドで環境変数を読み込みます：
+
+```bash
+direnv allow
+```
+
 ## プロジェクト構成
 
 ```text

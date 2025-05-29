@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Product, Category, SortOption } from "@/services/products/types";
-import { filterAndSortProducts } from "@/services/products/api";
+import { productsApi } from "@/services/products/api";
+import { Category, Product, SortOption } from "@/services/products/types";
+import { useEffect, useState } from "react";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import SortSelector from "./components/SortSelector";
@@ -13,92 +13,48 @@ interface ProductsClientProps {
   categories: Category[];
 }
 
-export default function ProductsClient({ initialProducts, categories }: ProductsClientProps) {
+export default function ProductsClient({
+  initialProducts,
+  categories,
+}: ProductsClientProps) {
   // クライアントサイドの状態管理
   const [activeCategory, setActiveCategory] = useState<number>(0);
   const [sortOption, setSortOption] = useState<SortOption>("recommended");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
-
-  // 価格フィルターに基づいて商品をフィルタリングする関数
-  const applyPriceFilter = (product: Product): boolean => {
-    if (selectedPriceRanges.length === 0) return true;
-    
-    const price = product.salePrice || product.price;
-    
-    return selectedPriceRanges.some(range => {
-      switch (range) {
-        case "under-10000":
-          return price < 10000;
-        case "10000-30000":
-          return price >= 10000 && price < 30000;
-        case "30000-50000":
-          return price >= 30000 && price < 50000;
-        case "over-50000":
-          return price >= 50000;
-        default:
-          return true;
-      }
-    });
-  };
-
-  // 状態フィルターに基づいて商品をフィルタリングする関数
-  const applyStatusFilter = (product: Product): boolean => {
-    if (selectedStatuses.length === 0) return true;
-    
-    return selectedStatuses.some(status => {
-      switch (status) {
-        case "new":
-          return product.isNew;
-        case "sale":
-          return product.salePrice !== null;
-        default:
-          return true;
-      }
-    });
-  };
+  const [filteredCategories, setFilteredCategories] =
+    useState<Category[]>(categories);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // フィルター条件が変更されたときに実行されるエフェクト
   useEffect(() => {
-    // 商品のフィルタリング
-    let filteredProducts = filterAndSortProducts(initialProducts, activeCategory, sortOption);
-    
-    // 価格フィルター適用
-    filteredProducts = filteredProducts.filter(applyPriceFilter);
-    
-    // 状態フィルター適用
-    filteredProducts = filteredProducts.filter(applyStatusFilter);
-
-    // 商品リストを更新
-    setProducts(filteredProducts);
-
-    // カテゴリごとの商品数を再計算
-    const updatedCategories = categories.map(category => {
-      // 「すべて」カテゴリの場合
-      if (category.id === 0) {
-        // すべての商品に対してフィルターだけ適用
-        const count = initialProducts
-          .filter(applyPriceFilter)
-          .filter(applyStatusFilter)
-          .length;
-        return { ...category, productCount: count };
+    const fetchProductsByCategory = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        if (activeCategory !== 0) {
+          const response = await productsApi.getProductsByCategory(
+            activeCategory
+          );
+          setProducts(response.items);
+        } else {
+          setProducts(initialProducts);
+        }
+        setFilteredCategories(categories);
+      } catch (error) {
+        console.error("Failed to fetch products by category:", error);
+        setError(
+          "商品データの取得に失敗しました。しばらく時間をおいてから再度お試しください。"
+        );
+      } finally {
+        setIsLoading(false);
       }
-      
-      // 特定のカテゴリの場合、そのカテゴリに属する商品のみをカウント
-      const count = initialProducts
-        .filter(product => product.categoryId === category.id)
-        .filter(applyPriceFilter)
-        .filter(applyStatusFilter)
-        .length;
-      
-      return { ...category, productCount: count };
-    });
-    
-    // 更新されたカテゴリ情報をセット
-    setFilteredCategories(updatedCategories);
-  }, [activeCategory, sortOption, selectedPriceRanges, selectedStatuses, initialProducts, categories]);
+    };
+
+    fetchProductsByCategory();
+  }, [activeCategory, categories, initialProducts]);
 
   // シンプルにした各ハンドラー
   const handleCategoryChange = (categoryId: number) => {
@@ -106,14 +62,17 @@ export default function ProductsClient({ initialProducts, categories }: Products
   };
 
   const handleSortChange = (option: SortOption) => {
+    // 並び替えはサーバーサイドで行うため、ここでは実装しない
     setSortOption(option);
   };
 
   const handlePriceFilterChange = (priceRanges: string[]) => {
+    // 価格フィルターはサーバーサイドで行うため、ここでは実装しない
     setSelectedPriceRanges(priceRanges);
   };
 
   const handleStatusFilterChange = (statuses: string[]) => {
+    // 状態フィルターはサーバーサイドで行うため、ここでは実装しない
     setSelectedStatuses(statuses);
   };
 
@@ -141,15 +100,36 @@ export default function ProductsClient({ initialProducts, categories }: Products
             />
           </div>
 
-          <ProductGrid products={products} />
-          
-          {/* 商品がない場合のメッセージ */}
-          {products.length === 0 && (
-            <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
-              <p className="text-gray-600 dark:text-gray-300">
-                条件に一致する商品がありません。フィルターを変更してください。
-              </p>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
+          ) : error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg text-center">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  handleCategoryChange(activeCategory);
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                再試行
+              </button>
+            </div>
+          ) : (
+            <>
+              <ProductGrid products={products} />
+
+              {/* 商品がない場合のメッセージ */}
+              {products.length === 0 && (
+                <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
+                  <p className="text-gray-600 dark:text-gray-300">
+                    条件に一致する商品がありません。フィルターを変更してください。
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

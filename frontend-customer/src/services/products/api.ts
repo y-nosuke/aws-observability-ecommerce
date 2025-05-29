@@ -103,31 +103,11 @@ export function filterAndSortProducts(
     | "price-desc"
     | "newest" = "recommended"
 ): Product[] {
-  console.log("Category type:", typeof category);
-  console.log(
-    "Product categoryId types:",
-    products.map((p) => ({
-      id: p.id,
-      categoryId: p.categoryId,
-      type: typeof p.categoryId,
-    }))
-  );
-
   // カテゴリーでフィルタリング
   const filtered =
     category === 0
       ? products
-      : products.filter((product) => {
-          console.log("Comparing:", {
-            category,
-            productCategoryId: product.categoryId,
-            types: {
-              category: typeof category,
-              productCategoryId: typeof product.categoryId,
-            },
-          });
-          return product.categoryId === category;
-        });
+      : products.filter((product) => product.categoryId === category);
 
   // 並び替え
   return sortProducts(filtered, sortOption);

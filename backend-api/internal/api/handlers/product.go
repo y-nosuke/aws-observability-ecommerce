@@ -195,7 +195,7 @@ func (h *ProductHandler) GetProductById(ctx echo.Context, id int64) error {
 
 	// セール価格は値がある場合のみ設定
 	var salePrice *float32
-	if product.SalePrice.IsZero() {
+	if !product.SalePrice.IsZero() {
 		sp, _ := product.SalePrice.Float64()
 		spFloat := float32(sp)
 		salePrice = &spFloat

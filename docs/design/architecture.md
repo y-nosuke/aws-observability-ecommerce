@@ -186,9 +186,8 @@ backend-api/
 │               │   └── error_handler.go
 │               ├── presenter/
 │               │   └── error_presenter.go
-│               └── openapi/                     # OpenAPI生成
-│                   ├── openapi_models.go    # oapi-codegen生成
-│                   └── openapi_server.go    # oapi-codegen生成
+│               └── openapi/                          # OpenAPI生成
+│                   └── oapi-codegen-config.gen.go    # oapi-codegen生成
 ├── api/                                     # API仕様
 │   ├── openapi.yaml
 │   └── docs/

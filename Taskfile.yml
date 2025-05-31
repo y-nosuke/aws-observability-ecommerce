@@ -1,5 +1,8 @@
 version: "3"
 
+env:
+  MIGRATIONS_PATH: backend-api/internal/db/migrations
+
 tasks:
   default:
     desc: プロジェクトのヘルプを表示
@@ -273,6 +276,12 @@ tasks:
     cmds:
       - migrate -path ${MIGRATIONS_PATH} -database "${MYSQL_DSN}" down
 
+  generate:
+    desc: モデルとOpenAPIを生成
+    cmds:
+      - task: generate:models
+      - task: generate:openapi
+
   generate:models:
     desc: SQLBoilerでモデルを生成
     dir: backend-api
@@ -283,5 +292,5 @@ tasks:
     desc: OpenAPIでモデルを生成
     dir: backend-api
     cmds:
-      - mkdir -p internal/api/openapi
+      - mkdir -p internal/shared/presentation/rest/openapi
       - oapi-codegen --config oapi-codegen-config.yaml openapi.yaml

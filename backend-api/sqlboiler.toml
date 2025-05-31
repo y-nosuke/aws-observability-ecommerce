@@ -1,4 +1,4 @@
-output = "internal/db/models"
+output = "internal/shared/infrastructure/models"
 no-tests = true
 wipe = true
 add-global-variants = true

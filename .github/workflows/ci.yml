@@ -54,14 +54,14 @@ jobs:
       - name: Generate code (api)
         run: |
           cd backend-api
-          mkdir -p internal/api/openapi
+          mkdir -p internal/shared/presentation/rest/openapi
           oapi-codegen -config oapi-codegen-config.yaml openapi.yaml
 
       - name: Generate code (sqlboiler)
         run: |
           cd backend-api
           # Run database migrations
-          migrate -path internal/db/migrations -database "mysql://ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" up
+          migrate -path migrations -database "mysql://ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" up
 
           # Generate models
           sqlboiler mysql

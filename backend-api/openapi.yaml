@@ -258,7 +258,7 @@ paths:
       description: 特定のカテゴリーに属する商品のページネーション対応リストを返します
       operationId: listProductsByCategory
       tags:
-        - product
+        - category
       parameters:
         - $ref: "#/components/parameters/CategoryIdPathParam"
         - $ref: "#/components/parameters/PageParam"

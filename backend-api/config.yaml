@@ -1,0 +1,32 @@
+app:
+  name: "aws-observability-ecommerce"
+  version: "1.0.0"
+  environment: "development"
+
+server:
+  port: 8000
+  host: "0.0.0.0"
+  read_timeout: 30
+  write_timeout: 30
+
+database:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "password"
+  name: "ecommerce"
+  max_open_conns: 25
+  max_idle_conns: 25
+  conn_max_lifetime: 5  # minutes
+
+aws:
+  use_localstack: true
+  region: "ap-northeast-1"
+  endpoint: "http://localstack:4566"
+  access_key: "test"
+  secret_key: "test"
+  token: ""
+  s3:
+    bucket_name: "product-images"
+    presigned_url_ttl: 3600  # seconds (1 hour)
+    use_path_style: true

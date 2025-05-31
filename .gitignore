@@ -7,8 +7,8 @@
 *.dylib
 logs
 
-backend-api/internal/db/models
-backend-api/internal/api/openapi
+backend-api/internal/shared/infrastructure/models
+backend-api/internal/shared/presentation/rest/openapi
 backend-image-processor/build
 
 # Test binary, built with `go test -c`

@@ -116,6 +116,11 @@ backend-api/
 │   │           │   └── product_handler.go   # 商品API（command専用）
 │   │           └── presenter/
 │   │               └── product_presenter.go
+│   ├── system/                              # システムドメイン
+│   │   └── presentation/
+│   │       └── rest/
+│   │           └── handler/
+│   │               └── health_handler.go    # ヘルスチェックAPI
 │   ├── category/                            # カテゴリドメイン（productと同様の構成）
 │   │   ├── application/                     # usecase, dto
 │   │   ├── domain/                          # entity, valueobject, repository, service, factory
@@ -186,9 +191,8 @@ backend-api/
 │               │   └── error_handler.go
 │               ├── presenter/
 │               │   └── error_presenter.go
-│               └── openapi/                     # OpenAPI生成
-│                   ├── openapi_models.go    # oapi-codegen生成
-│                   └── openapi_server.go    # oapi-codegen生成
+│               └── openapi/                          # OpenAPI生成
+│                   └── oapi-codegen-config.gen.go    # oapi-codegen生成
 ├── api/                                     # API仕様
 │   ├── openapi.yaml
 │   └── docs/

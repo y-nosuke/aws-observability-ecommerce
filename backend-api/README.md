@@ -398,7 +398,7 @@ docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 
 ## 📚 関連ドキュメント
 
-- [アーキテクチャ設計書](./docs/design/architecture.md)
+- [アーキテクチャ設計書](../docs/design/architecture.md)
 - [API仕様書](./openapi.yaml)
 - [データベース設計書](./docs/database/schema.md)
 - [デプロイメントガイド](./docs/deployment/README.md)

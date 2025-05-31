@@ -68,7 +68,7 @@ func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int64, 
 		return nil, "", fmt.Errorf("failed to get object from S3: %w", err)
 	}
 	defer func(reader io.ReadCloser) {
-		if err := reader.Close(); err != nil {
+		if err = reader.Close(); err != nil {
 			fmt.Printf("failed to close reader: %v\n", err)
 		}
 	}(reader)

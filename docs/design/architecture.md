@@ -116,6 +116,11 @@ backend-api/
 │   │           │   └── product_handler.go   # 商品API（command専用）
 │   │           └── presenter/
 │   │               └── product_presenter.go
+│   ├── system/                              # システムドメイン
+│   │   └── presentation/
+│   │       └── rest/
+│   │           └── handler/
+│   │               └── health_handler.go    # ヘルスチェックAPI
 │   ├── category/                            # カテゴリドメイン（productと同様の構成）
 │   │   ├── application/                     # usecase, dto
 │   │   ├── domain/                          # entity, valueobject, repository, service, factory

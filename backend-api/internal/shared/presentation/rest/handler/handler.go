@@ -8,12 +8,13 @@ import (
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
+	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 )
 
 // Handler は全てのAPIハンドラーを統合する構造体
 // oapi-codegenのServerInterfaceを実装する
 type Handler struct {
-	*HealthHandler
+	*systemHandler.HealthHandler
 	*queryHandler.CategoryListHandler
 	*queryHandler.ProductCatalogHandler
 	*queryHandler.ProductDetailHandler
@@ -27,7 +28,7 @@ func NewHandler(awsServiceRegistry *aws.ServiceRegistry) (*Handler, error) {
 	}
 
 	return &Handler{
-		HealthHandler:         NewHealthHandler(),
+		HealthHandler:         systemHandler.NewHealthHandler(),
 		CategoryListHandler:   queryHandler.NewCategoryListHandler(database.DB),
 		ProductCatalogHandler: queryHandler.NewProductCatalogHandler(database.DB),
 		ProductDetailHandler:  queryHandler.NewProductDetailHandler(database.DB),

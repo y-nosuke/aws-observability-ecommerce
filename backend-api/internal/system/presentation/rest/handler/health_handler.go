@@ -8,8 +8,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体

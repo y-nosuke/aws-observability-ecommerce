@@ -9,6 +9,8 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
+
+	customMiddleware "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/middleware"
 )
 
 // Router はアプリケーションのルーティングを管理する
@@ -43,6 +45,9 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(middleware.RequestID())
 	r.echo.Use(middleware.Logger())
 	r.echo.Use(middleware.CORS())
+
+	r.echo.Use(customMiddleware.NewMetricsMiddleware())
+	r.echo.Use(customMiddleware.NewRateLimitMiddleware())
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定

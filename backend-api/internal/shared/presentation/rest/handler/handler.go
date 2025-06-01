@@ -28,7 +28,7 @@ func NewHandler(awsServiceRegistry *aws.ServiceRegistry) (*Handler, error) {
 	}
 
 	return &Handler{
-		HealthHandler:         systemHandler.NewHealthHandler(),
+		HealthHandler:         systemHandler.NewHealthHandler(awsServiceRegistry.GetClientFactory()),
 		CategoryListHandler:   queryHandler.NewCategoryListHandler(database.DB),
 		ProductCatalogHandler: queryHandler.NewProductCatalogHandler(database.DB),
 		ProductDetailHandler:  queryHandler.NewProductDetailHandler(database.DB),

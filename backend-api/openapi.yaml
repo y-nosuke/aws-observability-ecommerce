@@ -17,6 +17,14 @@ paths:
       operationId: healthCheck
       tags:
         - system
+      parameters:
+        - name: checks
+          in: query
+          description: "実行する詳細チェック（カンマ区切り、例: db,iam,s3）"
+          required: false
+          schema:
+            type: string
+            example: db,iam,s3
       responses:
         "200":
           description: サービスは正常に稼働しています
@@ -486,7 +494,7 @@ components:
         - version
         - uptime
         - resources
-        - services
+        - components
       properties:
         status:
           type: string
@@ -508,8 +516,16 @@ components:
           example: 86400500
         resources:
           $ref: "#/components/schemas/SystemResources"
-        services:
-          $ref: "#/components/schemas/DependentServices"
+        components:
+          type: object
+          description: 各種依存コンポーネントの状態
+          additionalProperties:
+            type: string
+          example:
+            api_server: ok
+            database: ok
+            iam_auth: ok
+            s3_connectivity: "error: timeout"
 
     SystemResources:
       type: object

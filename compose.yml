@@ -236,10 +236,97 @@ services:
     networks:
       - ecommerce-network
 
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: otel-collector
+    restart: unless-stopped
+    ports:
+      - "4318:4318"
+    volumes:
+      - ./infra/otel-collector/config.yaml:/etc/otel-collector-config.yaml:ro
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    depends_on:
+      - loki
+      - tempo
+      - mimir
+    networks:
+      - ecommerce-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
+    depends_on:
+      - loki
+      - tempo
+      - mimir
+    networks:
+      - ecommerce-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.middlewares=secure-headers@file,cors@file"
+
+  loki:
+    image: grafana/loki:3.4.1
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ./infra/loki/config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    networks:
+      - ecommerce-network
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir
+    restart: unless-stopped
+    command: ["-config.file=/etc/mimir/config.yaml"]
+    volumes:
+      - ./infra/mimir/config.yaml:/etc/mimir/config.yaml:ro
+      - mimir_data:/mimir
+    networks:
+      - ecommerce-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mimir.rule=Host(`mimir.localhost`)"
+      - "traefik.http.routers.mimir.entrypoints=web"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+      - "traefik.http.routers.mimir.middlewares=secure-headers@file,cors@file"
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ./infra/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+    networks:
+      - ecommerce-network
+
 volumes:
   mysql_data:
     driver: local
   localstack_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  tempo_data:
+    driver: local
+  mimir_data:
     driver: local
 
 networks:

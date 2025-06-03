@@ -19,6 +19,11 @@ AWSオブザーバビリティのパターンを学習するためのeコマー�
 - Terraform
 - LocalStack CLI (`pip install localstack`)
 - LocalStack Desktop（[ダウンロードページ](https://app.localstack.cloud/resources/desktop)からインストール）
+- otel-cli（OpenTelemetry CLI。以下のコマンドでインストール）
+
+    ```bash
+    go install github.com/equinix-labs/otel-cli@latest
+    ```
 
 ## 環境変数の設定
 

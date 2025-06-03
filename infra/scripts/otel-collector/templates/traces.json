@@ -1,0 +1,49 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "stringValue": "{{SERVICE_NAME}}" }
+          },
+          {
+            "key": "service.version",
+            "value": { "stringValue": "{{SERVICE_VERSION}}" }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "{{TRACER_NAME}}"
+          },
+          "spans": [
+            {
+              "traceId": "{{TRACE_ID}}",
+              "spanId": "{{SPAN_ID}}",
+              "name": "{{SPAN_NAME}}",
+              "kind": 1,
+              "startTimeUnixNano": "{{START_TIME}}",
+              "endTimeUnixNano": "{{END_TIME}}",
+              "attributes": [
+                {
+                  "key": "operation.type",
+                  "value": { "stringValue": "{{OPERATION_TYPE}}" }
+                },
+                {
+                  "key": "test.category",
+                  "value": { "stringValue": "{{TEST_CATEGORY}}" }
+                },
+                {
+                  "key": "environment",
+                  "value": { "stringValue": "{{ENVIRONMENT}}" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

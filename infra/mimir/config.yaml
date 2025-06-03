@@ -1,0 +1,58 @@
+# モノリシック設定
+target: all,overrides-exporter
+
+# マルチテナンシー無効
+multitenancy_enabled: false
+
+# 共通ストレージ設定（オプション）
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /mimir/storage
+
+# ブロックストレージ設定（メトリクスデータ用）
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /mimir/blocks
+  tsdb:
+    dir: /mimir/tsdb
+
+# コンパクター設定
+compactor:
+  data_dir: /mimir/compactor
+
+# 分散システムの設定（単一インスタンス用）
+distributor:
+  ring:
+    kvstore:
+      store: memberlist
+
+# インジェスター設定
+ingester:
+  ring:
+    kvstore:
+      store: memberlist
+    replication_factor: 1
+
+# ストアゲートウェイ設定
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+
+# memberlist設定
+memberlist:
+  node_name: mimir-monolithic
+  bind_port: 7946
+
+# パフォーマンス最適化（オプション）
+limits:
+  max_global_series_per_user: 1000000
+  ingestion_rate: 10000
+
+# サーバー設定
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: info

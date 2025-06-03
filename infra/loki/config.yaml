@@ -1,0 +1,42 @@
+# Lokiの認証機能を有効化するかどうか（falseで認証なし、デフォルト）
+auth_enabled: false
+
+# サーバー設定: LokiのHTTPリッスンポートを指定
+server:
+  http_listen_port: 3100
+
+# 共通設定: インスタンスアドレスやストレージパスなど
+common:
+  instance_addr: 127.0.0.1 # インスタンスのバインドアドレス
+  path_prefix: /loki # データ保存のパスプレフィックス
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks # チャンクデータの保存先
+      rules_directory: /loki/rules # ルールファイルの保存先
+  replication_factor: 1 # レプリケーション数（単一ノードの場合1）
+  ring:
+    kvstore:
+      store: inmemory # クラスタリング用のKVストア（単一ノードはinmemory）
+
+# スキーマ設定: データの保存方式やインデックスの管理方法
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb # ストレージエンジン（推奨: tsdb）
+      object_store: filesystem # オブジェクトストア（ローカルファイル）
+      schema: v13 # スキーマバージョン
+      index:
+        prefix: index_ # インデックスファイルのプレフィックス
+        period: 24h # インデックスのローテーション周期
+
+# 制限・保持期間などの設定
+limits_config:
+  allow_structured_metadata: true # 構造化メタデータの許可
+  volume_enabled: true # volume APIの有効化
+  retention_period: 672h # ログ保持期間（672h=28日）
+  otlp_config:
+    resource_attributes:
+      attributes_config:
+        - action: index_label
+          attributes:
+            - service.version # OTLP経由で受信したservice.version属性をインデックス化

@@ -1,0 +1,65 @@
+# HTTPストリーミングを有効化（Grafana Exploreでのリアルタイム表示用）
+stream_over_http_enabled: true
+
+# サーバー設定: TempoのHTTPリッスンポートやログレベル
+server:
+  http_listen_port: 3200 # TempoのWeb UI/API用ポート
+  log_level: info # ログレベル（info/debugなど）
+
+# クエリフロントエンド: 検索やトレース取得のSLO設定
+query_frontend:
+  search:
+    duration_slo: 5s # 検索SLO（秒）
+    throughput_bytes_slo: 1.073741824e+09 # 検索スループットSLO（バイト/秒）
+    metadata_slo:
+      duration_slo: 5s
+      throughput_bytes_slo: 1.073741824e+09
+  trace_by_id:
+    duration_slo: 5s # traceById APIのSLO
+
+# ディストリビュータ: トレース受信設定（OTLP gRPCのみ有効化）
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "tempo:4317" # OTLP gRPC受信用エンドポイント
+
+# インジェスター: トレースのバッチ処理・WALへの書き込み
+ingester:
+  max_block_duration: 5m # ブロックの最大保持時間（デモ用、通常はデフォルト推奨）
+
+# コンパクタ: ブロックの保持期間や圧縮設定
+compactor:
+  compaction:
+    block_retention: 1h # トレース全体の保持期間（デモ用、通常は数日〜数週間）
+
+# メトリクスジェネレータ: トレースからPrometheusメトリクスを生成
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: docker-compose
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
+
+# ストレージ設定: ローカルストレージを利用（本番はS3/GCS等推奨）
+storage:
+  trace:
+    backend: local # ストレージバックエンド（local/s3/gcs/azure）
+    wal:
+      path: /var/tempo/wal # WALファイルの保存先
+    local:
+      path: /var/tempo/blocks # トレースブロックの保存先
+
+# オーバーライド設定: デフォルトでメトリクスジェネレータを有効化
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics, local-blocks] # メトリクス生成プロセッサ
+      generate_native_histograms: both # ネイティブヒストグラム生成（classic/native/both）

@@ -65,6 +65,10 @@ tasks:
         silent: true
       - cmd: 'echo "- PhpMyAdmin: http://phpmyadmin.localhost"'
         silent: true
+      - cmd: 'echo "- Mimir: http://mimir.localhost"'
+        silent: true
+      - cmd: 'echo "- Grafana: http://grafana.localhost"'
+        silent: true
       - cmd: 'echo "- Traefikダッシュボード: http://traefik.localhost:8080"'
         silent: true
 

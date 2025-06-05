@@ -1,0 +1,44 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "stringValue": "{{SERVICE_NAME}}" }
+          },
+          {
+            "key": "service.version",
+            "value": { "stringValue": "{{SERVICE_VERSION}}" }
+          }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": {
+            "name": "{{LOGGER_NAME}}"
+          },
+          "logRecords": [
+            {
+              "timeUnixNano": "{{TIMESTAMP}}",
+              "severityText": "{{SEVERITY}}",
+              "body": {
+                "stringValue": "{{LOG_MESSAGE}}"
+              },
+              "attributes": [
+                {
+                  "key": "environment",
+                  "value": { "stringValue": "{{ENVIRONMENT}}" }
+                },
+                {
+                  "key": "trace_id",
+                  "value": { "stringValue": "{{TRACE_ID}}" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

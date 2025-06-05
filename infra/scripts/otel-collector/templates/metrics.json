@@ -1,0 +1,46 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "stringValue": "{{SERVICE_NAME}}" }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "{{METER_NAME}}"
+          },
+          "metrics": [
+            {
+              "name": "{{METRIC_NAME}}",
+              "description": "{{METRIC_DESCRIPTION}}",
+              "unit": "{{METRIC_UNIT}}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      {
+                        "key": "environment",
+                        "value": { "stringValue": "{{ENVIRONMENT}}" }
+                      },
+                      {
+                        "key": "metric_type",
+                        "value": { "stringValue": "{{METRIC_TYPE}}" }
+                      }
+                    ],
+                    "timeUnixNano": "{{TIMESTAMP}}",
+                    "asInt": "{{METRIC_VALUE}}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -66,7 +66,7 @@ func (c *ObservabilityConfig) SetDefaults() {
 	viper.SetDefault("observability.otel.deployment_environment", "development")
 
 	// OTel collector defaults
-	viper.SetDefault("observability.otel.collector.endpoint", "http://otel-collector:4318")
+	viper.SetDefault("observability.otel.collector.endpoint", "otel-collector:4318")
 	viper.SetDefault("observability.otel.collector.timeout", "10s")
 	viper.SetDefault("observability.otel.collector.retry_enabled", true)
 	viper.SetDefault("observability.otel.collector.retry_max_attempts", 3)

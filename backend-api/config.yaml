@@ -17,7 +17,7 @@ database:
   name: "ecommerce"
   max_open_conns: 25
   max_idle_conns: 25
-  conn_max_lifetime: 5  # minutes
+  conn_max_lifetime: 5 # minutes
 
 aws:
   use_localstack: true
@@ -28,38 +28,38 @@ aws:
   token: ""
   s3:
     bucket_name: "product-images"
-    presigned_url_ttl: 3600  # seconds (1 hour)
+    presigned_url_ttl: 3600 # seconds (1 hour)
     use_path_style: true
 
 observability:
   logging:
-    level: "info"                              # debug, info, warn, error
-    format: "json"                             # json, text (開発時はtext推奨)
-    enable_otel: true                          # OpenTelemetry連携有効化
-    enable_trace_context: true                # トレースコンテキスト埋め込み
-    max_log_size_mb: 100                      # 単一ログファイル最大サイズ
-    
+    level: "info" # debug, info, warn, error
+    format: "json" # json, text (開発時はtext推奨)
+    enable_otel: true # OpenTelemetry連携有効化
+    enable_trace_context: true # トレースコンテキスト埋め込み
+    max_log_size_mb: 100 # 単一ログファイル最大サイズ
+
   otel:
     service_name: "aws-observability-ecommerce"
     service_version: "1.0.0"
     service_namespace: "ecommerce"
-    deployment_environment: "development"      # development, staging, production
-    
+    deployment_environment: "development" # development, staging, production
+
     collector:
-      endpoint: "http://otel-collector:4318"   # OTLP HTTP endpoint
+      endpoint: "otel-collector:4318" # OTLP HTTP endpoint (スキーム不要)
       timeout: "10s"
       retry_enabled: true
       retry_max_attempts: 3
       retry_initial_interval: "1s"
       retry_max_interval: "30s"
       compression: "gzip"
-      
+
     tracing:
       enabled: true
-      sample_rate: 1.0                         # 開発: 1.0, 本番: 0.1-0.01
+      sample_rate: 1.0 # 開発: 1.0, 本番: 0.1-0.01
       max_attributes_per_span: 128
       max_events_per_span: 128
-      
+
     logging:
       batch_timeout: "1s"
       max_queue_size: 2048

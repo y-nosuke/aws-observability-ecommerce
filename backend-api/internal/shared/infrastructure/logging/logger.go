@@ -39,7 +39,10 @@ type StructuredLogger struct {
 }
 
 // RequestIDKey はコンテキストキー
-const RequestIDKey = "request_id"
+// staticcheck対策: 独自型を使う
+type contextKey string
+
+const RequestIDKey contextKey = "request_id"
 
 // NewLogger は新しいStructuredLoggerを作成します
 func NewLogger(cfg config.ObservabilityConfig) (Logger, error) {

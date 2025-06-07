@@ -255,7 +255,7 @@ observability:
     deployment_environment: "development"      # development, staging, production
 
     collector:
-      endpoint: "http://otel-collector:4318"   # OTLP HTTP endpoint
+      endpoint: "otel-collector:4318"   # OTLP HTTP endpoint
       timeout: "10s"
       retry_enabled: true
       retry_max_attempts: 3

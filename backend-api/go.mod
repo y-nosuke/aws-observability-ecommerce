@@ -16,11 +16,37 @@ require (
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/sqlboiler/v4 v4.18.0
 	github.com/volatiletech/strmangle v0.0.8
+	go.opentelemetry.io/contrib/bridges/otelslog v0.5.0
+
+	// OpenTelemetry Core
+	go.opentelemetry.io/otel v1.30.0
+
+	// OTLP Exporters
+	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.5.0
+
+	// OpenTelemetry Logging
+	go.opentelemetry.io/otel/log v0.6.0
+	go.opentelemetry.io/otel/sdk v1.30.0
+	go.opentelemetry.io/otel/sdk/log v0.5.0
+	go.opentelemetry.io/otel/trace v1.30.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576 // indirect
+	google.golang.org/grpc v1.68.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 )
 
+require github.com/samber/slog-multi v1.4.0
+
 require (
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/ericlagergren/decimal v0.0.0-20190420051523-6335edbaa640 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
 	github.com/lib/pq v1.10.6 // indirect
+	github.com/samber/lo v1.49.1 // indirect
+	go.opentelemetry.io/otel/metric v1.30.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 )
 
 require (

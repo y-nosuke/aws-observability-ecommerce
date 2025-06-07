@@ -28,7 +28,6 @@ type OTelConfig struct {
 	ServiceNamespace      string            `mapstructure:"service_namespace"`
 	DeploymentEnvironment string            `mapstructure:"deployment_environment"`
 	Collector             CollectorConfig   `mapstructure:"collector"`
-	Tracing               TracingConfig     `mapstructure:"tracing"`
 	Logging               OTelLoggingConfig `mapstructure:"logging"`
 }
 
@@ -41,14 +40,6 @@ type CollectorConfig struct {
 	RetryInitialInterval time.Duration `mapstructure:"retry_initial_interval"`
 	RetryMaxInterval     time.Duration `mapstructure:"retry_max_interval"`
 	Compression          string        `mapstructure:"compression"`
-}
-
-// TracingConfig はトレーシング設定を管理する構造体
-type TracingConfig struct {
-	Enabled              bool    `mapstructure:"enabled"`
-	SampleRate           float64 `mapstructure:"sample_rate"`
-	MaxAttributesPerSpan int     `mapstructure:"max_attributes_per_span"`
-	MaxEventsPerSpan     int     `mapstructure:"max_events_per_span"`
 }
 
 // OTelLoggingConfig はOTelログ設定を管理する構造体
@@ -82,12 +73,6 @@ func (c *ObservabilityConfig) SetDefaults() {
 	viper.SetDefault("observability.otel.collector.retry_initial_interval", "1s")
 	viper.SetDefault("observability.otel.collector.retry_max_interval", "30s")
 	viper.SetDefault("observability.otel.collector.compression", "gzip")
-
-	// OTel tracing defaults
-	viper.SetDefault("observability.otel.tracing.enabled", true)
-	viper.SetDefault("observability.otel.tracing.sample_rate", 1.0)
-	viper.SetDefault("observability.otel.tracing.max_attributes_per_span", 128)
-	viper.SetDefault("observability.otel.tracing.max_events_per_span", 128)
 
 	// OTel logging defaults
 	viper.SetDefault("observability.otel.logging.batch_timeout", "1s")
@@ -125,14 +110,6 @@ func (c *ObservabilityConfig) BindEnvironmentVariables() error {
 
 	// OTel collector 環境変数
 	if err := viper.BindEnv("observability.otel.collector.endpoint", "OTEL_EXPORTER_OTLP_ENDPOINT"); err != nil {
-		return err
-	}
-
-	// OTel tracing 環境変数
-	if err := viper.BindEnv("observability.otel.tracing.enabled", "OTEL_TRACES_ENABLED"); err != nil {
-		return err
-	}
-	if err := viper.BindEnv("observability.otel.tracing.sample_rate", "OTEL_TRACES_SAMPLER_ARG"); err != nil {
 		return err
 	}
 

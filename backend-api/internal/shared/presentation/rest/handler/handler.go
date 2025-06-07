@@ -8,6 +8,7 @@ import (
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 )
 
@@ -19,10 +20,11 @@ type Handler struct {
 	*queryHandler.ProductCatalogHandler
 	*queryHandler.ProductDetailHandler
 	*handler.ProductHandler
+	logger logging.Logger
 }
 
 // NewHandler は新しいServiceRegistryを使用してハンドラーを作成
-func NewHandler(awsServiceRegistry *aws.ServiceRegistry) (*Handler, error) {
+func NewHandler(awsServiceRegistry *aws.ServiceRegistry, logger logging.Logger) (*Handler, error) {
 	if database.DB == nil {
 		return nil, fmt.Errorf("database connection is not initialized")
 	}
@@ -32,6 +34,7 @@ func NewHandler(awsServiceRegistry *aws.ServiceRegistry) (*Handler, error) {
 		CategoryListHandler:   queryHandler.NewCategoryListHandler(database.DB),
 		ProductCatalogHandler: queryHandler.NewProductCatalogHandler(database.DB),
 		ProductDetailHandler:  queryHandler.NewProductDetailHandler(database.DB),
-		ProductHandler:        di.InitializeProductHandler(awsServiceRegistry.GetS3ClientWrapper()),
+		ProductHandler:        di.InitializeProductHandler(awsServiceRegistry.GetS3ClientWrapper(), logger),
+		logger:                logger,
 	}, nil
 }

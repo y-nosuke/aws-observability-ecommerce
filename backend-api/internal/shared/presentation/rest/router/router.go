@@ -62,8 +62,8 @@ func (r *Router) setupMiddleware() {
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定
 func (r *Router) setupAPIRoutes(api *echo.Group, awsServiceRegistry *aws.ServiceRegistry) error {
-	// ハンドラーの初期化
-	h, err := handler.NewHandler(awsServiceRegistry)
+	// ハンドラーの初期化（ロガーを渡す）
+	h, err := handler.NewHandler(awsServiceRegistry, r.logger)
 	if err != nil {
 		return fmt.Errorf("failed to create handler: %w", err)
 	}

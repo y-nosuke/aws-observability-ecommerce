@@ -14,25 +14,28 @@ type ConfigSection interface {
 
 // Config は全体の設定を統合する構造体
 type Config struct {
-	App      AppConfig      `mapstructure:"app"`
-	Server   ServerConfig   `mapstructure:"server"`
-	Database DatabaseConfig `mapstructure:"database"`
-	AWS      AWSConfig      `mapstructure:"aws"`
+	App           AppConfig           `mapstructure:"app"`
+	Server        ServerConfig        `mapstructure:"server"`
+	Database      DatabaseConfig      `mapstructure:"database"`
+	AWS           AWSConfig           `mapstructure:"aws"`
+	Observability ObservabilityConfig `mapstructure:"observability"`
 }
 
 var (
 	// 各設定セクションへの直接アクセス用のグローバル変数
-	App      AppConfig
-	Server   ServerConfig
-	Database DatabaseConfig
-	AWS      AWSConfig
+	App           AppConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	AWS           AWSConfig
+	Observability ObservabilityConfig
 
 	// configSections は設定セクションのマップ
 	configSections = map[string]ConfigSection{
-		"app":      &AppConfig{},
-		"server":   &ServerConfig{},
-		"database": &DatabaseConfig{},
-		"aws":      &AWSConfig{},
+		"app":           &AppConfig{},
+		"server":        &ServerConfig{},
+		"database":      &DatabaseConfig{},
+		"aws":           &AWSConfig{},
+		"observability": &ObservabilityConfig{},
 	}
 )
 
@@ -76,6 +79,7 @@ func LoadConfig() error {
 	Server = cfg.Server
 	Database = cfg.Database
 	AWS = cfg.AWS
+	Observability = cfg.Observability
 
 	return nil
 }

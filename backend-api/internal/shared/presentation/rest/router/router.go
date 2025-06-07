@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
@@ -15,15 +16,19 @@ import (
 
 // Router はアプリケーションのルーティングを管理する
 type Router struct {
-	echo *echo.Echo
+	echo   *echo.Echo
+	logger logging.Logger
 }
 
 // NewRouter は新しいRouterインスタンスを作成
-func NewRouter() *Router {
+func NewRouter(logger logging.Logger) *Router {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	return &Router{echo: e}
+	return &Router{
+		echo:   e,
+		logger: logger,
+	}
 }
 
 // SetupRoutes は全てのルーティングを設定
@@ -41,19 +46,24 @@ func (r *Router) SetupRoutes(awsServiceRegistry *aws.ServiceRegistry) error {
 
 // setupMiddleware は共通ミドルウェアを設定
 func (r *Router) setupMiddleware() {
+	// 基本的なミドルウェア
 	r.echo.Use(middleware.Recover())
-	r.echo.Use(middleware.RequestID())
-	r.echo.Use(middleware.Logger())
 	r.echo.Use(middleware.CORS())
 
+	// 構造化ログ関連のミドルウェア（順序重要）
+	r.echo.Use(customMiddleware.RequestIDMiddleware())
+	r.echo.Use(customMiddleware.StructuredLoggingMiddleware(r.logger))
+	r.echo.Use(customMiddleware.ErrorHandlingMiddleware(r.logger))
+
+	// 将来実装予定のミドルウェア
 	r.echo.Use(customMiddleware.NewMetricsMiddleware())
 	r.echo.Use(customMiddleware.NewRateLimitMiddleware())
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定
 func (r *Router) setupAPIRoutes(api *echo.Group, awsServiceRegistry *aws.ServiceRegistry) error {
-	// ハンドラーの初期化
-	h, err := handler.NewHandler(awsServiceRegistry)
+	// ハンドラーの初期化（ロガーを渡す）
+	h, err := handler.NewHandler(awsServiceRegistry, r.logger)
 	if err != nil {
 		return fmt.Errorf("failed to create handler: %w", err)
 	}

@@ -11,15 +11,16 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/infrastructure/external/storage"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 )
 
 // Injectors from wire.go:
 
 // InitializeProductHandler はProductHandlerの依存関係を初期化する
-func InitializeProductHandler(s3Wrapper *aws.S3ClientWrapper) *handler.ProductHandler {
+func InitializeProductHandler(s3Wrapper *aws.S3ClientWrapper, logger logging.Logger) *handler.ProductHandler {
 	imageStorage := storage.NewS3ImageStorageImpl(s3Wrapper)
 	uploadProductImageUseCase := usecase.NewUploadProductImageUseCase(imageStorage, "product-images")
 	getProductImageUseCase := usecase.NewGetProductImageUseCase(imageStorage, "product-images")
-	productHandler := handler.NewProductHandler(uploadProductImageUseCase, getProductImageUseCase)
+	productHandler := handler.NewProductHandler(uploadProductImageUseCase, getProductImageUseCase, logger)
 	return productHandler
 }

@@ -18,6 +18,7 @@ blocks_storage:
     dir: /mimir/blocks
   tsdb:
     dir: /mimir/tsdb
+    retention_period: 24h
 
 # コンパクター設定
 compactor:
@@ -28,6 +29,9 @@ distributor:
   ring:
     kvstore:
       store: memberlist
+    # 単一インスタンス用の設定
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
 
 # インジェスター設定
 ingester:
@@ -35,24 +39,58 @@ ingester:
     kvstore:
       store: memberlist
     replication_factor: 1
+    # 単一インスタンス用の最適化
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+    # インスタンスの検出を早める
+    instance_enable_ipv6: false
+    final_sleep: 0s
 
 # ストアゲートウェイ設定
 store_gateway:
   sharding_ring:
     replication_factor: 1
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
 
 # memberlist設定
 memberlist:
   node_name: mimir-monolithic
   bind_port: 7946
+  # 単一ノードでの起動時間を短縮
+  gossip_interval: 200ms
+  gossip_nodes: 3
+  # 単一ノード用設定
+  advertise_port: 7946
 
-# パフォーマンス最適化（オプション）
+# パフォーマンス最適化
 limits:
   max_global_series_per_user: 1000000
   ingestion_rate: 10000
+  # インジェスト制限を緩和
+  max_global_series_per_metric: 20000
+  max_global_metadata_per_user: 8000
+  max_global_metadata_per_metric: 10
 
 # サーバー設定
 server:
   http_listen_port: 9009
   grpc_listen_port: 9095
   log_level: info
+  # ヘルスチェック用
+  grpc_server_max_recv_msg_size: 104857600
+  grpc_server_max_send_msg_size: 104857600
+
+# アクティビティトラッカー（リソース監視用）
+activity_tracker:
+  filepath: /mimir/metrics-activity.log
+
+# アラートマネージャー（オプション）
+alertmanager:
+  data_dir: /mimir/alertmanager
+  sharding_ring:
+    replication_factor: 1
+
+# 運用管理用設定
+usage_stats:
+  enabled: false

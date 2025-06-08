@@ -93,4 +93,4 @@ service:
             exporter:
               otlp:
                 protocol: http/protobuf
-                endpoint: http://mimir:9009/otlp
+                endpoint: http://loki:3100/otlp/v1/logs

@@ -66,6 +66,11 @@ jobs:
           # Generate models
           sqlboiler mysql
 
+      - name: Generate code (wire)
+        run: |
+          cd backend-api
+          wire ./...
+
       - name: Test (api)
         env:
           DB_DSN: ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce

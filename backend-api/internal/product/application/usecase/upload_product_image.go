@@ -8,7 +8,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // UploadProductImageUseCase は商品画像アップロードのユースケース
@@ -25,7 +25,7 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 
 // Execute は商品画像アップロードを実行する
 func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
-	completeOp := logging.StartOperation(ctx, "upload_product_image",
+	completeOp := logger.StartOperation(ctx, "upload_product_image",
 		"product_id", req.ProductID,
 		"filename", req.Filename,
 		"file_size_bytes", len(req.ImageData),
@@ -37,7 +37,7 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 		err := fmt.Errorf("only JPG and PNG images are supported")
 
 		// バリデーションエラーログ
-		logging.WithError(ctx, "画像ファイル拡張子がサポート外", err,
+		logger.WithError(ctx, "画像ファイル拡張子がサポート外", err,
 			"product_id", req.ProductID,
 			"filename", req.Filename,
 			"file_extension", fileExt,
@@ -50,7 +50,7 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 	}
 
 	// バリデーション成功ログ
-	logging.Info(ctx, "ファイル拡張子のバリデーション成功",
+	logger.Info(ctx, "ファイル拡張子のバリデーション成功",
 		"product_id", req.ProductID,
 		"file_extension", fileExt,
 		"layer", "usecase")
@@ -59,7 +59,7 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 	s3Key, urls, err := u.imageStorage.UploadImage(ctx, req.ProductID, fileExt, req.ImageData)
 	if err != nil {
 		// アップロードエラーログ
-		logging.WithError(ctx, "画像アップロードに失敗", err,
+		logger.WithError(ctx, "画像アップロードに失敗", err,
 			"product_id", req.ProductID,
 			"filename", req.Filename,
 			"file_extension", fileExt,
@@ -71,7 +71,7 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 	}
 
 	// 成功ログ
-	logging.Info(ctx, "画像アップロードが正常に完了",
+	logger.Info(ctx, "画像アップロードが正常に完了",
 		"product_id", req.ProductID,
 		"filename", req.Filename,
 		"s3_key", s3Key,

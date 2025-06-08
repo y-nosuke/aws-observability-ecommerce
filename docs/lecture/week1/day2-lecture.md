@@ -67,7 +67,7 @@ mkdir -p backend/cmd/server
 mkdir -p backend/internal/api/handlers
 mkdir -p backend/internal/api/middleware
 mkdir -p backend/internal/config
-mkdir -p backend/pkg/logging
+mkdir -p backend/pkg/logger
 ```
 
 この構造は以下の原則に基づいています：

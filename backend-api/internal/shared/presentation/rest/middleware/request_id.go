@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // RequestIDMiddleware はリクエストID生成ミドルウェアを作成
@@ -20,7 +20,7 @@ func RequestIDMiddleware() echo.MiddlewareFunc {
 			}
 
 			// コンテキストにリクエストIDを設定
-			ctx := context.WithValue(c.Request().Context(), logging.RequestIDKey, requestID)
+			ctx := context.WithValue(c.Request().Context(), logger.RequestIDKey, requestID)
 			c.SetRequest(c.Request().WithContext(ctx))
 
 			// レスポンスヘッダーにも設定

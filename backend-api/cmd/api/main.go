@@ -13,7 +13,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// グローバルロガーの初期化（早期初期化でどこでも使用可能に）
-	logging.Init(config.Observability)
+	logger.Init(config.Observability)
 
 	// DIコンテナの初期化（OpenTelemetryも含めて一括初期化）
 	ctx := context.Background()
@@ -48,7 +48,7 @@ func main() {
 	}()
 
 	// アプリケーション開始ログ
-	logging.LogBusinessEvent(ctx, "application_startup", "system", "main",
+	logger.LogBusinessEvent(ctx, "application_startup", "system", "main",
 		"config_loaded", true,
 		"di_container_ready", true,
 		"database_connected", true,
@@ -60,7 +60,7 @@ func main() {
 	// ルーターの初期化とセットアップ
 	r := router.NewRouter()
 	if err := r.SetupRoutes(container); err != nil {
-		logging.WithError(ctx, "ルーティングのセットアップに失敗", err,
+		logger.WithError(ctx, "ルーティングのセットアップに失敗", err,
 			"operation", "setup_routes",
 			"severity", "critical",
 			"business_impact", "service_startup_failure")
@@ -78,14 +78,14 @@ func main() {
 	go func() {
 		address := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 		// サーバー起動ログ
-		logging.Info(ctx, "HTTPサーバーを起動中",
+		logger.Info(ctx, "HTTPサーバーを起動中",
 			"address", address,
 			"environment", config.App.Environment,
 			"layer", "main")
 
 		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			// サーバー起動エラーログ
-			logging.WithError(ctx, "HTTPサーバーの起動に失敗", err,
+			logger.WithError(ctx, "HTTPサーバーの起動に失敗", err,
 				"address", address,
 				"operation", "start_server",
 				"severity", "critical",
@@ -98,7 +98,7 @@ func main() {
 	// シグナルを待機
 	<-ctx.Done()
 	// シャットダウン開始ログ
-	logging.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
+	logger.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
 
 	// グレースフルシャットダウン
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -106,18 +106,18 @@ func main() {
 
 	if err := e.Shutdown(shutdownCtx); err != nil {
 		// シャットダウンエラーログ
-		logging.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
+		logger.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
 			"operation", "shutdown_server",
 			"severity", "medium",
 			"business_impact", "graceful_shutdown_failed")
 		log.Printf("Failed to shutdown server gracefully: %v\n", err)
 	} else {
 		// シャットダウン成功ログ
-		logging.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
+		logger.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
 	}
 
 	// アプリケーション終了ログ
-	logging.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
+	logger.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
 		"graceful_shutdown", true,
 		"cleanup_executed", true,
 		"stage", "completion",

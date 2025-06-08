@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
@@ -36,7 +36,7 @@ func NewProductHandler(
 // UploadProductImage は商品画像をアップロードする
 func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.ProductIdParam) error {
 	// 操作開始ログ
-	completeOp := logging.StartOperation(ctx.Request().Context(), "upload_product_image",
+	completeOp := logger.StartOperation(ctx.Request().Context(), "upload_product_image",
 		"product_id", id,
 		"operation_type", "image_upload",
 		"layer", "handler")
@@ -45,7 +45,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	file, err := ctx.FormFile("image")
 	if err != nil {
 		// エラーログ
-		logging.WithError(ctx.Request().Context(), "アップロードファイルの取得に失敗", err,
+		logger.WithError(ctx.Request().Context(), "アップロードファイルの取得に失敗", err,
 			"product_id", id,
 			"layer", "handler",
 			"operation", "get_form_file")
@@ -56,7 +56,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	}
 
 	// ファイル情報をログ
-	logging.Info(ctx.Request().Context(), "ファイル情報を取得",
+	logger.Info(ctx.Request().Context(), "ファイル情報を取得",
 		"product_id", id,
 		"file_name", file.Filename,
 		"file_size_bytes", file.Size,
@@ -66,7 +66,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	// ファイルを開く
 	src, err := file.Open()
 	if err != nil {
-		logging.WithError(ctx.Request().Context(), "アップロードファイルのオープンに失敗", err,
+		logger.WithError(ctx.Request().Context(), "アップロードファイルのオープンに失敗", err,
 			"product_id", id,
 			"file_name", file.Filename,
 			"layer", "handler")
@@ -80,7 +80,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	// ファイル内容を読み込む
 	fileBytes, err := io.ReadAll(src)
 	if err != nil {
-		logging.WithError(ctx.Request().Context(), "ファイル内容の読み込みに失敗", err,
+		logger.WithError(ctx.Request().Context(), "ファイル内容の読み込みに失敗", err,
 			"product_id", id,
 			"file_name", file.Filename,
 			"layer", "handler")
@@ -96,7 +96,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	// ユースケースを実行
 	response, err := h.uploadProductImageUseCase.Execute(ctx.Request().Context(), req)
 	if err != nil {
-		logging.WithError(ctx.Request().Context(), "画像アップロード処理に失敗", err,
+		logger.WithError(ctx.Request().Context(), "画像アップロード処理に失敗", err,
 			"product_id", id,
 			"file_name", file.Filename,
 			"layer", "handler")
@@ -125,7 +125,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	}
 
 	// 成功ログ
-	logging.Info(ctx.Request().Context(), "画像アップロードが完了",
+	logger.Info(ctx.Request().Context(), "画像アップロードが完了",
 		"product_id", id,
 		"file_name", file.Filename,
 		"file_size_bytes", file.Size,
@@ -140,7 +140,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 		"content_type", file.Header.Get("Content-Type"))
 
 	// ビジネスイベントとして記録
-	logging.LogBusinessEvent(ctx.Request().Context(), "product_image_uploaded", "product", fmt.Sprint(id),
+	logger.LogBusinessEvent(ctx.Request().Context(), "product_image_uploaded", "product", fmt.Sprint(id),
 		"image_url", imageURL,
 		"s3_key", response.S3Key,
 		"filename", response.Filename,
@@ -154,7 +154,7 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 // GetProductImage は商品画像を取得する
 func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdParam, params openapi.GetProductImageParams) error {
 	// 操作開始ログ
-	completeOp := logging.StartOperation(ctx.Request().Context(), "get_product_image",
+	completeOp := logger.StartOperation(ctx.Request().Context(), "get_product_image",
 		"product_id", id,
 		"layer", "handler")
 
@@ -165,7 +165,7 @@ func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdP
 	}
 
 	// リクエスト情報をログ
-	logging.Info(ctx.Request().Context(), "画像取得リクエストを開始",
+	logger.Info(ctx.Request().Context(), "画像取得リクエストを開始",
 		"product_id", id,
 		"requested_size", size,
 		"layer", "handler")
@@ -174,7 +174,7 @@ func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdP
 	response, err := h.getProductImageUseCase.Execute(ctx.Request().Context(), id, size)
 	if err != nil {
 		// エラーログ
-		logging.WithError(ctx.Request().Context(), "画像取得処理に失敗", err,
+		logger.WithError(ctx.Request().Context(), "画像取得処理に失敗", err,
 			"product_id", id,
 			"requested_size", size,
 			"layer", "handler")
@@ -189,7 +189,7 @@ func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdP
 	}
 
 	// 成功ログ
-	logging.Info(ctx.Request().Context(), "画像取得が完了",
+	logger.Info(ctx.Request().Context(), "画像取得が完了",
 		"product_id", id,
 		"requested_size", size,
 		"content_type", response.ContentType,

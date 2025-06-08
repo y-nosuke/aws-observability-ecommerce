@@ -10,7 +10,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
@@ -28,9 +27,6 @@ var SharedProviderSet = wire.NewSet(
 	// オブザーバビリティ関連
 	ProvideOTelConfig, // ObservabilityConfigからOTelConfigを抽出
 	observability.NewOTelManager,
-
-	// ログ関連
-	logging.NewLogger,
 
 	// SqlBoiler用のバインド
 	wire.Bind(new(boil.ContextExecutor), new(*sql.DB)),

@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // StructuredLoggingMiddleware 構造化ログミドルウェアを作成
@@ -39,7 +39,7 @@ func StructuredLoggingMiddleware() echo.MiddlewareFunc {
 			ctx := c.Request().Context()
 
 			// HTTPリクエストログを出力（パッケージレベル関数を使用）
-			logging.LogHTTPRequest(ctx,
+			logger.LogHTTPRequest(ctx,
 				c.Request().Method,
 				c.Request().URL.Path,
 				c.Response().Status,

@@ -285,7 +285,7 @@ package config
 import "time"
 
 type ObservabilityConfig struct {
-    Logging LoggingConfig `mapstructure:"logging"`
+    Logging LoggingConfig `mapstructure:"logger"`
     OTel    OTelConfig    `mapstructure:"otel"`
 }
 
@@ -304,7 +304,7 @@ type OTelConfig struct {
     DeploymentEnvironment  string        `mapstructure:"deployment_environment"`
     Collector              CollectorConfig `mapstructure:"collector"`
     Tracing                TracingConfig   `mapstructure:"tracing"`
-    Logging                OTelLoggingConfig `mapstructure:"logging"`
+    Logging                OTelLoggingConfig `mapstructure:"logger"`
 }
 
 type CollectorConfig struct {
@@ -337,7 +337,7 @@ type OTelLoggingConfig struct {
 #### 3.3.1 構造化ロガー実装
 
 ```go
-// internal/shared/infrastructure/logging/logging.go
+// internal/shared/infrastructure/logger/logger.go
 package logging
 
 import (
@@ -507,7 +507,7 @@ func parseLogLevel(level string) slog.Level {
 #### 3.3.2 専用ログタイプ実装
 
 ```go
-// internal/shared/infrastructure/logging/request_log.go
+// internal/shared/infrastructure/logger/request_log.go
 package logging
 
 import (
@@ -573,7 +573,7 @@ func (l *StructuredLogger) LogRequest(ctx context.Context, req RequestLogData) {
     l.Info(ctx, "HTTP request processed", fields...)
 }
 
-// internal/shared/infrastructure/logging/error_log.go
+// internal/shared/infrastructure/logger/error_log.go
 type ErrorContext struct {
     Operation      string
     ResourceType   string
@@ -614,7 +614,7 @@ func (l *StructuredLogger) LogError(ctx context.Context, err error, errorCtx Err
     l.Error(ctx, "Application error occurred", err, fields...)
 }
 
-// internal/shared/infrastructure/logging/application_log.go
+// internal/shared/infrastructure/logger/application_log.go
 type ApplicationOperation struct {
     Name             string
     Category         string
@@ -1314,7 +1314,7 @@ groups:
 ### 6.1 ユニットテスト
 
 ```go
-// internal/shared/infrastructure/logging/logger_test.go
+// internal/shared/infrastructure/logger/logger_test.go
 package logging_test
 
 import (

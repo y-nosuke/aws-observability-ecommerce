@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/errors"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // ErrorHandlingMiddleware はエラーハンドリングミドルウェアを作成
@@ -47,7 +47,7 @@ func handleError(c echo.Context, err error) error {
 		}
 
 		// エラーログ
-		logging.WithError(c.Request().Context(), "アプリケーションエラーが発生", e,
+		logger.WithError(c.Request().Context(), "アプリケーションエラーが発生", e,
 			"error_type", e.Type,
 			"error_code", e.Code,
 			"operation", getOperationFromPath(c.Request().URL.Path),
@@ -62,7 +62,7 @@ func handleError(c echo.Context, err error) error {
 		statusCode = e.Code
 		if e.Internal != nil {
 			// 内部エラーがある場合は詳細ログを出力
-			logging.WithError(c.Request().Context(), "HTTPエラー（内部エラー有り）", e.Internal,
+			logger.WithError(c.Request().Context(), "HTTPエラー（内部エラー有り）", e.Internal,
 				"http_status", statusCode,
 				"operation", getOperationFromPath(c.Request().URL.Path),
 				"severity", "high",
@@ -82,7 +82,7 @@ func handleError(c echo.Context, err error) error {
 		// その他の予期しないエラー
 		statusCode = http.StatusInternalServerError
 
-		logging.WithError(c.Request().Context(), "予期しないエラーが発生", err,
+		logger.WithError(c.Request().Context(), "予期しないエラーが発生", err,
 			"operation", getOperationFromPath(c.Request().URL.Path),
 			"severity", "critical",
 			"business_impact", "service_disruption",

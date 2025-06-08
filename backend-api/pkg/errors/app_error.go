@@ -21,7 +21,7 @@ func (e *AppError) Error() string {
 }
 
 // LogArgs はパッケージレベルログ用のkey-value引数を返す
-// 新しいログシステム用（logging.Info(ctx, msg, args...)で使用）
+// 新しいログシステム用（logger.Info(ctx, msg, args...)で使用）
 func (e *AppError) LogArgs() []any {
 	args := []any{
 		"error_type", e.Type,

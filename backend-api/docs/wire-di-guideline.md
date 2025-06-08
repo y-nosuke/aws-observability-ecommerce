@@ -119,7 +119,7 @@ func ProvideLogger(appConfig *config.AppConfig) logging.Logger {
 以下の場合は、型定義と同じパッケージにコンストラクタを実装：
 
 ```go
-// ✅ pkg/logging/logging.go
+// ✅ pkg/logger/logger.go
 func NewLogger(config LogConfig) Logger {
     return &LoggerImpl{config: config}
 }

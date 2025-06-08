@@ -459,7 +459,7 @@ export type ProductsResponse = z.infer<typeof productsResponseSchema>;
 
 // services/products/api.ts (既存のファイルに追記・修正)
 import { apiClient } from '../api-client';
-import { logger } from '@/lib/logger'; // ロガーをインポート
+import { logger } from '@/lib/logging'; // ロガーをインポート
 import {
   type Product,
   productSchema,
@@ -513,7 +513,7 @@ Server Actionsでクライアントからの入力を受け取る際にも、zod
 'use server';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { logger } from '@/lib/logger'; // ロガーをインポート
+import { logger } from '@/lib/logging'; // ロガーをインポート
 // ... (他のimport)
 
 const createProductSchema = z.object({
@@ -682,7 +682,7 @@ export class ErrorBoundary extends React.Component<
 効率的なログ分析のために構造化ログを実装します：
 
 ```typescript
-// lib/logger.ts
+// lib/logging.ts
 import pino from 'pino';
 
 // 開発環境ではフォーマットされた出力、本番ではJSON形式
@@ -717,7 +717,7 @@ export function getContextLogger(context: Record<string, any>) {
 ブラウザからサーバーにログを効率的に送信する仕組み：
 
 ```typescript
-// lib/client-logger.ts
+// lib/client-logging.ts
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
 interface LogEntry {
@@ -814,7 +814,7 @@ if (typeof window !== 'undefined') {
 
 ```typescript
 // lib/event-tracking.ts
-import { clientLogger } from './client-logger';
+import { clientLogger } from './client-logging';
 
 type EventCategory = 'navigation' | 'interaction' | 'error' | 'performance';
 
@@ -890,7 +890,7 @@ Web Vitalsなどのパフォーマンスメトリクスを計測します：
 
 ```typescript
 // lib/performance-tracking.ts
-import { clientLogger } from './client-logger';
+import { clientLogger } from './client-logging';
 
 interface WebVitalMetric {
   id: string;

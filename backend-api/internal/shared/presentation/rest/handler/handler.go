@@ -5,7 +5,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 
 // Handler は全てのAPIハンドラーを統合する構造体
@@ -16,7 +15,6 @@ type Handler struct {
 	*queryHandler.ProductCatalogHandler
 	*queryHandler.ProductDetailHandler
 	*handler.ProductHandler
-	logger logging.Logger
 }
 
 // NewHandler はDIコンテナから各ハンドラーを取得してHandlerを作成
@@ -27,6 +25,5 @@ func NewHandler(container *di.AppContainer) (*Handler, error) {
 		ProductCatalogHandler: container.GetProductCatalogHandler(),
 		ProductDetailHandler:  container.GetProductDetailHandler(),
 		ProductHandler:        container.GetProductHandler(),
-		logger:                container.GetLogger(),
 	}, nil
 }

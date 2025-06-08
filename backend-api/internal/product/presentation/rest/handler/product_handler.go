@@ -20,48 +20,57 @@ import (
 type ProductHandler struct {
 	uploadProductImageUseCase *usecase.UploadProductImageUseCase
 	getProductImageUseCase    *usecase.GetProductImageUseCase
-	logHelper                 *logging.LogHelper
 }
 
 // NewProductHandler は新しいProductHandlerを作成する
 func NewProductHandler(
 	uploadProductImageUseCase *usecase.UploadProductImageUseCase,
 	getProductImageUseCase *usecase.GetProductImageUseCase,
-	logger logging.Logger,
 ) *ProductHandler {
 	return &ProductHandler{
 		uploadProductImageUseCase: uploadProductImageUseCase,
 		getProductImageUseCase:    getProductImageUseCase,
-		logHelper:                 logging.NewLogHelper(logger),
 	}
 }
 
 // UploadProductImage は商品画像をアップロードする
 func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.ProductIdParam) error {
-	// 操作ログの開始
-	opLogger := h.logHelper.StartOperation(ctx.Request().Context(), "upload_product_image", "product_management").
-		WithEntity("product", fmt.Sprint(id)).
-		WithAction("upload", "admin_ui").
-		WithData("operation_type", "image_upload")
+	// 操作開始ログ
+	completeOp := logging.StartOperation(ctx.Request().Context(), "upload_product_image",
+		"product_id", id,
+		"operation_type", "image_upload",
+		"layer", "handler")
 
 	// フォームからファイルを取得
 	file, err := ctx.FormFile("image")
 	if err != nil {
-		opLogger.Fail(ctx.Request().Context(), err)
+		// エラーログ
+		logging.WithError(ctx.Request().Context(), "アップロードファイルの取得に失敗", err,
+			"product_id", id,
+			"layer", "handler",
+			"operation", "get_form_file")
+		completeOp(false, "error_type", "form_file_error")
 		return ctx.JSON(http.StatusBadRequest, map[string]string{
 			"error": "failed to get uploaded file: " + err.Error(),
 		})
 	}
 
-	// ファイル情報をログに追加
-	opLogger.WithData("file_name", file.Filename).
-		WithData("file_size_bytes", file.Size).
-		WithData("content_type", file.Header.Get("Content-Type"))
+	// ファイル情報をログ
+	logging.Info(ctx.Request().Context(), "ファイル情報を取得",
+		"product_id", id,
+		"file_name", file.Filename,
+		"file_size_bytes", file.Size,
+		"content_type", file.Header.Get("Content-Type"),
+		"layer", "handler")
 
 	// ファイルを開く
 	src, err := file.Open()
 	if err != nil {
-		opLogger.Fail(ctx.Request().Context(), err)
+		logging.WithError(ctx.Request().Context(), "アップロードファイルのオープンに失敗", err,
+			"product_id", id,
+			"file_name", file.Filename,
+			"layer", "handler")
+		completeOp(false, "error_type", "file_open_error")
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to open uploaded file: " + err.Error(),
 		})
@@ -71,7 +80,11 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	// ファイル内容を読み込む
 	fileBytes, err := io.ReadAll(src)
 	if err != nil {
-		opLogger.Fail(ctx.Request().Context(), err)
+		logging.WithError(ctx.Request().Context(), "ファイル内容の読み込みに失敗", err,
+			"product_id", id,
+			"file_name", file.Filename,
+			"layer", "handler")
+		completeOp(false, "error_type", "file_read_error")
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "failed to read uploaded file: " + err.Error(),
 		})
@@ -83,7 +96,11 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 	// ユースケースを実行
 	response, err := h.uploadProductImageUseCase.Execute(ctx.Request().Context(), req)
 	if err != nil {
-		opLogger.Fail(ctx.Request().Context(), err)
+		logging.WithError(ctx.Request().Context(), "画像アップロード処理に失敗", err,
+			"product_id", id,
+			"file_name", file.Filename,
+			"layer", "handler")
+		completeOp(false, "error_type", "usecase_error")
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
 		})
@@ -107,36 +124,39 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 		}
 	}
 
-	opLogger.WithData("upload_result", map[string]interface{}{
-		"image_url":  imageURL,
-		"s3_key":     response.S3Key,
-		"filename":   response.Filename,
-		"product_id": response.ProductID,
-		"success":    true,
-	})
+	// 成功ログ
+	logging.Info(ctx.Request().Context(), "画像アップロードが完了",
+		"product_id", id,
+		"file_name", file.Filename,
+		"file_size_bytes", file.Size,
+		"s3_key", response.S3Key,
+		"image_url", imageURL,
+		"layer", "handler")
 
-	// 操作完了をログ
-	opLogger.Complete(ctx.Request().Context())
+	// 操作完了を記録
+	completeOp(true,
+		"s3_key", response.S3Key,
+		"image_url", imageURL,
+		"content_type", file.Header.Get("Content-Type"))
 
-	// ビジネスイベントとしても記録
-	h.logHelper.LogBusinessEvent(ctx.Request().Context(), "product_image_uploaded", "product", fmt.Sprint(id), map[string]interface{}{
-		"image_url":   imageURL,
-		"s3_key":      response.S3Key,
-		"filename":    response.Filename,
-		"file_name":   file.Filename,
-		"file_size":   file.Size,
-		"uploaded_by": "admin", // 実際は認証情報から取得
-	})
+	// ビジネスイベントとして記録
+	logging.LogBusinessEvent(ctx.Request().Context(), "product_image_uploaded", "product", fmt.Sprint(id),
+		"image_url", imageURL,
+		"s3_key", response.S3Key,
+		"filename", response.Filename,
+		"file_name", file.Filename,
+		"file_size", file.Size,
+		"uploaded_by", "admin") // 実際は認証情報から取得
 
 	return ctx.JSON(http.StatusOK, response)
 }
 
 // GetProductImage は商品画像を取得する
 func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdParam, params openapi.GetProductImageParams) error {
-	// 操作ログの開始
-	opLogger := h.logHelper.StartOperation(ctx.Request().Context(), "get_product_image", "product_management").
-		WithEntity("product", fmt.Sprint(id)).
-		WithAction("view", "customer_ui")
+	// 操作開始ログ
+	completeOp := logging.StartOperation(ctx.Request().Context(), "get_product_image",
+		"product_id", id,
+		"layer", "handler")
 
 	// サイズパラメータの取得（デフォルトはmedium）
 	size := "medium"
@@ -144,12 +164,21 @@ func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdP
 		size = string(*params.Size)
 	}
 
-	opLogger.WithData("requested_size", size)
+	// リクエスト情報をログ
+	logging.Info(ctx.Request().Context(), "画像取得リクエストを開始",
+		"product_id", id,
+		"requested_size", size,
+		"layer", "handler")
 
 	// ユースケースを実行
 	response, err := h.getProductImageUseCase.Execute(ctx.Request().Context(), id, size)
 	if err != nil {
-		opLogger.Fail(ctx.Request().Context(), err)
+		// エラーログ
+		logging.WithError(ctx.Request().Context(), "画像取得処理に失敗", err,
+			"product_id", id,
+			"requested_size", size,
+			"layer", "handler")
+		completeOp(false, "error_type", "usecase_error", "requested_size", size)
 		return ctx.JSON(http.StatusInternalServerError, openapi.ErrorResponse{
 			Code:    "internal_error",
 			Message: "Failed to get product image",
@@ -159,15 +188,19 @@ func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdP
 		})
 	}
 
-	// 成功時の追加データ
-	opLogger.WithData("response_info", map[string]interface{}{
-		"content_type":  response.ContentType,
-		"image_size":    len(response.ImageData),
-		"cache_enabled": true, // キャッシュ実装後に実際の値を設定
-	}).WithPerformanceData("response_size_bytes", len(response.ImageData))
+	// 成功ログ
+	logging.Info(ctx.Request().Context(), "画像取得が完了",
+		"product_id", id,
+		"requested_size", size,
+		"content_type", response.ContentType,
+		"image_size_bytes", len(response.ImageData),
+		"layer", "handler")
 
-	// 操作完了をログ
-	opLogger.Complete(ctx.Request().Context())
+	// 操作完了を記録
+	completeOp(true,
+		"content_type", response.ContentType,
+		"image_size_bytes", len(response.ImageData),
+		"requested_size", size)
 
 	// 画像データを返却
 	return ctx.Blob(http.StatusOK, response.ContentType, response.ImageData)

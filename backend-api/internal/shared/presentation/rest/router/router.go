@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
@@ -17,18 +16,16 @@ import (
 
 // Router はアプリケーションのルーティングを管理する
 type Router struct {
-	echo   *echo.Echo
-	logger logging.Logger
+	echo *echo.Echo
 }
 
 // NewRouter は新しいRouterインスタンスを作成
-func NewRouter(logger logging.Logger) *Router {
+func NewRouter() *Router {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
 	return &Router{
-		echo:   e,
-		logger: logger,
+		echo: e,
 	}
 }
 
@@ -51,10 +48,10 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(middleware.Recover())
 	r.echo.Use(middleware.CORS())
 
-	// 構造化ログ関連のミドルウェア（順序重要）
+	// ログミドルウェア（順序重要）
 	r.echo.Use(customMiddleware.RequestIDMiddleware())
-	r.echo.Use(customMiddleware.StructuredLoggingMiddleware(r.logger))
-	r.echo.Use(customMiddleware.ErrorHandlingMiddleware(r.logger))
+	r.echo.Use(customMiddleware.StructuredLoggingMiddleware())
+	r.echo.Use(customMiddleware.ErrorHandlingMiddleware())
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定

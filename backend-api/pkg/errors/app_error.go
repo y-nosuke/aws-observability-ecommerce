@@ -2,8 +2,6 @@ package errors
 
 import (
 	"fmt"
-
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 
 // AppError は構造化されたアプリケーションエラー
@@ -22,17 +20,43 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Type, e.Message)
 }
 
-// LogFields はログ出力用のフィールドを返す
-func (e *AppError) LogFields() []logging.Field {
-	fields := []logging.Field{
-		{Key: "error_type", Value: e.Type},
-		{Key: "error_code", Value: e.Code},
-		{Key: "error_message", Value: e.Message},
+// LogArgs はパッケージレベルログ用のkey-value引数を返す
+// 新しいログシステム用（logging.Info(ctx, msg, args...)で使用）
+func (e *AppError) LogArgs() []any {
+	args := []any{
+		"error_type", e.Type,
+		"error_code", e.Code,
+		"error_message", e.Message,
 	}
+
 	if len(e.Context) > 0 {
-		fields = append(fields, logging.Field{Key: "error_context", Value: e.Context})
+		args = append(args, "error_context", e.Context)
 	}
-	return fields
+
+	if e.Underlying != nil {
+		args = append(args, "underlying_error", e.Underlying.Error())
+	}
+
+	return args
+}
+
+// LogArgsMap はマップ形式でエラー情報を返す（デバッグやテスト用）
+func (e *AppError) LogArgsMap() map[string]interface{} {
+	result := map[string]interface{}{
+		"error_type":    e.Type,
+		"error_code":    e.Code,
+		"error_message": e.Message,
+	}
+
+	if len(e.Context) > 0 {
+		result["error_context"] = e.Context
+	}
+
+	if e.Underlying != nil {
+		result["underlying_error"] = e.Underlying.Error()
+	}
+
+	return result
 }
 
 // NewAppError は新しいAppErrorを作成

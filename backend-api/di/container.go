@@ -8,7 +8,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
@@ -26,9 +25,6 @@ type AppContainer struct {
 	ClientFactory      *aws.ClientFactory
 	S3ClientWrapper    *aws.S3ClientWrapper
 
-	// Logger
-	Logger logging.Logger
-
 	// Handlers
 	ProductHandler        *handler.ProductHandler
 	CategoryListHandler   *queryHandler.CategoryListHandler
@@ -45,7 +41,6 @@ func NewAppContainer(
 	awsServiceRegistry *aws.ServiceRegistry,
 	clientFactory *aws.ClientFactory,
 	s3ClientWrapper *aws.S3ClientWrapper,
-	logger logging.Logger,
 	productHandler *handler.ProductHandler,
 	categoryListHandler *queryHandler.CategoryListHandler,
 	productCatalogHandler *queryHandler.ProductCatalogHandler,
@@ -59,7 +54,6 @@ func NewAppContainer(
 		AWSServiceRegistry:    awsServiceRegistry,
 		ClientFactory:         clientFactory,
 		S3ClientWrapper:       s3ClientWrapper,
-		Logger:                logger,
 		ProductHandler:        productHandler,
 		CategoryListHandler:   categoryListHandler,
 		ProductCatalogHandler: productCatalogHandler,
@@ -110,11 +104,6 @@ func (c *AppContainer) GetProductDetailHandler() *queryHandler.ProductDetailHand
 // GetHealthHandler はヘルスハンドラーを取得
 func (c *AppContainer) GetHealthHandler() *systemHandler.HealthHandler {
 	return c.HealthHandler
-}
-
-// GetLogger はロガーを取得
-func (c *AppContainer) GetLogger() logging.Logger {
-	return c.Logger
 }
 
 // GetDB はデータベース接続を取得

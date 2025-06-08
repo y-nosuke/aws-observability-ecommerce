@@ -524,7 +524,7 @@ console.groupEnd();
 ### 1.10.2. 開発環境と本番環境の分離
 
 ```javascript
-// lib/logger.js
+// lib/logging.js
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 export const logger = {

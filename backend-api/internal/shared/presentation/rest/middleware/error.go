@@ -11,7 +11,7 @@ import (
 )
 
 // ErrorHandlingMiddleware はエラーハンドリングミドルウェアを作成
-func ErrorHandlingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
+func ErrorHandlingMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			err := next(c)
@@ -24,13 +24,13 @@ func ErrorHandlingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
 				return err
 			}
 
-			return handleError(c, err, logger)
+			return handleError(c, err)
 		}
 	}
 }
 
 // handleError はエラーを適切に処理してレスポンスを返す
-func handleError(c echo.Context, err error, logger logging.Logger) error {
+func handleError(c echo.Context, err error) error {
 	var statusCode int
 	var errorResponse map[string]interface{}
 
@@ -46,35 +46,28 @@ func handleError(c echo.Context, err error, logger logging.Logger) error {
 			},
 		}
 
-		// 構造化ログでエラーを記録
-		errorCtx := logging.ErrorContext{
-			Operation:      getOperationFromPath(c.Request().URL.Path),
-			ResourceType:   getResourceTypeFromPath(c.Request().URL.Path),
-			Severity:       getSeverityFromStatusCode(statusCode),
-			BusinessImpact: getBusinessImpactFromError(e),
-		}
-
-		// コンテキスト情報があれば追加
-		if resourceID := c.Param("id"); resourceID != "" {
-			errorCtx.ResourceID = resourceID
-		}
-
-		logger.LogError(c.Request().Context(), e, errorCtx)
+		// エラーログ
+		logging.WithError(c.Request().Context(), "アプリケーションエラーが発生", e,
+			"error_type", e.Type,
+			"error_code", e.Code,
+			"operation", getOperationFromPath(c.Request().URL.Path),
+			"resource_type", getResourceTypeFromPath(c.Request().URL.Path),
+			"severity", getSeverityFromStatusCode(statusCode),
+			"business_impact", getBusinessImpactFromError(e),
+			"status_code", statusCode,
+			"layer", "middleware")
 
 	case *echo.HTTPError:
 		// Echo HTTPエラー
 		statusCode = e.Code
 		if e.Internal != nil {
 			// 内部エラーがある場合は詳細ログを出力
-			internalErr := errors.NewAppError("InternalError", e.Error(), "INTERNAL_ERROR").
-				WithUnderlying(e.Internal)
-
-			errorCtx := logging.ErrorContext{
-				Operation:      getOperationFromPath(c.Request().URL.Path),
-				Severity:       "high",
-				BusinessImpact: "service_degradation",
-			}
-			logger.LogError(c.Request().Context(), internalErr, errorCtx)
+			logging.WithError(c.Request().Context(), "HTTPエラー（内部エラー有り）", e.Internal,
+				"http_status", statusCode,
+				"operation", getOperationFromPath(c.Request().URL.Path),
+				"severity", "high",
+				"business_impact", "service_degradation",
+				"layer", "middleware")
 		}
 
 		errorResponse = map[string]interface{}{
@@ -89,15 +82,12 @@ func handleError(c echo.Context, err error, logger logging.Logger) error {
 		// その他の予期しないエラー
 		statusCode = http.StatusInternalServerError
 
-		internalErr := errors.NewAppError("UnexpectedError", "An unexpected error occurred", "UNEXPECTED_ERROR").
-			WithUnderlying(err)
-
-		errorCtx := logging.ErrorContext{
-			Operation:      getOperationFromPath(c.Request().URL.Path),
-			Severity:       "critical",
-			BusinessImpact: "service_disruption",
-		}
-		logger.LogError(c.Request().Context(), internalErr, errorCtx)
+		logging.WithError(c.Request().Context(), "予期しないエラーが発生", err,
+			"operation", getOperationFromPath(c.Request().URL.Path),
+			"severity", "critical",
+			"business_impact", "service_disruption",
+			"status_code", statusCode,
+			"layer", "middleware")
 
 		errorResponse = map[string]interface{}{
 			"error": map[string]interface{}{
@@ -111,6 +101,8 @@ func handleError(c echo.Context, err error, logger logging.Logger) error {
 	// JSONレスポンスを返す
 	return c.JSON(statusCode, errorResponse)
 }
+
+// ===== ヘルパー関数 =====
 
 // getStatusCodeFromErrorType はエラータイプからHTTPステータスコードを取得
 func getStatusCodeFromErrorType(errorType string) int {

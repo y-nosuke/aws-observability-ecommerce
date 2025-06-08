@@ -337,7 +337,7 @@ type OTelLoggingConfig struct {
 #### 3.3.1 構造化ロガー実装
 
 ```go
-// internal/shared/infrastructure/logging/logger.go
+// internal/shared/infrastructure/logging/logging.go
 package logging
 
 import (

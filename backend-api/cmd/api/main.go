@@ -23,6 +23,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// グローバルロガーの初期化（早期初期化でどこでも使用可能に）
+	logging.Init(config.Observability)
+
 	// DIコンテナの初期化（OpenTelemetryも含めて一括初期化）
 	ctx := context.Background()
 	container, err := di.InitializeAppContainer(
@@ -44,35 +47,23 @@ func main() {
 		}
 	}()
 
-	// ログ出力用のloggerを取得
-	logger := container.GetLogger()
-
-	// 構造化ログでアプリケーション開始をログ出力
-	logger.LogApplication(ctx, logging.ApplicationOperation{
-		Name:     "application_startup",
-		Category: "system",
-		Duration: 0,
-		Success:  true,
-		Stage:    "initialization",
-		Action:   "start",
-		Source:   "main",
-		Data: map[string]interface{}{
-			"config_loaded":         true,
-			"di_container_ready":    true,
-			"database_connected":    true,
-			"aws_services_ready":    true,
-			"opentelemetry_enabled": true,
-		},
-	})
+	// アプリケーション開始ログ
+	logging.LogBusinessEvent(ctx, "application_startup", "system", "main",
+		"config_loaded", true,
+		"di_container_ready", true,
+		"database_connected", true,
+		"aws_services_ready", true,
+		"opentelemetry_enabled", true,
+		"stage", "initialization",
+		"action", "start")
 
 	// ルーターの初期化とセットアップ
-	r := router.NewRouter(logger)
+	r := router.NewRouter()
 	if err := r.SetupRoutes(container); err != nil {
-		logger.LogError(ctx, err, logging.ErrorContext{
-			Operation:      "setup_routes",
-			Severity:       "critical",
-			BusinessImpact: "service_startup_failure",
-		})
+		logging.WithError(ctx, "ルーティングのセットアップに失敗", err,
+			"operation", "setup_routes",
+			"severity", "critical",
+			"business_impact", "service_startup_failure")
 		log.Fatalf("Failed to setup routes: %v", err)
 	}
 
@@ -86,17 +77,19 @@ func main() {
 	// サーバーを起動
 	go func() {
 		address := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
-		logger.Info(ctx, "Starting HTTP server",
-			logging.Field{Key: "address", Value: address},
-			logging.Field{Key: "environment", Value: config.App.Environment},
-		)
+		// サーバー起動ログ
+		logging.Info(ctx, "HTTPサーバーを起動中",
+			"address", address,
+			"environment", config.App.Environment,
+			"layer", "main")
 
 		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.LogError(ctx, err, logging.ErrorContext{
-				Operation:      "start_server",
-				Severity:       "critical",
-				BusinessImpact: "service_unavailable",
-			})
+			// サーバー起動エラーログ
+			logging.WithError(ctx, "HTTPサーバーの起動に失敗", err,
+				"address", address,
+				"operation", "start_server",
+				"severity", "critical",
+				"business_impact", "service_unavailable")
 			log.Printf("Failed to start server: %v\n", err)
 			os.Exit(1)
 		}
@@ -104,35 +97,29 @@ func main() {
 
 	// シグナルを待機
 	<-ctx.Done()
-	logger.Info(ctx, "Shutdown signal received, gracefully shutting down...")
+	// シャットダウン開始ログ
+	logging.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
 
 	// グレースフルシャットダウン
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := e.Shutdown(shutdownCtx); err != nil {
-		logger.LogError(shutdownCtx, err, logging.ErrorContext{
-			Operation:      "shutdown_server",
-			Severity:       "medium",
-			BusinessImpact: "graceful_shutdown_failed",
-		})
+		// シャットダウンエラーログ
+		logging.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
+			"operation", "shutdown_server",
+			"severity", "medium",
+			"business_impact", "graceful_shutdown_failed")
 		log.Printf("Failed to shutdown server gracefully: %v\n", err)
 	} else {
-		logger.Info(shutdownCtx, "Server shutdown gracefully")
+		// シャットダウン成功ログ
+		logging.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
 	}
 
-	// アプリケーション終了をログ出力
-	logger.LogApplication(shutdownCtx, logging.ApplicationOperation{
-		Name:     "application_shutdown",
-		Category: "system",
-		Duration: 0,
-		Success:  true,
-		Stage:    "completion",
-		Action:   "stop",
-		Source:   "main",
-		Data: map[string]interface{}{
-			"graceful_shutdown": true,
-			"cleanup_executed":  true,
-		},
-	})
+	// アプリケーション終了ログ
+	logging.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
+		"graceful_shutdown", true,
+		"cleanup_executed", true,
+		"stage", "completion",
+		"action", "stop")
 }

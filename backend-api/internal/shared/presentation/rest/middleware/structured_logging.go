@@ -11,8 +11,8 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 
-// StructuredLoggingMiddleware は構造化ログミドルウェアを作成
-func StructuredLoggingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
+// StructuredLoggingMiddleware 構造化ログミドルウェアを作成
+func StructuredLoggingMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
@@ -34,30 +34,28 @@ func StructuredLoggingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
 			// 次のハンドラーを実行
 			err := next(c)
 
-			// ログデータを構築
+			// ログ出力
 			duration := time.Since(start)
-			logData := logging.RequestLogData{
-				Method:        c.Request().Method,
-				Path:          c.Request().URL.Path,
-				Query:         c.Request().URL.RawQuery,
-				StatusCode:    c.Response().Status,
-				RequestSize:   requestSize,
-				ResponseSize:  resWrapper.size,
-				Duration:      duration,
-				UserAgent:     c.Request().UserAgent(),
-				RemoteIP:      c.RealIP(),
-				XForwardedFor: c.Request().Header.Get("X-Forwarded-For"),
-				Referer:       c.Request().Referer(),
-				ContentType:   c.Request().Header.Get("Content-Type"),
-				Accept:        c.Request().Header.Get("Accept"),
-				// ユーザー情報は認証実装後に追加
-				CacheHit:         false, // キャッシュ実装後に追加
-				DatabaseQueries:  0,     // DB監視実装後に追加
-				ExternalAPICalls: 0,     // 外部API監視実装後に追加
-			}
+			ctx := c.Request().Context()
 
-			// リクエストログを出力
-			logger.LogRequest(c.Request().Context(), logData)
+			// HTTPリクエストログを出力（パッケージレベル関数を使用）
+			logging.LogHTTPRequest(ctx,
+				c.Request().Method,
+				c.Request().URL.Path,
+				c.Response().Status,
+				duration,
+				"request_size_bytes", requestSize,
+				"response_size_bytes", resWrapper.size,
+				"user_agent", c.Request().UserAgent(),
+				"remote_ip", c.RealIP(),
+				"x_forwarded_for", c.Request().Header.Get("X-Forwarded-For"),
+				"referer", c.Request().Referer(),
+				"content_type", c.Request().Header.Get("Content-Type"),
+				"accept", c.Request().Header.Get("Accept"),
+				"query", c.Request().URL.RawQuery,
+				"cache_hit", false, // TODO: キャッシュ実装後に動的に設定
+				"database_queries", 0, // TODO: DB監視実装後に動的に設定
+				"external_api_calls", 0) // TODO: 外部API監視実装後に動的に設定
 
 			return err
 		}
@@ -65,9 +63,6 @@ func StructuredLoggingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
 }
 
 // responseWriter はレスポンスサイズを追跡するためのラッパー
-// 他のmiddlewareで必要ならtypes.go等に共通化も検討
-// 今回はこのファイル内に配置
-
 type responseWriter struct {
 	http.ResponseWriter
 	size int64

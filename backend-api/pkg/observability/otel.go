@@ -71,7 +71,7 @@ func (m *OTelManager) Shutdown() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := m.loggerProvider.Shutdown(ctx); err != nil {
-			return fmt.Errorf("failed to shutdown logger provider: %w", err)
+			return fmt.Errorf("failed to shutdown logging provider: %w", err)
 		}
 		log.Println("OpenTelemetry shutdown completed")
 	}

@@ -2,49 +2,30 @@ package logging
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
-
-	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"time"
 
 	slogmulti "github.com/samber/slog-multi"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
-// Logger は構造化ログ機能のインターフェース
-type Logger interface {
-	Info(ctx context.Context, msg string, fields ...Field)
-	Warn(ctx context.Context, msg string, fields ...Field)
-	Error(ctx context.Context, msg string, err error, fields ...Field)
-	Debug(ctx context.Context, msg string, fields ...Field)
-
-	// 特定ログタイプ向けヘルパー
-	LogRequest(ctx context.Context, req RequestLogData)
-	LogError(ctx context.Context, err error, errorCtx ErrorContext)
-	LogApplication(ctx context.Context, op ApplicationOperation)
-}
-
-// Field はログフィールドの構造体
-type Field struct {
-	Key   string
-	Value interface{}
-}
-
-// StructuredLogger は構造化ログの実装
+// StructuredLogger ログ機能を提供
 type StructuredLogger struct {
 	slogger *slog.Logger
 	config  config.LoggingConfig
 }
 
 // RequestIDKey はコンテキストキー
-// staticcheck対策: 独自型を使う
 type contextKey string
 
 const RequestIDKey contextKey = "request_id"
 
-// NewLogger は新しいStructuredLoggerを作成します
-func NewLogger(cfg config.ObservabilityConfig) (Logger, error) {
+// NewLogger は新しいLoggerを作成
+func NewLogger(cfg config.ObservabilityConfig) *StructuredLogger {
 	var handler slog.Handler
 
 	opts := &slog.HandlerOptions{
@@ -71,47 +52,32 @@ func NewLogger(cfg config.ObservabilityConfig) (Logger, error) {
 		config:  cfg.Logging,
 	}
 
-	return logger, nil
+	return logger
 }
 
-// Info はInfoレベルのログを出力します
-func (l *StructuredLogger) Info(ctx context.Context, msg string, fields ...Field) {
-	l.log(ctx, slog.LevelInfo, msg, fields...)
+// Info はInfoレベルのログを出力（シンプル版）
+func (l *StructuredLogger) Info(ctx context.Context, msg string, args ...any) {
+	l.logWithContext(ctx, slog.LevelInfo, msg, args...)
 }
 
-// Warn はWarnレベルのログを出力します
-func (l *StructuredLogger) Warn(ctx context.Context, msg string, fields ...Field) {
-	l.log(ctx, slog.LevelWarn, msg, fields...)
+// Warn はWarnレベルのログを出力（シンプル版）
+func (l *StructuredLogger) Warn(ctx context.Context, msg string, args ...any) {
+	l.logWithContext(ctx, slog.LevelWarn, msg, args...)
 }
 
-// Error はErrorレベルのログを出力します
-func (l *StructuredLogger) Error(ctx context.Context, msg string, err error, fields ...Field) {
-	allFields := append(fields, Field{Key: "error", Value: err.Error()})
-	l.log(ctx, slog.LevelError, msg, allFields...)
+// Error はErrorレベルのログを出力（シンプル版）
+func (l *StructuredLogger) Error(ctx context.Context, msg string, args ...any) {
+	l.logWithContext(ctx, slog.LevelError, msg, args...)
 }
 
-// Debug はDebugレベルのログを出力します
-func (l *StructuredLogger) Debug(ctx context.Context, msg string, fields ...Field) {
-	l.log(ctx, slog.LevelDebug, msg, fields...)
+// Debug はDebugレベルのログを出力（シンプル版）
+func (l *StructuredLogger) Debug(ctx context.Context, msg string, args ...any) {
+	l.logWithContext(ctx, slog.LevelDebug, msg, args...)
 }
 
-// log は実際のログ出力を行う内部メソッド
-func (l *StructuredLogger) log(ctx context.Context, level slog.Level, msg string, fields ...Field) {
-	attrs := make([]slog.Attr, 0, len(fields)+10) // 余裕を持ったサイズ
-
-	// 共通フィールドを追加
-	attrs = append(attrs, l.buildCommonFields(ctx)...)
-
-	// カスタムフィールドを追加
-	for _, field := range fields {
-		attrs = append(attrs, slog.Any(field.Key, field.Value))
-	}
-
-	l.slogger.LogAttrs(ctx, level, msg, attrs...)
-}
-
-// buildCommonFields は共通フィールドを構築します
-func (l *StructuredLogger) buildCommonFields(ctx context.Context) []slog.Attr {
+// logWithContext はコンテキスト情報を付加してログ出力
+func (l *StructuredLogger) logWithContext(ctx context.Context, level slog.Level, msg string, args ...any) {
+	// 基本的な共通フィールドを自動で追加
 	attrs := []slog.Attr{
 		slog.Group("service",
 			slog.String("name", config.App.Name),
@@ -127,15 +93,107 @@ func (l *StructuredLogger) buildCommonFields(ctx context.Context) []slog.Attr {
 		))
 	}
 
+	// トレース情報を追加（コンテキストから自動取得）
+	if traceID := extractTraceID(ctx); traceID != "" {
+		attrs = append(attrs, slog.Group("trace",
+			slog.String("id", traceID),
+		))
+	}
+
 	// ホスト情報を追加
-	hostname, err := os.Hostname()
-	if err == nil && hostname != "" {
+	if hostname, err := os.Hostname(); err == nil && hostname != "" {
 		attrs = append(attrs, slog.Group("host",
 			slog.String("name", hostname),
 		))
 	}
 
-	return attrs
+	// ユーザー提供の引数をattrsに変換
+	for i := 0; i < len(args); i += 2 {
+		if i+1 < len(args) {
+			key := fmt.Sprintf("%v", args[i])
+			value := args[i+1]
+			attrs = append(attrs, slog.Any(key, value))
+		}
+	}
+
+	l.slogger.LogAttrs(ctx, level, msg, attrs...)
+}
+
+// extractTraceID はコンテキストからトレースIDを取得（OpenTelemetry対応）
+func extractTraceID(ctx context.Context) string {
+	// TODO: OpenTelemetryのSpanからトレースIDを取得する実装を追加
+	// 現在は簡易実装
+	if traceID, ok := ctx.Value("trace_id").(string); ok {
+		return traceID
+	}
+	return ""
+}
+
+// === 便利なヘルパーメソッド ===
+
+// InfoF はフォーマット付きでInfoログを出力
+func (l *StructuredLogger) InfoF(ctx context.Context, format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	l.Info(ctx, msg)
+}
+
+// ErrorF はフォーマット付きでErrorログを出力
+func (l *StructuredLogger) ErrorF(ctx context.Context, format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	l.Error(ctx, msg)
+}
+
+// WithError はエラー情報を含むログを出力
+func (l *StructuredLogger) WithError(ctx context.Context, msg string, err error, args ...any) {
+	allArgs := append(args, "error", err.Error())
+	if err != nil {
+		allArgs = append(allArgs, "error_type", fmt.Sprintf("%T", err))
+	}
+	l.Error(ctx, msg, allArgs...)
+}
+
+// === ビジネスロジック用のヘルパー ===
+
+// LogOperation は操作の開始/完了を記録
+func (l *StructuredLogger) LogOperation(ctx context.Context, operation string, duration time.Duration, success bool, args ...any) {
+	level := slog.LevelInfo
+	if !success {
+		level = slog.LevelError
+	}
+
+	allArgs := append(args,
+		"operation", operation,
+		"duration_ms", float64(duration.Nanoseconds())/1e6,
+		"success", success,
+		"log_type", "operation",
+	)
+
+	l.logWithContext(ctx, level, fmt.Sprintf("Operation %s completed", operation), allArgs...)
+}
+
+// LogHTTPRequest はHTTPリクエストをログ出力
+func (l *StructuredLogger) LogHTTPRequest(ctx context.Context, method, path string, status int, duration time.Duration, args ...any) {
+	allArgs := append(args,
+		"http_method", method,
+		"http_path", path,
+		"http_status", status,
+		"duration_ms", float64(duration.Nanoseconds())/1e6,
+		"log_type", "http_request",
+	)
+
+	l.Info(ctx, "HTTP request processed", allArgs...)
+}
+
+// LogBusinessEvent はビジネスイベントをログ出力
+func (l *StructuredLogger) LogBusinessEvent(ctx context.Context, event string, entityType string, entityID string, args ...any) {
+	allArgs := append(args,
+		"event", event,
+		"entity_type", entityType,
+		"entity_id", entityID,
+		"log_type", "business_event",
+	)
+
+	l.Info(ctx, fmt.Sprintf("Business event: %s", event), allArgs...)
 }
 
 // extractRequestID はコンテキストからリクエストIDを抽出します

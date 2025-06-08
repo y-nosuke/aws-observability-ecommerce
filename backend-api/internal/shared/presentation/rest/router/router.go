@@ -55,10 +55,6 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(customMiddleware.RequestIDMiddleware())
 	r.echo.Use(customMiddleware.StructuredLoggingMiddleware(r.logger))
 	r.echo.Use(customMiddleware.ErrorHandlingMiddleware(r.logger))
-
-	// 将来実装予定のミドルウェア
-	r.echo.Use(customMiddleware.NewMetricsMiddleware())
-	r.echo.Use(customMiddleware.NewRateLimitMiddleware())
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定

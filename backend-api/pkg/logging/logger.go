@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
-	"go.opentelemetry.io/otel/trace"
 
 	slogmulti "github.com/samber/slog-multi"
 
@@ -121,17 +120,6 @@ func (l *StructuredLogger) buildCommonFields(ctx context.Context) []slog.Attr {
 		),
 	}
 
-	// トレースコンテキストを追加
-	if l.config.EnableTraceContext {
-		if traceCtx := l.extractTraceContext(ctx); traceCtx.TraceID != "" {
-			attrs = append(attrs, slog.Group("trace",
-				slog.String("trace_id", traceCtx.TraceID),
-				slog.String("span_id", traceCtx.SpanID),
-				slog.String("flags", traceCtx.Flags),
-			))
-		}
-	}
-
 	// リクエストIDを追加
 	if reqID := extractRequestID(ctx); reqID != "" {
 		attrs = append(attrs, slog.Group("request",
@@ -148,28 +136,6 @@ func (l *StructuredLogger) buildCommonFields(ctx context.Context) []slog.Attr {
 	}
 
 	return attrs
-}
-
-// TraceContext はトレースコンテキスト情報
-type TraceContext struct {
-	TraceID string
-	SpanID  string
-	Flags   string
-}
-
-// extractTraceContext はトレースコンテキストを抽出します
-func (l *StructuredLogger) extractTraceContext(ctx context.Context) TraceContext {
-	span := trace.SpanFromContext(ctx)
-	if !span.SpanContext().IsValid() {
-		return TraceContext{}
-	}
-
-	spanCtx := span.SpanContext()
-	return TraceContext{
-		TraceID: spanCtx.TraceID().String(),
-		SpanID:  spanCtx.SpanID().String(),
-		Flags:   spanCtx.TraceFlags().String(),
-	}
 }
 
 // extractRequestID はコンテキストからリクエストIDを抽出します

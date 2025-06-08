@@ -14,11 +14,10 @@ type ObservabilityConfig struct {
 
 // LoggingConfig はログ設定を管理する構造体
 type LoggingConfig struct {
-	Level              string `mapstructure:"level"`
-	Format             string `mapstructure:"format"`
-	EnableOTel         bool   `mapstructure:"enable_otel"`
-	EnableTraceContext bool   `mapstructure:"enable_trace_context"`
-	MaxLogSizeMB       int    `mapstructure:"max_log_size_mb"`
+	Level        string `mapstructure:"level"`
+	Format       string `mapstructure:"format"`
+	EnableOTel   bool   `mapstructure:"enable_otel"`
+	MaxLogSizeMB int    `mapstructure:"max_log_size_mb"`
 }
 
 // OTelConfig はOpenTelemetry設定を管理する構造体

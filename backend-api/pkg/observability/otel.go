@@ -3,57 +3,83 @@ package observability
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/log/global"
-	"go.opentelemetry.io/otel/sdk/log"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
-// InitOpenTelemetry はOpenTelemetryを初期化します
-func InitOpenTelemetry(cfg config.OTelConfig) (func(), error) {
+// OTelManager はOpenTelemetryの初期化と管理を行う構造体
+type OTelManager struct {
+	loggerProvider *sdklog.LoggerProvider
+	resource       *resource.Resource
+}
+
+// NewOTelManager はOTelManagerのコンストラクタ（wireプロバイダー）
+func NewOTelManager(otelConfig config.OTelConfig) (*OTelManager, error) {
 	ctx := context.Background()
 
 	// リソース情報を作成
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceName(cfg.ServiceName),
-			semconv.ServiceVersion(cfg.ServiceVersion),
-			semconv.ServiceNamespace(cfg.ServiceNamespace),
-			semconv.DeploymentEnvironment(cfg.DeploymentEnvironment),
+			semconv.ServiceName(otelConfig.ServiceName),
+			semconv.ServiceVersion(otelConfig.ServiceVersion),
+			semconv.ServiceNamespace(otelConfig.ServiceNamespace),
+			semconv.DeploymentEnvironment(otelConfig.DeploymentEnvironment),
 		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	var shutdownFuncs []func()
-
 	// ログ初期化
-	loggerShutdown, err := initLogging(ctx, cfg, res)
+	loggerProvider, err := initLogging(ctx, otelConfig, res)
 	if err != nil {
-		// 既に初期化されたものをクリーンアップ
-		for _, shutdown := range shutdownFuncs {
-			shutdown()
-		}
 		return nil, fmt.Errorf("failed to initialize logging: %w", err)
 	}
-	shutdownFuncs = append(shutdownFuncs, loggerShutdown)
 
-	// シャットダウン関数を返す
-	return func() {
-		for i := len(shutdownFuncs) - 1; i >= 0; i-- {
-			shutdownFuncs[i]()
-		}
+	// グローバルLoggerProviderを設定
+	global.SetLoggerProvider(loggerProvider)
+
+	log.Printf("OpenTelemetry initialized for service: %s", otelConfig.ServiceName)
+
+	return &OTelManager{
+		loggerProvider: loggerProvider,
+		resource:       res,
 	}, nil
 }
 
+// GetLoggerProvider はLoggerProviderを返します
+func (m *OTelManager) GetLoggerProvider() *sdklog.LoggerProvider {
+	return m.loggerProvider
+}
+
+// GetResource はResourceを返します
+func (m *OTelManager) GetResource() *resource.Resource {
+	return m.resource
+}
+
+// Shutdown はOpenTelemetryリソースをクリーンアップします
+func (m *OTelManager) Shutdown() error {
+	if m.loggerProvider != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := m.loggerProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown logger provider: %w", err)
+		}
+		log.Println("OpenTelemetry shutdown completed")
+	}
+	return nil
+}
+
 // initLogging はログを初期化します
-func initLogging(ctx context.Context, cfg config.OTelConfig, res *resource.Resource) (func(), error) {
+func initLogging(ctx context.Context, cfg config.OTelConfig, res *resource.Resource) (*sdklog.LoggerProvider, error) {
 	// OTLP Log Exporter
 	logExporter, err := otlploghttp.New(ctx,
 		otlploghttp.WithEndpoint(cfg.Collector.Endpoint),
@@ -66,24 +92,31 @@ func initLogging(ctx context.Context, cfg config.OTelConfig, res *resource.Resou
 	}
 
 	// Log Provider
-	lp := log.NewLoggerProvider(
-		log.WithProcessor(log.NewBatchProcessor(logExporter,
-			log.WithExportTimeout(cfg.Logging.BatchTimeout),
-			log.WithMaxQueueSize(cfg.Logging.MaxQueueSize),
-			log.WithExportMaxBatchSize(cfg.Logging.MaxExportBatchSize),
-			log.WithExportTimeout(cfg.Logging.ExportTimeout),
+	lp := sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter,
+			sdklog.WithExportTimeout(cfg.Logging.BatchTimeout),
+			sdklog.WithMaxQueueSize(cfg.Logging.MaxQueueSize),
+			sdklog.WithExportMaxBatchSize(cfg.Logging.MaxExportBatchSize),
 		)),
-		log.WithResource(res),
+		sdklog.WithResource(res),
 	)
 
-	global.SetLoggerProvider(lp)
+	return lp, nil
+}
+
+// 以下は下位互換性のための関数（段階的に削除予定）
+
+// InitOpenTelemetry は下位互換性のためのラッパー関数
+// 新しいコードではNewOTelManagerを使用してください
+func InitOpenTelemetry(cfg config.OTelConfig) (func(), error) {
+	manager, err := NewOTelManager(cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := lp.Shutdown(ctx); err != nil {
-			// ログに記録するがエラーは握りつぶす
-			fmt.Printf("Error shutting down logger provider: %v\n", err)
+		if shutdownErr := manager.Shutdown(); shutdownErr != nil {
+			log.Printf("Error during OpenTelemetry shutdown: %v", shutdownErr)
 		}
 	}, nil
 }

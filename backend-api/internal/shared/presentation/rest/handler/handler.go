@@ -1,13 +1,9 @@
 package handler
 
 import (
-	"fmt"
-
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/infrastructure/di"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
@@ -23,18 +19,14 @@ type Handler struct {
 	logger logging.Logger
 }
 
-// NewHandler は新しいServiceRegistryを使用してハンドラーを作成
-func NewHandler(awsServiceRegistry *aws.ServiceRegistry, logger logging.Logger) (*Handler, error) {
-	if database.DB == nil {
-		return nil, fmt.Errorf("database connection is not initialized")
-	}
-
+// NewHandler はDIコンテナから各ハンドラーを取得してHandlerを作成
+func NewHandler(container *di.AppContainer) (*Handler, error) {
 	return &Handler{
-		HealthHandler:         systemHandler.NewHealthHandler(awsServiceRegistry.GetClientFactory()),
-		CategoryListHandler:   queryHandler.NewCategoryListHandler(database.DB),
-		ProductCatalogHandler: queryHandler.NewProductCatalogHandler(database.DB),
-		ProductDetailHandler:  queryHandler.NewProductDetailHandler(database.DB),
-		ProductHandler:        di.InitializeProductHandler(awsServiceRegistry.GetS3ClientWrapper(), logger),
-		logger:                logger,
+		HealthHandler:         container.GetHealthHandler(),
+		CategoryListHandler:   container.GetCategoryListHandler(),
+		ProductCatalogHandler: container.GetProductCatalogHandler(),
+		ProductDetailHandler:  container.GetProductDetailHandler(),
+		ProductHandler:        container.GetProductHandler(),
+		logger:                container.GetLogger(),
 	}, nil
 }

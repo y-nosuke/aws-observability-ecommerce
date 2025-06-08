@@ -11,14 +11,12 @@ import (
 // GetProductImageUseCase は商品画像取得のユースケース
 type GetProductImageUseCase struct {
 	imageStorage service.ImageStorage
-	bucket       string
 }
 
 // NewGetProductImageUseCase は新しいGetProductImageUseCaseを作成する
-func NewGetProductImageUseCase(imageStorage service.ImageStorage, bucket string) *GetProductImageUseCase {
+func NewGetProductImageUseCase(imageStorage service.ImageStorage) *GetProductImageUseCase {
 	return &GetProductImageUseCase{
 		imageStorage: imageStorage,
-		bucket:       bucket,
 	}
 }
 

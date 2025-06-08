@@ -10,12 +10,10 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 func main() {
@@ -25,39 +23,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 構造化ロガーの初期化
-	logger, err := logging.NewLogger(config.Observability)
+	// DIコンテナの初期化（OpenTelemetryも含めて一括初期化）
+	ctx := context.Background()
+	container, err := di.InitializeAppContainer(
+		ctx,
+		config.App,
+		config.AWS,
+		config.Database,
+		config.Observability,
+	)
 	if err != nil {
-		log.Printf("Failed to initialize logger: %v\n", err)
+		log.Printf("Failed to initialize DI container: %v\n", err)
 		os.Exit(1)
 	}
 
-	// OpenTelemetryの初期化
-	otelShutdown, err := observability.InitOpenTelemetry(config.Observability.OTel)
-	if err != nil {
-		log.Printf("Failed to initialize OpenTelemetry: %v\n", err)
-		os.Exit(1)
-	}
-	defer otelShutdown()
-
-	// データベース接続の初期化
-	if initErr := database.InitDatabase(); err != nil {
-		log.Printf("Failed to initialize database: %v\n", initErr)
-		os.Exit(1)
-	}
+	// アプリケーション終了時のクリーンアップを設定
 	defer func() {
-		if closeErr := database.CloseDatabase(); closeErr != nil {
-			log.Printf("Failed to close database: %v\n", closeErr)
+		if cleanupErr := container.Cleanup(); cleanupErr != nil {
+			log.Printf("Error during cleanup: %v\n", cleanupErr)
 		}
 	}()
 
-	// AWSサービスレジストリの初期化
-	ctx := context.Background()
-	awsServiceRegistry, err := aws.NewServiceRegistry(ctx, config.AWS)
-	if err != nil {
-		log.Printf("Failed to initialize AWS services: %v", err)
-		os.Exit(1)
-	}
+	// ログ出力用のloggerを取得
+	logger := container.GetLogger()
 
 	// 構造化ログでアプリケーション開始をログ出力
 	logger.LogApplication(ctx, logging.ApplicationOperation{
@@ -69,15 +57,17 @@ func main() {
 		Action:   "start",
 		Source:   "main",
 		Data: map[string]interface{}{
-			"config_loaded":      true,
-			"database_connected": true,
-			"aws_services_ready": true,
+			"config_loaded":         true,
+			"di_container_ready":    true,
+			"database_connected":    true,
+			"aws_services_ready":    true,
+			"opentelemetry_enabled": true,
 		},
 	})
 
 	// ルーターの初期化とセットアップ
 	r := router.NewRouter(logger)
-	if err := r.SetupRoutes(awsServiceRegistry); err != nil {
+	if err := r.SetupRoutes(container); err != nil {
 		logger.LogError(ctx, err, logging.ErrorContext{
 			Operation:      "setup_routes",
 			Severity:       "critical",
@@ -140,5 +130,9 @@ func main() {
 		Stage:    "completion",
 		Action:   "stop",
 		Source:   "main",
+		Data: map[string]interface{}{
+			"graceful_shutdown": true,
+			"cleanup_executed":  true,
+		},
 	})
 }

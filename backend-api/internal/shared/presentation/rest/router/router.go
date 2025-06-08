@@ -5,9 +5,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
@@ -32,7 +33,7 @@ func NewRouter(logger logging.Logger) *Router {
 }
 
 // SetupRoutes は全てのルーティングを設定
-func (r *Router) SetupRoutes(awsServiceRegistry *aws.ServiceRegistry) error {
+func (r *Router) SetupRoutes(container *di.AppContainer) error {
 	// 1. ミドルウェアの設定
 	r.setupMiddleware()
 
@@ -41,7 +42,7 @@ func (r *Router) SetupRoutes(awsServiceRegistry *aws.ServiceRegistry) error {
 
 	// 3. OpenAPI仕様に基づくAPIルーティング
 	api := r.echo.Group("/api")
-	return r.setupAPIRoutes(api, awsServiceRegistry)
+	return r.setupAPIRoutes(api, container)
 }
 
 // setupMiddleware は共通ミドルウェアを設定
@@ -61,9 +62,9 @@ func (r *Router) setupMiddleware() {
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定
-func (r *Router) setupAPIRoutes(api *echo.Group, awsServiceRegistry *aws.ServiceRegistry) error {
-	// ハンドラーの初期化（ロガーを渡す）
-	h, err := handler.NewHandler(awsServiceRegistry, r.logger)
+func (r *Router) setupAPIRoutes(api *echo.Group, container *di.AppContainer) error {
+	// ハンドラーの初期化（DIコンテナから取得）
+	h, err := handler.NewHandler(container)
 	if err != nil {
 		return fmt.Errorf("failed to create handler: %w", err)
 	}

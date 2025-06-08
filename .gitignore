@@ -9,6 +9,7 @@ logs
 
 backend-api/internal/shared/infrastructure/models
 backend-api/internal/shared/presentation/rest/openapi
+backend-api/di/wire_gen.go
 backend-image-processor/build
 
 # Test binary, built with `go test -c`

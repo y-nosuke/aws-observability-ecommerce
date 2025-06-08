@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 )
 
@@ -21,14 +21,16 @@ import (
 type HealthHandler struct {
 	startTime  time.Time
 	version    string
+	db         *sql.DB
 	awsFactory *aws.ClientFactory
 }
 
 // NewHealthHandler は新しいヘルスハンドラーを作成します
-func NewHealthHandler(awsFactory *aws.ClientFactory) *HealthHandler {
+func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler {
 	return &HealthHandler{
 		startTime:  time.Now(),
 		version:    config.App.Version,
+		db:         db,
 		awsFactory: awsFactory,
 	}
 }
@@ -84,7 +86,7 @@ func (h *HealthHandler) createResources() openapi.SystemResources {
 func (h *HealthHandler) createComponents(ctx context.Context, checks []string) map[string]string {
 	components := map[string]string{}
 
-	healthCheckers := NewHealthCheckers(database.DB, h.awsFactory, checks)
+	healthCheckers := NewHealthCheckers(h.db, h.awsFactory, checks)
 	results := healthCheckers.Check(ctx)
 	for n, e := range results {
 		if e != nil {

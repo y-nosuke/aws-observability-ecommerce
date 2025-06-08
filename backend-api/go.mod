@@ -35,7 +35,10 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 )
 
-require github.com/samber/slog-multi v1.4.0
+require (
+	github.com/google/wire v0.6.0
+	github.com/samber/slog-multi v1.4.0
+)
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

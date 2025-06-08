@@ -285,6 +285,7 @@ tasks:
     cmds:
       - task: generate:models
       - task: generate:openapi
+      - task: generate:wire
 
   generate:models:
     desc: SQLBoilerでモデルを生成
@@ -298,3 +299,9 @@ tasks:
     cmds:
       - mkdir -p internal/shared/presentation/rest/openapi
       - oapi-codegen --config oapi-codegen-config.yaml openapi.yaml
+
+  generate:wire:
+    desc: Wireのコードを生成
+    dir: backend-api
+    cmds:
+      - wire ./di

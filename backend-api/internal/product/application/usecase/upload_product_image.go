@@ -13,14 +13,12 @@ import (
 // UploadProductImageUseCase は商品画像アップロードのユースケース
 type UploadProductImageUseCase struct {
 	imageStorage service.ImageStorage
-	bucket       string
 }
 
 // NewUploadProductImageUseCase は新しいUploadProductImageUseCaseを作成する
-func NewUploadProductImageUseCase(imageStorage service.ImageStorage, bucket string) *UploadProductImageUseCase {
+func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProductImageUseCase {
 	return &UploadProductImageUseCase{
 		imageStorage: imageStorage,
-		bucket:       bucket,
 	}
 }
 
@@ -33,20 +31,9 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 	}
 
 	// 画像をアップロード
-	s3Key, err := u.imageStorage.UploadImage(ctx, req.ProductID, fileExt, req.ImageData)
+	s3Key, urls, err := u.imageStorage.UploadImage(ctx, req.ProductID, fileExt, req.ImageData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload image: %w", err)
-	}
-
-	// ファイル名（拡張子なし）
-	fileNameWithoutExt := strings.TrimSuffix(filepath.Base(s3Key), fileExt)
-
-	// レスポンスを構築
-	urls := map[string]string{
-		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", u.bucket, s3Key),
-		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/%s_thumbnail%s", u.bucket, fileNameWithoutExt, fileExt),
-		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/%s_medium%s", u.bucket, fileNameWithoutExt, fileExt),
-		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/%s_large%s", u.bucket, fileNameWithoutExt, fileExt),
 	}
 
 	return dto.NewUploadImageResponse(req.ProductID, req.Filename, s3Key, urls), nil

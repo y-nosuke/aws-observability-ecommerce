@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 

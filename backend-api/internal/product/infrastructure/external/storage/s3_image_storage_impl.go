@@ -24,8 +24,8 @@ func NewS3ImageStorageImpl(s3Wrapper *aws.S3ClientWrapper) service.ImageStorage 
 	}
 }
 
-// UploadImage は商品画像をS3にアップロードする
-func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int64, fileExt string, imageData []byte) (string, error) {
+// UploadImage は商品画像をS3にアップロードし、S3キーとURLマップを返却する
+func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int64, fileExt string, imageData []byte) (string, map[string]string, error) {
 	// S3へのアップロード先キーを生成
 	key := fmt.Sprintf("uploads/%d/original%s", productID, fileExt)
 
@@ -46,10 +46,30 @@ func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int64, f
 
 	err := s.s3Wrapper.UploadObject(ctx, key, bytes.NewReader(imageData), options)
 	if err != nil {
-		return "", fmt.Errorf("failed to upload image to S3: %w", err)
+		return "", nil, fmt.Errorf("failed to upload image to S3: %w", err)
 	}
 
-	return key, nil
+	// URLマップを構築（S3ClientWrapperからbucket名を取得）
+	urls := s.buildImageURLs(key, fileExt)
+
+	return key, urls, nil
+}
+
+// buildImageURLs は画像のURLマップを構築する
+func (s *S3ImageStorageImpl) buildImageURLs(s3Key, fileExt string) map[string]string {
+	// S3ClientWrapperのconfigからbucket名を取得
+	bucketName := s.s3Wrapper.GetBucketName()
+
+	// ファイル名（拡張子なし）
+	fileNameWithoutExt := strings.TrimSuffix(filepath.Base(s3Key), fileExt)
+
+	// LocalStack環境のURL構築
+	return map[string]string{
+		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", bucketName, s3Key),
+		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/%s_thumbnail%s", bucketName, fileNameWithoutExt, fileExt),
+		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/%s_medium%s", bucketName, fileNameWithoutExt, fileExt),
+		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/%s_large%s", bucketName, fileNameWithoutExt, fileExt),
+	}
 }
 
 // GetImageData は指定されたサイズの画像データを取得する

@@ -2,38 +2,13 @@ package middleware
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
-
-// RequestIDMiddleware はリクエストID生成ミドルウェアを作成
-func RequestIDMiddleware() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// ヘッダーからリクエストIDを取得、なければ生成
-			requestID := c.Request().Header.Get("X-Request-ID")
-			if requestID == "" {
-				requestID = "req_" + uuid.New().String()
-			}
-
-			// コンテキストにリクエストIDを設定
-			ctx := context.WithValue(c.Request().Context(), logging.RequestIDKey, requestID)
-			c.SetRequest(c.Request().WithContext(ctx))
-
-			// レスポンスヘッダーにも設定
-			c.Response().Header().Set("X-Request-ID", requestID)
-
-			return next(c)
-		}
-	}
-}
 
 // StructuredLoggingMiddleware は構造化ログミドルウェアを作成
 func StructuredLoggingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
@@ -89,6 +64,9 @@ func StructuredLoggingMiddleware(logger logging.Logger) echo.MiddlewareFunc {
 }
 
 // responseWriter はレスポンスサイズを追跡するためのラッパー
+// 他のmiddlewareで必要ならtypes.go等に共通化も検討
+// 今回はこのファイル内に配置
+
 type responseWriter struct {
 	http.ResponseWriter
 	size int64
@@ -98,28 +76,4 @@ func (w *responseWriter) Write(b []byte) (int, error) {
 	size, err := w.ResponseWriter.Write(b)
 	w.size += int64(size)
 	return size, err
-}
-
-// NewMetricsMiddleware はメトリクスミドルウェアを作成
-// 将来的にPrometheusやその他のメトリクス収集ツールと統合可能
-func NewMetricsMiddleware() echo.MiddlewareFunc {
-	// TODO: メトリクス収集の実装
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// メトリクス収集のロジックをここに実装
-			return next(c)
-		}
-	}
-}
-
-// NewRateLimitMiddleware はレート制限ミドルウェアを作成
-// 将来的にRedisベースのレート制限を実装可能
-func NewRateLimitMiddleware() echo.MiddlewareFunc {
-	// TODO: レート制限の実装
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// レート制限のロジックをここに実装
-			return next(c)
-		}
-	}
 }

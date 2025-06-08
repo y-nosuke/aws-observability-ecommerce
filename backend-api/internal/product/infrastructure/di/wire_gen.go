@@ -11,7 +11,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/infrastructure/external/storage"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 
 // Injectors from wire.go:

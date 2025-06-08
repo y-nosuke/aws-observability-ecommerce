@@ -8,8 +8,8 @@ import (
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 )
 
 // Handler は全てのAPIハンドラーを統合する構造体

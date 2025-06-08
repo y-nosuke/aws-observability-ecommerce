@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 

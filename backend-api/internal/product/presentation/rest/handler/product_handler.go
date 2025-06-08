@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
 	"fmt"

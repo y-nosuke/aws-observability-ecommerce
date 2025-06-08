@@ -13,9 +13,9 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/logging"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/observability"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logging"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 func main() {

@@ -13,6 +13,19 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
+type Logger interface {
+	Info(ctx context.Context, msg string, args ...any)
+	Warn(ctx context.Context, msg string, args ...any)
+	Error(ctx context.Context, msg string, args ...any)
+	Debug(ctx context.Context, msg string, args ...any)
+	InfoF(ctx context.Context, format string, args ...any)
+	ErrorF(ctx context.Context, format string, args ...any)
+	WithError(ctx context.Context, msg string, err error, args ...any)
+	LogOperation(ctx context.Context, operation string, duration time.Duration, success bool, args ...any)
+	LogHTTPRequest(ctx context.Context, method string, path string, status int, duration time.Duration, args ...any)
+	LogBusinessEvent(ctx context.Context, event string, entityType string, id string, args ...any)
+}
+
 // StructuredLogger ログ機能を提供
 type StructuredLogger struct {
 	slogger *slog.Logger
@@ -25,7 +38,7 @@ type contextKey string
 const RequestIDKey contextKey = "request_id"
 
 // NewLogger は新しいLoggerを作成
-func NewLogger(cfg config.ObservabilityConfig) *StructuredLogger {
+func NewLogger(cfg config.ObservabilityConfig) Logger {
 	var handler slog.Handler
 
 	opts := &slog.HandlerOptions{

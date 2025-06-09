@@ -103,20 +103,3 @@ func initLogging(ctx context.Context, cfg config.OTelConfig, res *resource.Resou
 
 	return lp, nil
 }
-
-// 以下は下位互換性のための関数（段階的に削除予定）
-
-// InitOpenTelemetry は下位互換性のためのラッパー関数
-// 新しいコードではNewOTelManagerを使用してください
-func InitOpenTelemetry(cfg config.OTelConfig) (func(), error) {
-	manager, err := NewOTelManager(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return func() {
-		if shutdownErr := manager.Shutdown(); shutdownErr != nil {
-			log.Printf("Error during OpenTelemetry shutdown: %v", shutdownErr)
-		}
-	}, nil
-}

@@ -5,6 +5,7 @@ datasources:
     type: loki
     access: proxy
     url: http://loki:3100
+    uid: loki # 追加: ダッシュボードで参照するUID
     isDefault: true
     editable: true
 
@@ -12,6 +13,7 @@ datasources:
     type: prometheus
     access: proxy
     url: http://mimir:9009/prometheus
+    uid: mimir
     isDefault: false
     editable: true
     jsonData:

@@ -10,7 +10,7 @@ import (
 
 // グローバルロガーインスタンス
 var (
-	globalLogger *StructuredLogger
+	globalLogger Logger
 	initOnce     sync.Once
 )
 
@@ -22,18 +22,13 @@ func Init(cfg config.ObservabilityConfig) {
 	})
 }
 
-// MustInit はグローバルロガーを初期化し、エラー時はpanicします
-func MustInit(cfg config.ObservabilityConfig) {
-	Init(cfg)
-}
-
 // SetGlobalLogger はグローバルロガーを直接設定します（テスト用）
-func SetGlobalLogger(logger *StructuredLogger) {
+func SetGlobalLogger(logger Logger) {
 	globalLogger = logger
 }
 
 // getGlobalLogger はグローバルロガーを取得します（内部用）
-func getGlobalLogger() *StructuredLogger {
+func getGlobalLogger() Logger {
 	if globalLogger == nil {
 		// フォールバック：デフォルト設定でロガーを作成
 		cfg := config.ObservabilityConfig{
@@ -115,14 +110,4 @@ func StartOperation(ctx context.Context, operation string, args ...any) func(suc
 		allArgs := append(args, additionalArgs...)
 		LogOperation(ctx, operation, duration, success, allArgs...)
 	}
-}
-
-// QuickInfo は最も簡単なログ出力（一時的なデバッグ用）
-func QuickInfo(ctx context.Context, msg string) {
-	Info(ctx, msg)
-}
-
-// QuickError は最も簡単なエラーログ出力
-func QuickError(ctx context.Context, msg string, err error) {
-	WithError(ctx, msg, err)
 }

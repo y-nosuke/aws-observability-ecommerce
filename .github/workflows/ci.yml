@@ -51,6 +51,9 @@ jobs:
       - name: Install golang-migrate
         run: go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
+      - name: Install wire
+        run: go install github.com/google/wire/cmd/wire@latest
+
       - name: Generate code (api)
         run: |
           cd backend-api
@@ -65,6 +68,11 @@ jobs:
 
           # Generate models
           sqlboiler mysql
+
+      - name: Generate code (wire)
+        run: |
+          cd backend-api
+          wire ./...
 
       - name: Test (api)
         env:

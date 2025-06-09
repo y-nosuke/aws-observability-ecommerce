@@ -1,0 +1,96 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+        cors:
+          allowed_origins:
+            - "http://localhost:*"
+            - "http://backend-api:*"
+            - "http://customer:*"
+            - "http://admin:*"
+
+processors:
+  # バッチ処理でパフォーマンス最適化
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # 環境情報を追加
+  attributes/add_env:
+    actions:
+      - key: environment
+        value: "development"
+        action: insert
+      - key: deployment.environment
+        value: "development"
+        action: insert
+
+  # メモリ制限
+  memory_limiter:
+    limit_mib: 200
+    spike_limit_mib: 50
+    check_interval: 5s
+
+  # リソース情報の変換
+  resource:
+    attributes:
+      - key: service.name
+        from_attribute: service_name
+        action: upsert
+      - key: service.version
+        from_attribute: service_version
+        action: upsert
+
+exporters:
+  debug/stdout:
+    verbosity: normal
+    sampling_initial: 5
+    sampling_thereafter: 200
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  otlphttp/mimir:
+    endpoint: http://mimir:9009/otlp
+  otlp/tempo:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/add_env, resource, batch]
+      exporters: [otlphttp/loki]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/add_env, resource, batch]
+      exporters: [debug/stdout, otlphttp/mimir]
+
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/add_env, resource, batch]
+      exporters: [otlp/tempo]
+
+  telemetry:
+    logs:
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: http://loki:3100/otlp/v1/logs

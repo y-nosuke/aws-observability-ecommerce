@@ -27,6 +27,11 @@ func NewS3ClientWrapper(client *s3.Client, config configPkg.S3Config) *S3ClientW
 	}
 }
 
+// GetBucketName は設定されているバケット名を返します
+func (w *S3ClientWrapper) GetBucketName() string {
+	return w.config.BucketName
+}
+
 // UploadOptions はアップロードオプション
 type UploadOptions struct {
 	ContentType     string

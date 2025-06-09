@@ -66,7 +66,9 @@ chmod +x continuous_metrics.sh
 ## JSONテンプレートについて
 
 ### templates/logs.json
+
 ログ送信用のOTLP形式JSONテンプレート。以下の変数が置換されます：
+
 - `{{SERVICE_NAME}}`: サービス名
 - `{{SERVICE_VERSION}}`: サービスバージョン
 - `{{TIMESTAMP}}`: Unix nanosecondタイムスタンプ
@@ -74,13 +76,17 @@ chmod +x continuous_metrics.sh
 - `{{TRACE_ID}}`: トレースID（ログとトレースの関連付け用）
 
 ### templates/metrics.json
+
 メトリクス送信用のOTLP形式JSONテンプレート。以下の変数が置換されます：
+
 - `{{METRIC_NAME}}`: メトリクス名
 - `{{METRIC_VALUE}}`: メトリクス値
 - `{{METRIC_DESCRIPTION}}`: メトリクスの説明
 
 ### templates/traces.json
+
 トレース送信用のOTLP形式JSONテンプレート。以下の変数が置換されます：
+
 - `{{TRACE_ID}}`: トレースID
 - `{{SPAN_ID}}`: スパンID
 - `{{SPAN_NAME}}`: スパン名
@@ -90,19 +96,21 @@ chmod +x continuous_metrics.sh
 
 テスト実行後、以下の手順でGrafanaで確認：
 
-1. **Grafanaにアクセス**: http://grafana.localhost
+1. **Grafanaにアクセス**: <http://grafana.localhost>
    - ユーザー名: `admin`
    - パスワード: `admin`
 
 2. **Exploreタブでデータを確認**:
 
    **ログ (Loki データソース選択)**:
-   ```
+
+   ```bash
    {service_name="observability-test"}
    ```
 
    **メトリクス (Mimir データソース選択)**:
-   ```
+
+   ```bash
    test_gauge
    cpu_usage_percent
    memory_usage_percent
@@ -118,16 +126,19 @@ chmod +x continuous_metrics.sh
 ### スクリプトが失敗する場合
 
 1. **コンテナの状態確認**:
+
    ```bash
    docker ps | grep -E "(otel-collector|loki|mimir|tempo|grafana)"
    ```
 
 2. **OTEL Collectorログ確認**:
+
    ```bash
    docker logs otel-collector
    ```
 
 3. **各サービスのヘルスチェック**:
+
    ```bash
    curl http://localhost:4318/  # OTEL Collector
    curl http://localhost:3100/ready  # Loki
@@ -138,6 +149,7 @@ chmod +x continuous_metrics.sh
 ### JSONテンプレートが見つからない場合
 
 テンプレートディレクトリが正しく作成されているか確認：
+
 ```bash
 ls -la /home/yoichi/workspace/aws-observability-ecommerce/infra/scripts/otel-collector/templates/
 ```
@@ -157,6 +169,7 @@ ls -la /home/yoichi/workspace/aws-observability-ecommerce/infra/scripts/otel-col
 ### 異なる環境での実行
 
 スクリプト内の以下の変数を変更することで、異なる環境に対応できます：
+
 - `OTEL_ENDPOINT`: OTEL Collectorのエンドポイント
 - `SERVICE_NAME`: サービス名
 - `ENVIRONMENT`: 環境名（development/staging/production）

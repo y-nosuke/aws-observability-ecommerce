@@ -5,16 +5,26 @@ datasources:
     type: loki
     access: proxy
     url: http://loki:3100
-    isDefault: false
-  - name: Tempo
-    type: tempo
-    access: proxy
-    url: http://tempo:3200
-    isDefault: false
+    uid: loki # 追加: ダッシュボードで参照するUID
+    isDefault: true
+    editable: true
+
   - name: Mimir
     type: prometheus
     access: proxy
     url: http://mimir:9009/prometheus
-    isDefault: true
+    uid: mimir
+    isDefault: false
+    editable: true
     jsonData:
       timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    uid: tempo
+    isDefault: false
+    editable: true

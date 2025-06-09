@@ -79,8 +79,7 @@ tasks:
       - cmd: 'echo "環境が起動しました。セットアップを開始します..."'
         silent: true
       - task: migrate:up
-      - task: generate:models
-      - task: generate:openapi
+      - task: generate
       - cmd: 'echo "セットアップが完了しました。以下のURLでアクセスできます:"'
         silent: true
       - task: urls
@@ -285,6 +284,7 @@ tasks:
     cmds:
       - task: generate:models
       - task: generate:openapi
+      - task: generate:wire
 
   generate:models:
     desc: SQLBoilerでモデルを生成
@@ -298,3 +298,9 @@ tasks:
     cmds:
       - mkdir -p internal/shared/presentation/rest/openapi
       - oapi-codegen --config oapi-codegen-config.yaml openapi.yaml
+
+  generate:wire:
+    desc: Wireのコードを生成
+    dir: backend-api
+    cmds:
+      - wire ./di

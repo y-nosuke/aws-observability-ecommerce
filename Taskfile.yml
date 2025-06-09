@@ -79,8 +79,7 @@ tasks:
       - cmd: 'echo "環境が起動しました。セットアップを開始します..."'
         silent: true
       - task: migrate:up
-      - task: generate:models
-      - task: generate:openapi
+      - task: generate
       - cmd: 'echo "セットアップが完了しました。以下のURLでアクセスできます:"'
         silent: true
       - task: urls

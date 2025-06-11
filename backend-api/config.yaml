@@ -61,7 +61,16 @@ observability:
       max_events_per_span: 128
 
     logging:
+      enabled: true
       batch_timeout: "1s"
       max_queue_size: 2048
       max_export_batch_size: 512
       export_timeout: "30s"
+
+    metrics:
+      enabled: true
+      batch_timeout: "1s"
+      max_queue_size: 2048
+      max_export_batch_size: 512
+      export_timeout: "30s"
+      histogram_boundaries: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]

@@ -11,8 +11,8 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
-// StructuredLoggingMiddleware 構造化ログミドルウェアを作成
-func StructuredLoggingMiddleware() echo.MiddlewareFunc {
+// LoggingMiddleware 構造化ログミドルウェアを作成
+func LoggingMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()

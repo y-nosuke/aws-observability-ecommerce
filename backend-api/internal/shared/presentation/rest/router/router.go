@@ -48,9 +48,12 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(middleware.Recover())
 	r.echo.Use(middleware.CORS())
 
+	// メトリクス収集ミドルウェア（早期に配置）
+	r.echo.Use(customMiddleware.HTTPMetricsMiddleware())
+
 	// ログミドルウェア（順序重要）
 	r.echo.Use(customMiddleware.RequestIDMiddleware())
-	r.echo.Use(customMiddleware.StructuredLoggingMiddleware())
+	r.echo.Use(customMiddleware.LoggingMiddleware())
 	r.echo.Use(customMiddleware.ErrorHandlingMiddleware())
 }
 

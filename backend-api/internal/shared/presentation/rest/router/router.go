@@ -48,6 +48,9 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(middleware.Recover())
 	r.echo.Use(middleware.CORS())
 
+	// トレーシングミドルウェア（早期に配置）
+	r.echo.Use(customMiddleware.TracingMiddleware())
+
 	// メトリクス収集ミドルウェア（早期に配置）
 	r.echo.Use(customMiddleware.HTTPMetricsMiddleware())
 

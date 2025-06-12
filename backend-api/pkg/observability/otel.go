@@ -9,12 +9,15 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.32.0"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
@@ -23,8 +26,10 @@ import (
 type OTelManager struct {
 	loggerProvider *sdklog.LoggerProvider
 	meterProvider  *sdkmetric.MeterProvider
+	tracerProvider *sdktrace.TracerProvider
 	resource       *resource.Resource
 	meter          metric.Meter // TODO metricsパッケージで初期化したい。
+	tracer         trace.Tracer
 }
 
 // NewOTelManager はOTelManagerのコンストラクタ（wireプロバイダー）
@@ -37,7 +42,7 @@ func NewOTelManager(otelConfig config.OTelConfig) (*OTelManager, error) {
 			semconv.ServiceName(otelConfig.ServiceName),
 			semconv.ServiceVersion(otelConfig.ServiceVersion),
 			semconv.ServiceNamespace(otelConfig.ServiceNamespace),
-			semconv.DeploymentEnvironment(otelConfig.DeploymentEnvironment),
+			semconv.DeploymentEnvironmentName(otelConfig.DeploymentEnvironment),
 		),
 	)
 	if err != nil {
@@ -69,13 +74,28 @@ func NewOTelManager(otelConfig config.OTelConfig) (*OTelManager, error) {
 		meter = meterProvider.Meter(otelConfig.ServiceName)
 	}
 
-	log.Printf("OpenTelemetry initialized for service: %s (metrics enabled: %v)", otelConfig.ServiceName, otelConfig.Metrics.Enabled)
+	// トレース初期化
+	var tracerProvider *sdktrace.TracerProvider
+	var tracer trace.Tracer
+
+	if otelConfig.Tracing.Enabled {
+		tracerProvider, err = initTracing(ctx, otelConfig, res)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize tracing: %w", err)
+		}
+		otel.SetTracerProvider(tracerProvider)
+		tracer = tracerProvider.Tracer(otelConfig.ServiceName)
+	}
+
+	log.Printf("OpenTelemetry initialized for service: %s (metrics enabled: %v, tracing enabled: %v)", otelConfig.ServiceName, otelConfig.Metrics.Enabled, otelConfig.Tracing.Enabled)
 
 	return &OTelManager{
 		loggerProvider: loggerProvider,
 		meterProvider:  meterProvider,
+		tracerProvider: tracerProvider,
 		resource:       res,
 		meter:          meter,
+		tracer:         tracer,
 	}, nil
 }
 
@@ -89,9 +109,19 @@ func (m *OTelManager) GetMeterProvider() *sdkmetric.MeterProvider {
 	return m.meterProvider
 }
 
+// GetTracerProvider はTracerProviderを返します
+func (m *OTelManager) GetTracerProvider() *sdktrace.TracerProvider {
+	return m.tracerProvider
+}
+
 // GetMeter はMeterを返します
 func (m *OTelManager) GetMeter() metric.Meter {
 	return m.meter
+}
+
+// GetTracer はTracerを返します
+func (m *OTelManager) GetTracer() trace.Tracer {
+	return m.tracer
 }
 
 // GetResource はResourceを返します
@@ -115,6 +145,13 @@ func (m *OTelManager) Shutdown() error {
 	if m.meterProvider != nil {
 		if err := m.meterProvider.Shutdown(ctx); err != nil {
 			return fmt.Errorf("failed to shutdown meter provider: %w", err)
+		}
+	}
+
+	// トレースプロバイダーのシャットダウン
+	if m.tracerProvider != nil {
+		if err := m.tracerProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown tracer provider: %w", err)
 		}
 	}
 
@@ -170,4 +207,34 @@ func initMetrics(ctx context.Context, cfg config.OTelConfig, res *resource.Resou
 	)
 
 	return mp, nil
+}
+
+// initTracing はトレースを初期化します
+func initTracing(ctx context.Context, cfg config.OTelConfig, res *resource.Resource) (*sdktrace.TracerProvider, error) {
+	// OTLP Trace Exporter
+	traceExporter, err := otlptracehttp.New(ctx,
+		otlptracehttp.WithEndpoint(cfg.Collector.Endpoint),
+		otlptracehttp.WithTimeout(cfg.Tracing.ExportTimeout),
+		otlptracehttp.WithCompression(otlptracehttp.GzipCompression),
+		otlptracehttp.WithInsecure(), // 開発環境用
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+	}
+
+	// サンプラーの設定
+	sampler := sdktrace.TraceIDRatioBased(cfg.Tracing.SamplingRatio)
+
+	// Trace Provider
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(traceExporter,
+			sdktrace.WithBatchTimeout(cfg.Tracing.BatchTimeout),
+			sdktrace.WithMaxQueueSize(cfg.Tracing.MaxQueueSize),
+			sdktrace.WithMaxExportBatchSize(cfg.Tracing.MaxExportBatchSize),
+		),
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sampler),
+	)
+
+	return tp, nil
 }

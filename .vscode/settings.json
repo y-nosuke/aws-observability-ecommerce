@@ -62,6 +62,7 @@
     "labstack",
     "localstack",
     "MAINT",
+    "mapstructure",
     "MTTA",
     "MTTD",
     "MTTI",
@@ -76,6 +77,8 @@
     "otelslog",
     "otlplog",
     "otlploghttp",
+    "otlpmetric",
+    "otlpmetrichttp",
     "otlptrace",
     "otlptracehttp",
     "phpmyadmin",
@@ -88,6 +91,7 @@
     "SCAL",
     "scrollbars",
     "sdklog",
+    "sdkmetric",
     "semconv",
     "shopspring",
     "SIEM",
@@ -106,7 +110,8 @@
     "usecase",
     "valueobject",
     "varchar",
-    "volatiletech"
+    "volatiletech",
+    "webp"
   ],
   "explorer.autoReveal": "focusNoScroll"
 }

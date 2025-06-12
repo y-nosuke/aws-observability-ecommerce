@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
@@ -25,6 +30,18 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 
 // Execute は商品画像アップロードを実行する
 func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
+	// トレーシングスパンを開始
+	tracer := otel.Tracer("aws-observability-ecommerce")
+	ctx, span := tracer.Start(ctx, "usecase.upload_product_image", trace.WithAttributes(
+		attribute.String("app.layer", "usecase"),
+		attribute.String("app.domain", "product"),
+		attribute.String("app.operation_name", "upload_product_image"),
+		attribute.Int64("app.entity_id", req.ProductID),
+		attribute.String("app.filename", req.Filename),
+		attribute.Int("app.file_size_bytes", len(req.ImageData)),
+	))
+	defer span.End()
+
 	completeOp := logger.StartOperation(ctx, "upload_product_image",
 		"product_id", req.ProductID,
 		"filename", req.Filename,
@@ -33,6 +50,8 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 
 	// ファイル拡張子の検証
 	fileExt := strings.ToLower(filepath.Ext(req.Filename))
+	span.SetAttributes(attribute.String("app.file_extension", fileExt))
+
 	if fileExt != ".jpg" && fileExt != ".jpeg" && fileExt != ".png" {
 		err := fmt.Errorf("only JPG and PNG images are supported")
 
@@ -45,6 +64,15 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 			"layer", "usecase",
 			"validation_error", "unsupported_file_extension")
 
+		// スパンにエラー情報を記録
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		span.SetAttributes(
+			attribute.Bool("error", true),
+			attribute.String("error.type", "validation_error"),
+			attribute.String("error.detail", "unsupported_file_extension"),
+		)
+
 		completeOp(false, "error_type", "validation_error", "file_extension", fileExt)
 		return nil, err
 	}
@@ -54,6 +82,9 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 		"product_id", req.ProductID,
 		"file_extension", fileExt,
 		"layer", "usecase")
+
+	// バリデーション成功をスパンに記録
+	span.SetAttributes(attribute.Bool("app.validation_passed", true))
 
 	// 画像をアップロード
 	s3Key, urls, err := u.imageStorage.UploadImage(ctx, req.ProductID, fileExt, req.ImageData)
@@ -66,6 +97,14 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 			"layer", "usecase",
 			"storage_operation", "upload_image")
 
+		// スパンにエラー情報を記録
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		span.SetAttributes(
+			attribute.Bool("error", true),
+			attribute.String("error.type", "storage_error"),
+		)
+
 		completeOp(false, "error_type", "storage_failure")
 		return nil, fmt.Errorf("failed to upload image: %w", err)
 	}
@@ -77,6 +116,13 @@ func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.Upload
 		"s3_key", s3Key,
 		"generated_urls", len(urls),
 		"layer", "usecase")
+
+	// 成功情報をスパンに記録
+	span.SetAttributes(
+		attribute.String("app.s3_key", s3Key),
+		attribute.Int("app.generated_urls", len(urls)),
+		attribute.Bool("app.success", true),
+	)
 
 	// 操作成功を記録
 	completeOp(true,

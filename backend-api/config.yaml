@@ -56,9 +56,11 @@ observability:
 
     tracing:
       enabled: true
-      sample_rate: 1.0 # 開発: 1.0, 本番: 0.1-0.01
-      max_attributes_per_span: 128
-      max_events_per_span: 128
+      sampling_ratio: 1.0 # 開発: 1.0, ステージング: 0.1, 本番: 0.01
+      batch_timeout: "1s"
+      max_queue_size: 2048
+      max_export_batch_size: 512
+      export_timeout: "30s"
 
     logging:
       enabled: true

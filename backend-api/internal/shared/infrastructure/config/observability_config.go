@@ -29,6 +29,7 @@ type OTelConfig struct {
 	Collector             CollectorConfig   `mapstructure:"collector"`
 	Logging               OTelLoggingConfig `mapstructure:"logging"`
 	Metrics               OTelMetricsConfig `mapstructure:"metrics"`
+	Tracing               OTelTracingConfig `mapstructure:"tracing"`
 }
 
 // CollectorConfig はOTel Collector設定を管理する構造体
@@ -59,6 +60,16 @@ type OTelMetricsConfig struct {
 	MaxExportBatchSize  int           `mapstructure:"max_export_batch_size"`
 	ExportTimeout       time.Duration `mapstructure:"export_timeout"`
 	HistogramBoundaries []float64     `mapstructure:"histogram_boundaries"`
+}
+
+// OTelTracingConfig はOTelトレース設定を管理する構造体
+type OTelTracingConfig struct {
+	Enabled            bool          `mapstructure:"enabled"`
+	SamplingRatio      float64       `mapstructure:"sampling_ratio"`
+	BatchTimeout       time.Duration `mapstructure:"batch_timeout"`
+	MaxQueueSize       int           `mapstructure:"max_queue_size"`
+	MaxExportBatchSize int           `mapstructure:"max_export_batch_size"`
+	ExportTimeout      time.Duration `mapstructure:"export_timeout"`
 }
 
 // SetDefaults はObservabilityConfigのデフォルト値を設定します
@@ -99,6 +110,14 @@ func (c *ObservabilityConfig) SetDefaults() {
 	viper.SetDefault("observability.otel.metrics.max_export_batch_size", 512)
 	viper.SetDefault("observability.otel.metrics.export_timeout", "30s")
 	viper.SetDefault("observability.otel.metrics.histogram_boundaries", []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0})
+
+	// OTel tracing defaults
+	viper.SetDefault("observability.otel.tracing.enabled", true)
+	viper.SetDefault("observability.otel.tracing.sampling_ratio", 1.0)
+	viper.SetDefault("observability.otel.tracing.batch_timeout", "1s")
+	viper.SetDefault("observability.otel.tracing.max_queue_size", 2048)
+	viper.SetDefault("observability.otel.tracing.max_export_batch_size", 512)
+	viper.SetDefault("observability.otel.tracing.export_timeout", "30s")
 }
 
 // BindEnvironmentVariables は環境変数をバインドします
@@ -191,6 +210,26 @@ func (c *ObservabilityConfig) BindEnvironmentVariables() error {
 		return err
 	}
 	if err := viper.BindEnv("observability.otel.metrics.histogram_boundaries", "OTEL_METRICS_HISTOGRAM_BOUNDARIES"); err != nil {
+		return err
+	}
+
+	// OTel tracing 環境変数
+	if err := viper.BindEnv("observability.otel.tracing.enabled", "OTEL_TRACES_ENABLED"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("observability.otel.tracing.sampling_ratio", "OTEL_TRACES_SAMPLING_RATIO"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("observability.otel.tracing.batch_timeout", "OTEL_TRACES_BATCH_TIMEOUT"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("observability.otel.tracing.max_queue_size", "OTEL_TRACES_MAX_QUEUE_SIZE"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("observability.otel.tracing.max_export_batch_size", "OTEL_TRACES_MAX_EXPORT_BATCH_SIZE"); err != nil {
+		return err
+	}
+	if err := viper.BindEnv("observability.otel.tracing.export_timeout", "OTEL_TRACES_EXPORT_TIMEOUT"); err != nil {
 		return err
 	}
 

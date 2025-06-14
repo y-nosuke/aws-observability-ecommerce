@@ -3,7 +3,7 @@
 ## 1. はじめに
 
 このドキュメントは、「AWSオブザーバビリティ学習用eコマースアプリ」開発プロジェクト全体で共通理解を持つために、主要な用語とその定義、要素間の関係性、および各種成果物のID命名規則を定めます。
-本ドキュメントは、特に「[02_requirements_definition_process.md](link/to/02_requirements_definition_process.md)」および「[03_agile_project_management.md](link/to/03_agile_project_management.md)」を読む上での基礎知識を提供します。
+本ドキュメントは、特に「[02_requirements_definition_process.md](02_requirements_definition_process.md)」および「[03_agile_project_management.md](03_agile_project_management.md)」を読む上での基礎知識を提供します。
 
 ## 2. ユーザーストーリーマッピングの基本用語
 
@@ -95,19 +95,19 @@
 
 ```mermaid
 graph TD
-    subgraph ビジネス価値/目標 (数ヶ月〜年単位)
+    subgraph "ビジネス価値/目標 (数ヶ月〜年単位)"
         E1(EPIC: 主要ビジネス機能A<br/>例: EP-SHOPPING)
         E2(EPIC: 横断的関心事 X<br/>例: EP-CROSSCUTTING-OBS)
     end
 
-    subgraph 具体的な機能要求 (開発単位: 数日〜1スプリント)
+    subgraph "具体的な機能要求 (開発単位: 数日〜1スプリント)"
         E1 --> US1_1(UserStory 1.1<br/>例: US-CUST-BROWSE-01)
         E1 --> US1_2(UserStory 1.2)
         E2 --> US_OBS_IMPL(UserStory: 基盤実装<br/>例: US-DEV-OBS-IMPL-01)
         E2 --> US_OBS_USE(UserStory: 機能利用<br/>例: US-SRE-OBS-ALERT-01)
     end
 
-    subgraph システムの振る舞い (詳細仕様、操作単位)
+    subgraph "システムの振る舞い (詳細仕様、操作単位)"
         US1_1 --> UC1_1(UseCase A.1<br/>例: UC-CUST-BROWSE-01)
         US_OBS_USE --> UC_OBS_USE(UseCase X.Use<br/>例: UC-SRE-OBS-ALERT-01)
         US1_2 -->|シンプルなら不要| UC1_2(UseCase A.2<br/>例外系など);

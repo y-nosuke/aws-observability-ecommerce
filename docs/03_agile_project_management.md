@@ -17,7 +17,7 @@
 - 本プロジェクト"AWSオブザーバビリティ学習用eコマースアプリ"におけるアジャイル開発の進め方を具体的に示す。
 - GitHub ProjectsやIssueを活用したタスク管理、スプリント運営方法を解説する。
 - 個人開発においても適用可能な、軽量かつ効果的なアジャイルプラクティスを提供する。
-- **関連ドキュメント:** 本書を読む前に"[01_concepts_and_terminology.md](link/to/01_concepts_and_terminology.md)"で主要な概念と用語を理解することを推奨します。"[02_requirements_definition_process.md](link/to/02_requirements_definition_process.md)"で定義された要件が、本ドキュメントで説明する開発管理アイテムへと繋がります。
+- **関連ドキュメント:** 本書を読む前に"[01_concepts_and_terminology.md](01_concepts_and_terminology.md)"で主要な概念と用語を理解することを推奨します。"[02_requirements_definition_process.md](02_requirements_definition_process.md)"で定義された要件が、本ドキュメントで説明する開発管理アイテムへと繋がります。
 
 ## 2. 開発管理ツールのセットアップ (GitHub)
 
@@ -75,7 +75,7 @@ GitHub Projects内で、作業状況を把握しやすくするために、以�
 ### 3.2. 開発管理上のエピックの定義
 
 - **目的:** プロジェクトの大きな目標（例: MVPリリース、特定の機能群の完成）を達成するための開発の塊（エピック）を定義します。各エピックは、設計上の特定のアクティビティ (`ACT-...`) の一部または全体を実現することを目的とします。
-  - 用語詳細は"[01_concepts_and_terminology.md](link/to/01_concepts_and_terminology.md)"参照。
+  - 用語詳細は"[01_concepts_and_terminology.md](01_concepts_and_terminology.md)"参照。
 - **進め方:**
     1. 初期リリースで達成したい主要なアクティビティやマッピングレベルのユーザーストーリー群を特定します。
     2. それらをいくつかのエピック (`EP-[機能エリア略称]-[連番]`) にまとめ、各エピックの具体的な目標、スコープ（含める主要なPBI候補）、完了条件（成功指標）を設定します。
@@ -99,9 +99,9 @@ GitHub Projects内で、作業状況を把握しやすくするために、以�
 
 ### 4.1. 初期バックログの作成（要件定義の出力を開発管理アイテムへ変換）
 
-- "[02_requirements_definition_process.md](link/to/02_requirements_definition_process.md)"で作成されたマッピングレベルのユーザーストーリーやその他要件をレビューし、開発管理アイテム（PBI）の候補としてリストアップします。
+- "[02_requirements_definition_process.md](02_requirements_definition_process.md)"で作成されたマッピングレベルのユーザーストーリーやその他要件をレビューし、開発管理アイテム（PBI）の候補としてリストアップします。
 - 各PBI候補には、開発管理用のPBI ID (`PBI-[ペルソナ略称]-[機能エリア略称]-[US識別子]-[連番]`) を付与する準備をします。
-  - 用語詳細は"[01_concepts_and_terminology.md](link/to/01_concepts_and_terminology.md)"参照。
+  - 用語詳細は"[01_concepts_and_terminology.md](01_concepts_and_terminology.md)"参照。
 - 現時点で想定される技術的負債や、将来の拡張性・保守性のために必要な内部的な改善タスク（リファクタリング）もPBI候補としてリストアップします。
 - 最初は全てのPBI候補をGitHub Issue化せず、優先度の高いものから順次Issue化していくアプローチも可能です。
 

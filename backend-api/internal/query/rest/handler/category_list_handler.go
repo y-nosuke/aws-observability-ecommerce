@@ -65,7 +65,7 @@ func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
 			"layer", "handler")
 
 		completeOp(false, "error_type", "data_fetch_error")
-		
+
 		errorResponse := h.mapper.PresentInternalServerError("Failed to fetch categories", err)
 		return ctx.JSON(http.StatusInternalServerError, errorResponse)
 	}
@@ -76,30 +76,30 @@ func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
 	_, mapSpan := tracer.Start(requestCtx, "handler.map_categories_response")
 	response := h.mapper.ToCategoryListResponse(categories)
 	mapSpan.SetAttributes(
-		attribute.Int("app.response_items", len(response.Items)), // ✅ Data → Items に修正
-		attribute.Int("app.total_categories", len(response.Items)), // ✅ Data → Items に修正
+		attribute.Int("app.response_items", len(response.Items)),
+		attribute.Int("app.total_categories", len(response.Items)),
 	)
 	mapSpan.End()
 
 	// 成功情報をスパンに記録
 	span.SetAttributes(
 		attribute.Int("http.response.status_code", http.StatusOK),
-		attribute.Int("app.categories_returned", len(response.Items)), // ✅ Data → Items に修正
+		attribute.Int("app.categories_returned", len(response.Items)),
 	)
 
 	// 成功ログ
 	logger.Info(requestCtx, "カテゴリー一覧取得が完了",
-		"categories_count", len(response.Items), // ✅ Data → Items に修正
+		"categories_count", len(response.Items),
 		"layer", "handler")
 
 	// 操作完了記録
 	completeOp(true,
-		"categories_count", len(response.Items), // ✅ Data → Items に修正
+		"categories_count", len(response.Items),
 		"http_status", http.StatusOK)
 
 	// ビジネスイベントとして記録
 	logger.LogBusinessEvent(requestCtx, "categories_listed", "category", "system",
-		"categories_count", len(response.Items), // ✅ Data → Items に修正
+		"categories_count", len(response.Items),
 		"success", true)
 
 	return ctx.JSON(http.StatusOK, response)

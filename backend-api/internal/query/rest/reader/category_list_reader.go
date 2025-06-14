@@ -74,11 +74,11 @@ func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context)
 			attribute.String("app.category_name", category.Name),
 			attribute.Int("app.category_index", i),
 		))
-		
+
 		count, err := models.Products(
 			qm.Where("category_id = ?", category.ID),
 		).Count(countCtx, r.db)
-		
+
 		if err != nil {
 			countSpan.RecordError(err)
 			countSpan.SetStatus(codes.Error, err.Error())
@@ -87,10 +87,10 @@ func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context)
 			span.SetStatus(codes.Error, err.Error())
 			return nil, fmt.Errorf("failed to count products for category %d: %w", category.ID, err)
 		}
-		
+
 		countSpan.SetAttributes(attribute.Int64("app.product_count", count))
 		countSpan.End()
-		
+
 		result = append(result, &CategoryWithCount{
 			Category:     category,
 			ProductCount: count,

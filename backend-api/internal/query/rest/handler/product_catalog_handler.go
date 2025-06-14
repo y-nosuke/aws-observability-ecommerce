@@ -101,7 +101,7 @@ func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.Li
 		attribute.Int("app.products_returned", len(response.Items)),
 		attribute.Int("app.total_products", response.Total),
 		attribute.Int("app.current_page", response.Page),
-		attribute.Bool("app.has_more_pages", response.Page*response.PageSize < int(response.Total)),
+		attribute.Bool("app.has_more_pages", response.Page*response.PageSize < response.Total),
 	)
 
 	return ctx.JSON(http.StatusOK, response)
@@ -173,7 +173,7 @@ func (h *ProductCatalogHandler) ListProductsByCategory(ctx echo.Context, id open
 		attribute.Int("app.products_returned", len(response.Items)),
 		attribute.Int("app.total_products", response.Total),
 		attribute.Int("app.current_page", response.Page),
-		attribute.Bool("app.has_more_pages", response.Page*response.PageSize < int(response.Total)),
+		attribute.Bool("app.has_more_pages", response.Page*response.PageSize < response.Total),
 	)
 
 	return ctx.JSON(http.StatusOK, response)

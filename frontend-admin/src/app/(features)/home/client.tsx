@@ -2,6 +2,7 @@
 
 import DashboardCard from "@/components/ui/DashboardCard";
 import DashboardStats from "@/components/ui/DashboardStats";
+import SystemHealthStatus from "@/components/ui/SystemHealthStatus";
 import InventoryAlertsTable from "./components/InventoryAlertsTable";
 import LatestOrdersTable from "./components/LatestOrdersTable";
 import PopularProductsTable from "./components/PopularProductsTable";
@@ -98,6 +99,9 @@ export default function HomeClient({
       >
         <InventoryAlertsTable alerts={inventoryAlerts} />
       </DashboardCard>
+
+      {/* システムヘルスステータス */}
+      <SystemHealthStatus mode="detailed" autoRefreshMinutes={5} />
     </div>
   );
 }

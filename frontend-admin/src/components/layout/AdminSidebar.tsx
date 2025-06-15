@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import SystemHealthStatus from "../ui/SystemHealthStatus";
 
 type AdminSidebarProps = {
   isOpen?: boolean;
@@ -114,20 +114,6 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
     },
   ];
 
-  const [currentTime, setCurrentTime] = useState("");
-
-  useEffect(() => {
-    // クライアント側でのみ実行されるように
-    setCurrentTime(new Date().toLocaleString("ja-JP"));
-
-    // 1分ごとに更新
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleString("ja-JP"));
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <aside
       className={`bg-sidebar text-white min-h-screen transition-all duration-300 overflow-hidden ${
@@ -232,32 +218,9 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
             </ul>
           </nav>
 
-          {/* サイドバー底部のエレメント */}
-          <div className="mt-auto pt-6 border-t border-gray-700/50 mt-6">
-            <div className="bg-indigo-700/20 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-indigo-400 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-sm font-medium text-indigo-200">
-                  管理者ステータス
-                </p>
-              </div>
-              <p className="text-xs text-gray-300">
-                システムは正常に稼働しています。最終チェック：{currentTime}
-              </p>
-            </div>
+          {/* サイドバー底部のシステムヘルス表示 */}
+          <div className="mt-auto pt-6 border-t border-gray-700/50">
+            <SystemHealthStatus mode="compact" />
           </div>
         </div>
       )}

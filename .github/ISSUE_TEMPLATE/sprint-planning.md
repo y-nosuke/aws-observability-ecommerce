@@ -1,7 +1,7 @@
 ---
 name: Sprint Planning
 about: スプリント計画を記録する
-title: 'スプリント [番号] 計画 ([開始日]〜[終了日])'
+title: 'SP-XX: スプリント [番号] 計画 ([開始日]〜[終了日])'
 labels: 'sprint-plan'
 assignees: ''
 ---

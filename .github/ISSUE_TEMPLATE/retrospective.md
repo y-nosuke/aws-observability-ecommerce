@@ -1,7 +1,7 @@
 ---
 name: Retrospective
 about: スプリントの振り返り（レトロスペクティブ）を記録する
-title: 'スプリント [番号] 振り返り ([終了日])'
+title: 'RT-XX: スプリント [番号] 振り返り ([終了日])'
 labels: 'retrospective'
 assignees: ''
 ---

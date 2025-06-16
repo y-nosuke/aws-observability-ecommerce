@@ -71,7 +71,7 @@ func NewOTelManager(otelConfig config.OTelConfig) (*OTelManager, error) {
 			return nil, fmt.Errorf("failed to initialize metrics: %w", err)
 		}
 		otel.SetMeterProvider(meterProvider)
-		meter = meterProvider.Meter(otelConfig.ServiceName)
+		meter = meterProvider.Meter("github.com/y-nosuke/aws-observability-ecommerce/backend-api")
 	}
 
 	// トレース初期化
@@ -84,7 +84,7 @@ func NewOTelManager(otelConfig config.OTelConfig) (*OTelManager, error) {
 			return nil, fmt.Errorf("failed to initialize tracing: %w", err)
 		}
 		otel.SetTracerProvider(tracerProvider)
-		tracer = tracerProvider.Tracer(otelConfig.ServiceName)
+		tracer = tracerProvider.Tracer("github.com/y-nosuke/aws-observability-ecommerce/backend-api")
 	}
 
 	log.Printf("OpenTelemetry initialized for service: %s (metrics enabled: %v, tracing enabled: %v)", otelConfig.ServiceName, otelConfig.Metrics.Enabled, otelConfig.Tracing.Enabled)

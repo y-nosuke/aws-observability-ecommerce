@@ -42,7 +42,7 @@ func NewDefaultLogger(cfg config.ObservabilityConfig) *DefaultLogger {
 	// OpenTelemetry ブリッジを使用
 	if cfg.Logging.EnableOTel {
 		handler = slogmulti.Fanout(
-			otelslog.NewHandler("aws-observability-ecommerce"),
+			otelslog.NewHandler("github.com/y-nosuke/aws-observability-ecommerce/backend-api"),
 			handler,
 		)
 	}

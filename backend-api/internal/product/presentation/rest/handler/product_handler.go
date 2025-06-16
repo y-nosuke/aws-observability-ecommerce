@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
@@ -40,16 +39,15 @@ func NewProductHandler(
 // UploadProductImage は商品画像をアップロードする
 func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.ProductIdParam) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.upload_product_image", trace.WithAttributes(
-		attribute.String("app.layer", "handler"),
-		attribute.String("app.domain", "product"),
-		attribute.String("app.operation", "upload_product_image"),
+	requestCtx, span := tracer.StartHandler(ctx.Request().Context(), "upload_product_image", "product")
+	defer span.End()
+
+	// 追加の属性を設定
+	span.SetAttributes(
 		attribute.String("http.method", ctx.Request().Method),
 		attribute.String("http.route", ctx.Path()),
 		attribute.Int64("app.product_id", id),
-	))
-	defer span.End()
+	)
 
 	// 操作開始ログ
 	completeOp := logger.StartOperation(requestCtx, "upload_product_image",
@@ -227,16 +225,15 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 // GetProductImage は商品画像を取得する
 func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdParam, params openapi.GetProductImageParams) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.get_product_image", trace.WithAttributes(
-		attribute.String("app.layer", "handler"),
-		attribute.String("app.domain", "product"),
-		attribute.String("app.operation", "get_product_image"),
+	requestCtx, span := tracer.StartHandler(ctx.Request().Context(), "get_product_image", "product")
+	defer span.End()
+
+	// 追加の属性を設定
+	span.SetAttributes(
 		attribute.String("http.method", ctx.Request().Method),
 		attribute.String("http.route", ctx.Path()),
 		attribute.Int64("app.product_id", id),
-	))
-	defer span.End()
+	)
 
 	// 操作開始ログ
 	completeOp := logger.StartOperation(requestCtx, "get_product_image",

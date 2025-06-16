@@ -6,10 +6,11 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
 )
@@ -37,7 +38,7 @@ type ProductListParams struct {
 // FindProductsWithDetails は商品一覧を詳細情報付きで取得
 func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, params *ProductListParams) ([]*models.Product, int64, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
+	// トレーシングスパンを開始
 	ctx, span := tracer.Start(ctx, "reader.find_products_with_details", trace.WithAttributes(
 		attribute.String("app.layer", "reader"),
 		attribute.String("app.domain", "product_catalog"),

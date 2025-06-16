@@ -59,8 +59,8 @@ limits_config:
             - deployment.environment
         - action: structured_metadata
           attributes:
-            - trace.trace_id
-            - trace.span_id
+            - tracer.trace_id
+            - tracer.span_id
 
 table_manager:
   retention_deletes_enabled: true

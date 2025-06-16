@@ -6,14 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // UploadProductImageUseCase は商品画像アップロードのユースケース
@@ -31,16 +30,15 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 // Execute は商品画像アップロードを実行する
 func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	ctx, span := tracer.Start(ctx, "usecase.upload_product_image", trace.WithAttributes(
-		attribute.String("app.layer", "usecase"),
-		attribute.String("app.domain", "product"),
-		attribute.String("app.operation_name", "upload_product_image"),
+	ctx, span := tracer.StartUseCase(ctx, "upload_product_image", "product")
+	defer span.End()
+
+	// 追加の属性を設定
+	span.SetAttributes(
 		attribute.Int64("app.entity_id", req.ProductID),
 		attribute.String("app.filename", req.Filename),
 		attribute.Int("app.file_size_bytes", len(req.ImageData)),
-	))
-	defer span.End()
+	)
 
 	completeOp := logger.StartOperation(ctx, "upload_product_image",
 		"product_id", req.ProductID,

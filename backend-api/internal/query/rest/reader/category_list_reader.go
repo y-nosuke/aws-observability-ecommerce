@@ -6,12 +6,12 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	models "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // CategoryListReader はカテゴリー一覧データの読み取りを担当
@@ -35,7 +35,6 @@ type CategoryWithCount struct {
 // FindCategoriesWithProductCount はカテゴリー一覧を商品数付きで取得
 func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context) ([]*CategoryWithCount, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
 	ctx, span := tracer.Start(ctx, "reader.find_categories_with_product_count", trace.WithAttributes(
 		attribute.String("app.layer", "reader"),
 		attribute.String("app.domain", "category"),

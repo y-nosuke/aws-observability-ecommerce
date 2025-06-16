@@ -95,7 +95,7 @@ func (l *DefaultLogger) logWithContext(ctx context.Context, level slog.Level, ms
 
 	// トレース情報を追加（コンテキストから自動取得）
 	if traceID := extractTraceID(ctx); traceID != "" {
-		attrs = append(attrs, slog.Group("trace",
+		attrs = append(attrs, slog.Group("tracer",
 			slog.String("id", traceID),
 		))
 	}

@@ -6,12 +6,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
@@ -34,7 +34,6 @@ func NewProductDetailHandler(db boil.ContextExecutor) *ProductDetailHandler {
 // GetProductById は指定されたIDの商品を取得する
 func (h *ProductDetailHandler) GetProductById(ctx echo.Context, id openapi.ProductIdParam) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
 	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.get_product_by_id", trace.WithAttributes(
 		attribute.String("app.layer", "handler"),
 		attribute.String("app.domain", "product"),

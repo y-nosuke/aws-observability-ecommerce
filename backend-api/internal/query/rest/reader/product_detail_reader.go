@@ -8,12 +8,12 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // ProductDetailReader は商品詳細データの読み取りを担当
@@ -31,7 +31,7 @@ func NewProductDetailReader(db boil.ContextExecutor) *ProductDetailReader {
 // FindProductByID は指定されたIDの商品を詳細情報付きで取得
 func (r *ProductDetailReader) FindProductByID(ctx context.Context, id int) (*models.Product, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
+	// トレーシングスパンを開始
 	ctx, span := tracer.Start(ctx, "reader.find_product_by_id", trace.WithAttributes(
 		attribute.String("app.layer", "reader"),
 		attribute.String("app.domain", "product"),

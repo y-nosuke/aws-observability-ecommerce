@@ -5,7 +5,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -13,6 +12,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // CategoryListHandler はカテゴリー一覧APIのハンドラー
@@ -32,7 +32,6 @@ func NewCategoryListHandler(db boil.ContextExecutor) *CategoryListHandler {
 // ListCategories はカテゴリー一覧を取得する
 func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
 	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.list_categories", trace.WithAttributes(
 		attribute.String("app.layer", "handler"),
 		attribute.String("app.domain", "category"),

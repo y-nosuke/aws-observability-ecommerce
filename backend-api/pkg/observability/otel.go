@@ -219,7 +219,7 @@ func initTracing(ctx context.Context, cfg config.OTelConfig, res *resource.Resou
 		otlptracehttp.WithInsecure(), // 開発環境用
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+		return nil, fmt.Errorf("failed to create tracer exporter: %w", err)
 	}
 
 	// サンプラーの設定

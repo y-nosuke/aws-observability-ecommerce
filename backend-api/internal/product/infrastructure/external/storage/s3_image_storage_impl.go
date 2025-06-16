@@ -8,13 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // S3ImageStorageImpl はS3ClientWrapperを使用した画像ストレージの実装
@@ -32,8 +31,7 @@ func NewS3ImageStorageImpl(s3Wrapper *aws.S3ClientWrapper) service.ImageStorage 
 // UploadImage は商品画像をS3にアップロードし、S3キーとURLマップを返却する
 func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int64, fileExt string, imageData []byte) (string, map[string]string, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	ctx, span := tracer.Start(ctx, "s3.upload_image", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := tracer.StartExternalAPI(ctx, "s3", "upload_image")
 	defer span.End()
 
 	// S3へのアップロード先キーを生成
@@ -113,8 +111,7 @@ func (s *S3ImageStorageImpl) buildImageURLs(s3Key, fileExt string) map[string]st
 // GetImageData は指定されたサイズの画像データを取得する
 func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int64, size string) ([]byte, string, error) {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	ctx, span := tracer.Start(ctx, "s3.get_image", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := tracer.StartExternalAPI(ctx, "s3", "get_image")
 	defer span.End()
 
 	// サイズのバリデーション

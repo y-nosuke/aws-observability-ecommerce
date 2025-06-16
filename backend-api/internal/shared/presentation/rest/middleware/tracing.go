@@ -10,6 +10,8 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.32.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // TracingMiddleware はHTTPリクエストのトレーシングミドルウェア
@@ -20,8 +22,6 @@ func TracingMiddleware() echo.MiddlewareFunc {
 			if otel.GetTracerProvider() == nil {
 				return next(c)
 			}
-
-			tracer := otel.Tracer("aws-observability-ecommerce")
 
 			// トレースコンテキストの抽出
 			ctx := otel.GetTextMapPropagator().Extract(

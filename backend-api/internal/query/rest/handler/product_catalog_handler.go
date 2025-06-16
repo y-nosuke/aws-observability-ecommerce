@@ -5,10 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
@@ -33,7 +34,6 @@ func NewProductCatalogHandler(db boil.ContextExecutor) *ProductCatalogHandler {
 // ListProducts は商品一覧を取得する（OpenAPI仕様に準拠）
 func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.ListProductsParams) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
 	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.list_products", trace.WithAttributes(
 		attribute.String("app.layer", "handler"),
 		attribute.String("app.domain", "product_catalog"),
@@ -110,7 +110,6 @@ func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.Li
 // ListProductsByCategory は指定されたカテゴリーの商品一覧を取得する
 func (h *ProductCatalogHandler) ListProductsByCategory(ctx echo.Context, id openapi.CategoryIdPathParam, params openapi.ListProductsByCategoryParams) error {
 	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
 	requestCtx, span := tracer.Start(ctx.Request().Context(), "handler.list_products_by_category", trace.WithAttributes(
 		attribute.String("app.layer", "handler"),
 		attribute.String("app.domain", "product_catalog"),

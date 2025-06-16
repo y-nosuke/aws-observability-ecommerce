@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.32.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // TracingWrapper はデータベース接続のトレーシングラッパー
@@ -88,9 +89,7 @@ func (tw *TracingWrapper) PrepareContext(ctx context.Context, query string) (*sq
 
 // BeginTx はトランザクション開始をトレース
 func (tw *TracingWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	tracer := otel.Tracer("aws-observability-ecommerce")
-
-	ctx, span := tracer.Start(ctx, "db.begin_tx", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := tracer.StartDatabase(ctx, "begin_tx", tw.dbName)
 	defer span.End()
 
 	// DB属性を設定
@@ -118,8 +117,6 @@ func (tw *TracingWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sq
 
 // startDBSpan はデータベース操作のスパンを開始
 func (tw *TracingWrapper) startDBSpan(ctx context.Context, operationName, query string) (context.Context, trace.Span) {
-	tracer := otel.Tracer("aws-observability-ecommerce")
-
 	ctx, span := tracer.Start(ctx, operationName, trace.WithSpanKind(trace.SpanKindClient))
 
 	// DB属性を設定

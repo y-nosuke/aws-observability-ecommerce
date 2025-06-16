@@ -59,17 +59,15 @@ func main() {
 		"action", "start")
 
 	// グローバルHTTPメトリクスの初期化
-	if container.OTelManager != nil {
-		meter := container.OTelManager.GetMeter()
-		if err := metrics.Init(meter); err != nil {
-			logger.WithError(ctx, "HTTPメトリクスの初期化に失敗", err,
-				"operation", "init_http_metrics",
-				"severity", "medium",
-				"business_impact", "metrics_collection_disabled")
-			// メトリクス初期化失敗は致命的エラーではないため、アプリケーションは継続
-		} else {
-			logger.Info(ctx, "HTTPメトリクスを初期化しました")
-		}
+	meter := container.OTelManager.GetMeter()
+	if err := metrics.Init(meter); err != nil {
+		logger.WithError(ctx, "HTTPメトリクスの初期化に失敗", err,
+			"operation", "init_http_metrics",
+			"severity", "medium",
+			"business_impact", "metrics_collection_disabled")
+		// メトリクス初期化失敗は致命的エラーではないため、アプリケーションは継続
+	} else {
+		logger.Info(ctx, "HTTPメトリクスを初期化しました")
 	}
 
 	// ルーターの初期化とセットアップ

@@ -12,11 +12,11 @@ import (
 var (
 	globalHTTPMetricsRecorder HTTPMetricsRecorder
 	initOnce                  sync.Once
-	initError                 error
 )
 
 // Init はグローバルHTTPメトリクスを初期化します
 func Init(meter metric.Meter) error {
+	var initError error
 	initOnce.Do(func() {
 		if meter == nil {
 			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
@@ -34,13 +34,13 @@ func Init(meter metric.Meter) error {
 	return initError
 }
 
-// SetGlobalHTTPMetrics はグローバルHTTPメトリクスを直接設定します（テスト用）
-func SetGlobalHTTPMetrics(metrics HTTPMetricsRecorder) {
+// SetGlobalHTTPMetricsRecorder はグローバルHTTPメトリクスを直接設定します（テスト用）
+func SetGlobalHTTPMetricsRecorder(metrics HTTPMetricsRecorder) {
 	globalHTTPMetricsRecorder = metrics
 }
 
-// getGlobalHTTPMetrics はグローバルHTTPメトリクスを取得します（内部用）
-func getGlobalHTTPMetrics() HTTPMetricsRecorder {
+// getGlobalHTTPMetricsRecorder はグローバルHTTPメトリクスを取得します（内部用）
+func getGlobalHTTPMetricsRecorder() HTTPMetricsRecorder {
 	if globalHTTPMetricsRecorder == nil {
 		return &NoopHTTPMetricsRecorder{}
 	}
@@ -51,10 +51,10 @@ func getGlobalHTTPMetrics() HTTPMetricsRecorder {
 
 // RecordHTTPRequest はHTTPリクエストのメトリクスを記録します
 func RecordHTTPRequest(method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
-	getGlobalHTTPMetrics().RecordRequest(method, route, statusCode, duration, requestSize, responseSize)
+	getGlobalHTTPMetricsRecorder().RecordRequest(method, route, statusCode, duration, requestSize, responseSize)
 }
 
 // RecordHTTPRequestWithContext はコンテキスト付きでHTTPリクエストのメトリクスを記録します
 func RecordHTTPRequestWithContext(ctx context.Context, method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
-	getGlobalHTTPMetrics().RecordRequestWithContext(ctx, method, route, statusCode, duration, requestSize, responseSize)
+	getGlobalHTTPMetricsRecorder().RecordRequestWithContext(ctx, method, route, statusCode, duration, requestSize, responseSize)
 }

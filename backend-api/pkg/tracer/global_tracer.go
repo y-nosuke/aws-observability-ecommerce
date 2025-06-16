@@ -7,6 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -24,6 +25,26 @@ func Init(tracer trace.Tracer) error {
 			globalTracer = NewNoopTracer()
 			return
 		}
+
+		globalTracer = NewDefaultTracer(tracer)
+	})
+	return initError
+}
+
+// InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルトレーサーを初期化します
+func InitWithProvider(provider *sdktrace.TracerProvider) error {
+	var initError error
+	initOnce.Do(func() {
+		if provider == nil {
+			globalTracer = NewNoopTracer()
+			return
+		}
+
+		// グローバルTracerProviderを設定
+		otel.SetTracerProvider(provider)
+
+		// Tracerを取得
+		tracer := provider.Tracer("github.com/y-nosuke/aws-observability-ecommerce/backend-api")
 
 		globalTracer = NewDefaultTracer(tracer)
 	})

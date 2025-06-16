@@ -5,6 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/log/global"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
@@ -20,6 +23,26 @@ func Init(cfg config.ObservabilityConfig) {
 	initOnce.Do(func() {
 		globalLogger = NewDefaultLogger(cfg)
 	})
+}
+
+// InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルロガーを初期化します
+func InitWithProvider(provider *sdklog.LoggerProvider, cfg config.ObservabilityConfig) error {
+	var err error
+	initOnce.Do(func() {
+		if provider != nil {
+			// OpenTelemetryプロバイダーをグローバルに設定
+			global.SetLoggerProvider(provider)
+
+			// OpenTelemetry対応のロガーを作成
+			cfg.Logging.EnableOTel = true
+			globalLogger = NewDefaultLogger(cfg)
+		} else {
+			// プロバイダーがnilの場合は通常のロガーを使用
+			cfg.Logging.EnableOTel = false
+			globalLogger = NewDefaultLogger(cfg)
+		}
+	})
+	return err
 }
 
 // SetGlobalLogger はグローバルロガーを直接設定します（テスト用）

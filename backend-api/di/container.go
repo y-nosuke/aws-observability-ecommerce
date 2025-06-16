@@ -18,7 +18,7 @@ type AppContainer struct {
 	DBManager *database.DBManager
 
 	// Observability
-	OTelManager *observability.OTelManager
+	ProviderFactory *observability.ProviderFactory
 
 	// AWS Services
 	AWSServiceRegistry *aws.ServiceRegistry
@@ -37,7 +37,7 @@ type AppContainer struct {
 func NewAppContainer(
 	db *sql.DB,
 	dbManager *database.DBManager,
-	otelManager *observability.OTelManager,
+	providerFactory *observability.ProviderFactory,
 	awsServiceRegistry *aws.ServiceRegistry,
 	clientFactory *aws.ClientFactory,
 	s3ClientWrapper *aws.S3ClientWrapper,
@@ -50,7 +50,7 @@ func NewAppContainer(
 	return &AppContainer{
 		DB:                    db,
 		DBManager:             dbManager,
-		OTelManager:           otelManager,
+		ProviderFactory:       providerFactory,
 		AWSServiceRegistry:    awsServiceRegistry,
 		ClientFactory:         clientFactory,
 		S3ClientWrapper:       s3ClientWrapper,
@@ -72,8 +72,8 @@ func (c *AppContainer) Cleanup() error {
 	}
 
 	// OpenTelemetryをシャットダウン
-	if c.OTelManager != nil {
-		if err := c.OTelManager.Shutdown(); err != nil {
+	if c.ProviderFactory != nil {
+		if err := c.ProviderFactory.Shutdown(); err != nil {
 			return err
 		}
 	}
@@ -116,9 +116,9 @@ func (c *AppContainer) GetDBManager() *database.DBManager {
 	return c.DBManager
 }
 
-// GetOTelManager はOTelManagerを取得
-func (c *AppContainer) GetOTelManager() *observability.OTelManager {
-	return c.OTelManager
+// GetProviderFactory はProviderFactoryを取得
+func (c *AppContainer) GetProviderFactory() *observability.ProviderFactory {
+	return c.ProviderFactory
 }
 
 // GetAWSServiceRegistry はAWSサービスレジストリを取得

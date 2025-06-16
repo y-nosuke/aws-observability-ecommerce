@@ -5,7 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
 // グローバルメトリクスインスタンス
@@ -22,6 +24,32 @@ func Init(meter metric.Meter) error {
 			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
 			return
 		}
+
+		httpMetrics, err := NewDefaultHTTPMetricsRecorder(meter)
+		if err != nil {
+			initError = err
+			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
+			return
+		}
+		globalHTTPMetricsRecorder = httpMetrics
+	})
+	return initError
+}
+
+// InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルHTTPメトリクスを初期化します
+func InitWithProvider(provider *sdkmetric.MeterProvider) error {
+	var initError error
+	initOnce.Do(func() {
+		if provider == nil {
+			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
+			return
+		}
+
+		// グローバルMeterProviderを設定
+		otel.SetMeterProvider(provider)
+
+		// Meterを取得
+		meter := provider.Meter("github.com/y-nosuke/aws-observability-ecommerce/backend-api")
 
 		httpMetrics, err := NewDefaultHTTPMetricsRecorder(meter)
 		if err != nil {

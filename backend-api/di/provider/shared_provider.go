@@ -26,7 +26,7 @@ var SharedProviderSet = wire.NewSet(
 
 	// オブザーバビリティ関連
 	ProvideOTelConfig, // ObservabilityConfigからOTelConfigを抽出
-	observability.NewOTelManager,
+	observability.NewProviderFactory,
 
 	// SqlBoiler用のバインド
 	wire.Bind(new(boil.ContextExecutor), new(*sql.DB)),

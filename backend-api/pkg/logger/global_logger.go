@@ -18,7 +18,7 @@ var (
 // アプリケーション起動時に一度だけ呼び出してください
 func Init(cfg config.ObservabilityConfig) {
 	initOnce.Do(func() {
-		globalLogger = NewLogger(cfg)
+		globalLogger = NewDefaultLogger(cfg)
 	})
 }
 
@@ -38,7 +38,7 @@ func getGlobalLogger() Logger {
 				EnableOTel: false,
 			},
 		}
-		globalLogger = NewLogger(cfg)
+		globalLogger = NewDefaultLogger(cfg)
 	}
 	return globalLogger
 }

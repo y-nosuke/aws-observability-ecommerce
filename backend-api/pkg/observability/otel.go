@@ -28,7 +28,7 @@ type OTelManager struct {
 	meterProvider  *sdkmetric.MeterProvider
 	tracerProvider *sdktrace.TracerProvider
 	resource       *resource.Resource
-	meter          metric.Meter // TODO metricsパッケージで初期化したい。
+	meter          metric.Meter
 	tracer         trace.Tracer
 }
 

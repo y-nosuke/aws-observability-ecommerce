@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -9,41 +10,41 @@ import (
 
 // グローバルメトリクスインスタンス
 var (
-	globalHTTPMetrics HTTPMetricsRecorder
-	initOnce          sync.Once
-	initError         error
+	globalHTTPMetricsRecorder HTTPMetricsRecorder
+	initOnce                  sync.Once
+	initError                 error
 )
 
 // Init はグローバルHTTPメトリクスを初期化します
 func Init(meter metric.Meter) error {
 	initOnce.Do(func() {
 		if meter == nil {
-			globalHTTPMetrics = &NoopHTTPMetrics{}
+			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
 			return
 		}
 
-		httpMetrics, err := NewHTTPMetrics(meter)
+		httpMetrics, err := NewDefaultHTTPMetricsRecorder(meter)
 		if err != nil {
 			initError = err
-			globalHTTPMetrics = &NoopHTTPMetrics{}
+			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
 			return
 		}
-		globalHTTPMetrics = httpMetrics
+		globalHTTPMetricsRecorder = httpMetrics
 	})
 	return initError
 }
 
-// SetHTTPMetrics はグローバルHTTPメトリクスを直接設定します（テスト用）
-func SetHTTPMetrics(metrics HTTPMetricsRecorder) {
-	globalHTTPMetrics = metrics
+// SetGlobalHTTPMetrics はグローバルHTTPメトリクスを直接設定します（テスト用）
+func SetGlobalHTTPMetrics(metrics HTTPMetricsRecorder) {
+	globalHTTPMetricsRecorder = metrics
 }
 
 // getGlobalHTTPMetrics はグローバルHTTPメトリクスを取得します（内部用）
 func getGlobalHTTPMetrics() HTTPMetricsRecorder {
-	if globalHTTPMetrics == nil {
-		return &NoopHTTPMetrics{}
+	if globalHTTPMetricsRecorder == nil {
+		return &NoopHTTPMetricsRecorder{}
 	}
-	return globalHTTPMetrics
+	return globalHTTPMetricsRecorder
 }
 
 // === パッケージレベルの便利関数 ===
@@ -54,6 +55,6 @@ func RecordHTTPRequest(method, route string, statusCode int, duration time.Durat
 }
 
 // RecordHTTPRequestWithContext はコンテキスト付きでHTTPリクエストのメトリクスを記録します
-func RecordHTTPRequestWithContext(method, route, statusCode string, duration time.Duration, requestSize, responseSize int64) {
-	getGlobalHTTPMetrics().RecordRequestWithContext(method, route, statusCode, duration, requestSize, responseSize)
+func RecordHTTPRequestWithContext(ctx context.Context, method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
+	getGlobalHTTPMetrics().RecordRequestWithContext(ctx, method, route, statusCode, duration, requestSize, responseSize)
 }

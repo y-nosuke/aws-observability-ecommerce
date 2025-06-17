@@ -17,20 +17,6 @@ var (
 	initOnce     sync.Once
 )
 
-// Init はグローバルトレーサーを初期化します
-func Init(tracer trace.Tracer) error {
-	var initError error
-	initOnce.Do(func() {
-		if tracer == nil {
-			globalTracer = NewNoopTracer()
-			return
-		}
-
-		globalTracer = NewDefaultTracer(tracer)
-	})
-	return initError
-}
-
 // InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルトレーサーを初期化します
 func InitWithProvider(provider *sdktrace.TracerProvider) error {
 	var initError error

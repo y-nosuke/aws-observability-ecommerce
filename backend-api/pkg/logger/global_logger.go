@@ -17,32 +17,25 @@ var (
 	initOnce     sync.Once
 )
 
-// Init はグローバルロガーを初期化します
-// アプリケーション起動時に一度だけ呼び出してください
-func Init(cfg config.ObservabilityConfig) {
-	initOnce.Do(func() {
-		globalLogger = NewDefaultLogger(cfg)
-	})
-}
-
 // InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルロガーを初期化します
 func InitWithProvider(provider *sdklog.LoggerProvider, cfg config.ObservabilityConfig) error {
-	var err error
+	var initError error
 	initOnce.Do(func() {
-		if provider != nil {
-			// OpenTelemetryプロバイダーをグローバルに設定
-			global.SetLoggerProvider(provider)
-
-			// OpenTelemetry対応のロガーを作成
-			cfg.Logging.EnableOTel = true
-			globalLogger = NewDefaultLogger(cfg)
-		} else {
+		if provider == nil {
 			// プロバイダーがnilの場合は通常のロガーを使用
 			cfg.Logging.EnableOTel = false
 			globalLogger = NewDefaultLogger(cfg)
+			return
 		}
+
+		// OpenTelemetryプロバイダーをグローバルに設定
+		global.SetLoggerProvider(provider)
+
+		// OpenTelemetry対応のロガーを作成
+		cfg.Logging.EnableOTel = true
+		globalLogger = NewDefaultLogger(cfg)
 	})
-	return err
+	return initError
 }
 
 // SetGlobalLogger はグローバルロガーを直接設定します（テスト用）

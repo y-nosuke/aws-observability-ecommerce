@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
@@ -15,26 +14,6 @@ var (
 	globalHTTPMetricsRecorder HTTPMetricsRecorder
 	initOnce                  sync.Once
 )
-
-// Init はグローバルHTTPメトリクスを初期化します
-func Init(meter metric.Meter) error {
-	var initError error
-	initOnce.Do(func() {
-		if meter == nil {
-			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
-			return
-		}
-
-		httpMetrics, err := NewDefaultHTTPMetricsRecorder(meter)
-		if err != nil {
-			initError = err
-			globalHTTPMetricsRecorder = NewNoopHTTPMetricsRecorder()
-			return
-		}
-		globalHTTPMetricsRecorder = httpMetrics
-	})
-	return initError
-}
 
 // InitWithProvider はOpenTelemetryプロバイダーを使用してグローバルHTTPメトリクスを初期化します
 func InitWithProvider(provider *sdkmetric.MeterProvider) error {

@@ -14,8 +14,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/metrics"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 func main() {
@@ -25,7 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// DIコンテナの初期化（OpenTelemetryも含めて一括初期化）
+	// DIコンテナの初期化
 	ctx := context.Background()
 	container, err := di.InitializeAppContainer(
 		ctx,
@@ -39,14 +37,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// グローバルロガーの初期化（分離型初期化）
-	loggerProvider, err := container.ProviderFactory.CreateLoggerProvider()
-	if err != nil {
-		log.Printf("Failed to create logger provider: %v\n", err)
-	} else {
-		if initErr := logger.InitWithProvider(loggerProvider, config.Observability); initErr != nil {
-			log.Printf("Failed to initialize logger with provider: %v\n", initErr)
-		}
+	// グローバルオブザーバビリティの一括初期化
+	globalObservabilityInitializer := container.GetGlobalObservabilityInitializer()
+	if err := globalObservabilityInitializer.Initialize(config.Observability); err != nil {
+		log.Fatalf("Failed to initialize global observability: %v\n", err)
 	}
 
 	// アプリケーション終了時のクリーンアップを設定
@@ -65,40 +59,6 @@ func main() {
 		"opentelemetry_enabled", true,
 		"stage", "initialization",
 		"action", "start")
-
-	// グローバルHTTPメトリクスの初期化（分離型初期化）
-	meterProvider, err := container.ProviderFactory.CreateMeterProvider()
-	if err != nil {
-		logger.WithError(ctx, "MeterProviderの作成に失敗", err,
-			"operation", "create_meter_provider",
-			"severity", "medium")
-	} else {
-		if initErr := metrics.InitWithProvider(meterProvider); initErr != nil {
-			logger.WithError(ctx, "HTTPメトリクスの初期化に失敗", initErr,
-				"operation", "init_http_metrics",
-				"severity", "medium",
-				"business_impact", "metrics_collection_disabled")
-		} else {
-			logger.Info(ctx, "HTTPメトリクスを初期化しました")
-		}
-	}
-
-	// グローバルトレーサーの初期化（分離型初期化）
-	tracerProvider, err := container.ProviderFactory.CreateTracerProvider()
-	if err != nil {
-		logger.WithError(ctx, "TracerProviderの作成に失敗", err,
-			"operation", "create_tracer_provider",
-			"severity", "medium")
-	} else {
-		if initErr := tracer.InitWithProvider(tracerProvider); initErr != nil {
-			logger.WithError(ctx, "トレーサーの初期化に失敗", initErr,
-				"operation", "init_tracer",
-				"severity", "medium",
-				"business_impact", "tracing_collection_disabled")
-		} else {
-			logger.Info(ctx, "トレーサーを初期化しました")
-		}
-	}
 
 	// ルーターの初期化とセットアップ
 	r := router.NewRouter()

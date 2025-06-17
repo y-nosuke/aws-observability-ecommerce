@@ -7,6 +7,7 @@ import (
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
+	observabilityInfra "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/observability"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
@@ -18,7 +19,8 @@ type AppContainer struct {
 	DBManager *database.DBManager
 
 	// Observability
-	ProviderFactory observability.ProviderFactory
+	ProviderFactory                observability.ProviderFactory
+	GlobalObservabilityInitializer *observabilityInfra.GlobalObservabilityInitializer
 
 	// AWS Services
 	AWSServiceRegistry *aws.ServiceRegistry
@@ -38,6 +40,7 @@ func NewAppContainer(
 	db *sql.DB,
 	dbManager *database.DBManager,
 	providerFactory observability.ProviderFactory,
+	globalObservabilityInitializer *observabilityInfra.GlobalObservabilityInitializer,
 	awsServiceRegistry *aws.ServiceRegistry,
 	clientFactory *aws.ClientFactory,
 	s3ClientWrapper *aws.S3ClientWrapper,
@@ -48,17 +51,18 @@ func NewAppContainer(
 	healthHandler *systemHandler.HealthHandler,
 ) *AppContainer {
 	return &AppContainer{
-		DB:                    db,
-		DBManager:             dbManager,
-		ProviderFactory:       providerFactory,
-		AWSServiceRegistry:    awsServiceRegistry,
-		ClientFactory:         clientFactory,
-		S3ClientWrapper:       s3ClientWrapper,
-		ProductHandler:        productHandler,
-		CategoryListHandler:   categoryListHandler,
-		ProductCatalogHandler: productCatalogHandler,
-		ProductDetailHandler:  productDetailHandler,
-		HealthHandler:         healthHandler,
+		DB:                             db,
+		DBManager:                      dbManager,
+		ProviderFactory:                providerFactory,
+		GlobalObservabilityInitializer: globalObservabilityInitializer,
+		AWSServiceRegistry:             awsServiceRegistry,
+		ClientFactory:                  clientFactory,
+		S3ClientWrapper:                s3ClientWrapper,
+		ProductHandler:                 productHandler,
+		CategoryListHandler:            categoryListHandler,
+		ProductCatalogHandler:          productCatalogHandler,
+		ProductDetailHandler:           productDetailHandler,
+		HealthHandler:                  healthHandler,
 	}
 }
 
@@ -124,4 +128,9 @@ func (c *AppContainer) GetProviderFactory() observability.ProviderFactory {
 // GetAWSServiceRegistry はAWSサービスレジストリを取得
 func (c *AppContainer) GetAWSServiceRegistry() *aws.ServiceRegistry {
 	return c.AWSServiceRegistry
+}
+
+// GetGlobalObservabilityInitializer はグローバルオブザーバビリティ初期化サービスを取得
+func (c *AppContainer) GetGlobalObservabilityInitializer() *observabilityInfra.GlobalObservabilityInitializer {
+	return c.GlobalObservabilityInitializer
 }

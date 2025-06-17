@@ -10,6 +10,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
+	observabilityInfra "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/observability"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
@@ -28,6 +29,7 @@ var SharedProviderSet = wire.NewSet(
 	ProvideOTelConfig, // ObservabilityConfigからOTelConfigを抽出
 	ProvideOTelProviderFactory,
 	wire.Bind(new(observability.ProviderFactory), new(*observability.OTelProviderFactory)),
+	observabilityInfra.NewGlobalObservabilityInitializer, // グローバル初期化サービス
 
 	// SqlBoiler用のバインド
 	wire.Bind(new(boil.ContextExecutor), new(*sql.DB)),

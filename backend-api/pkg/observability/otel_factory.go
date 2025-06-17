@@ -17,18 +17,25 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
-// ProviderFactory はOpenTelemetryのプロバイダー生成を管理する構造体
-type ProviderFactory struct {
+// OTelProviderFactory はOpenTelemetryのプロバイダー生成を管理する構造体
+type OTelProviderFactory struct {
 	config         config.OTelConfig
+	options        ProviderFactoryOptions
 	resource       *resource.Resource
 	loggerProvider *sdklog.LoggerProvider
 	meterProvider  *sdkmetric.MeterProvider
 	tracerProvider *sdktrace.TracerProvider
 }
 
-// NewProviderFactory はProviderFactoryのコンストラクタ
-func NewProviderFactory(otelConfig config.OTelConfig) (*ProviderFactory, error) {
+// NewOTelProviderFactory はOTelProviderFactoryのコンストラクタ
+func NewOTelProviderFactory(otelConfig config.OTelConfig, opts ...ProviderFactoryOptions) (*OTelProviderFactory, error) {
 	ctx := context.Background()
+
+	// オプションの設定
+	options := DefaultProviderFactoryOptions()
+	if len(opts) > 0 {
+		options = opts[0]
+	}
 
 	// リソース情報を作成
 	res, err := resource.New(ctx,
@@ -43,14 +50,21 @@ func NewProviderFactory(otelConfig config.OTelConfig) (*ProviderFactory, error) 
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	return &ProviderFactory{
+	return &OTelProviderFactory{
 		config:   otelConfig,
+		options:  options,
 		resource: res,
 	}, nil
 }
 
 // CreateLoggerProvider はLoggerProviderを作成します
-func (f *ProviderFactory) CreateLoggerProvider() (*sdklog.LoggerProvider, error) {
+func (f *OTelProviderFactory) CreateLoggerProvider() (*sdklog.LoggerProvider, error) {
+	// オプションで無効化されている場合
+	if !f.options.EnableLogging {
+		return nil, nil
+	}
+
+	// 設定で無効化されている場合
 	if !f.config.Logging.Enabled {
 		return nil, nil
 	}
@@ -70,7 +84,13 @@ func (f *ProviderFactory) CreateLoggerProvider() (*sdklog.LoggerProvider, error)
 }
 
 // CreateMeterProvider はMeterProviderを作成します
-func (f *ProviderFactory) CreateMeterProvider() (*sdkmetric.MeterProvider, error) {
+func (f *OTelProviderFactory) CreateMeterProvider() (*sdkmetric.MeterProvider, error) {
+	// オプションで無効化されている場合
+	if !f.options.EnableMetrics {
+		return nil, nil
+	}
+
+	// 設定で無効化されている場合
 	if !f.config.Metrics.Enabled {
 		return nil, nil
 	}
@@ -90,7 +110,13 @@ func (f *ProviderFactory) CreateMeterProvider() (*sdkmetric.MeterProvider, error
 }
 
 // CreateTracerProvider はTracerProviderを作成します
-func (f *ProviderFactory) CreateTracerProvider() (*sdktrace.TracerProvider, error) {
+func (f *OTelProviderFactory) CreateTracerProvider() (*sdktrace.TracerProvider, error) {
+	// オプションで無効化されている場合
+	if !f.options.EnableTracing {
+		return nil, nil
+	}
+
+	// 設定で無効化されている場合
 	if !f.config.Tracing.Enabled {
 		return nil, nil
 	}
@@ -110,56 +136,44 @@ func (f *ProviderFactory) CreateTracerProvider() (*sdktrace.TracerProvider, erro
 }
 
 // GetResource はResourceを返します
-func (f *ProviderFactory) GetResource() *resource.Resource {
+func (f *OTelProviderFactory) GetResource() *resource.Resource {
 	return f.resource
 }
 
 // GetConfig は設定を返します
-func (f *ProviderFactory) GetConfig() config.OTelConfig {
+func (f *OTelProviderFactory) GetConfig() config.OTelConfig {
 	return f.config
 }
 
 // Shutdown はOpenTelemetryプロバイダーをクリーンアップします
-func (f *ProviderFactory) Shutdown() error {
+func (f *OTelProviderFactory) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := ShutdownProvider(ctx, f.loggerProvider); err != nil {
-		return fmt.Errorf("failed to shutdown logger provider: %w", err)
-	}
-
-	if err := ShutdownProvider(ctx, f.meterProvider); err != nil {
-		return fmt.Errorf("failed to shutdown meter provider: %w", err)
-	}
-
-	if err := ShutdownProvider(ctx, f.tracerProvider); err != nil {
-		return fmt.Errorf("failed to shutdown tracer provider: %w", err)
-	}
-
-	return nil
-}
-
-// ShutdownProvider はOpenTelemetryプロバイダーをクリーンアップします
-func ShutdownProvider(ctx context.Context, provider interface{}) error {
-	switch p := provider.(type) {
-	case *sdklog.LoggerProvider:
-		if p != nil {
-			return p.Shutdown(ctx)
-		}
-	case *sdkmetric.MeterProvider:
-		if p != nil {
-			return p.Shutdown(ctx)
-		}
-	case *sdktrace.TracerProvider:
-		if p != nil {
-			return p.Shutdown(ctx)
+	// 依存関係を考慮した順序でShutdown
+	if f.loggerProvider != nil {
+		if err := f.loggerProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown logger provider: %w", err)
 		}
 	}
+
+	if f.meterProvider != nil {
+		if err := f.meterProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown meter provider: %w", err)
+		}
+	}
+
+	if f.tracerProvider != nil {
+		if err := f.tracerProvider.Shutdown(ctx); err != nil {
+			return fmt.Errorf("failed to shutdown tracer provider: %w", err)
+		}
+	}
+
 	return nil
 }
 
 // initLogging はログを初期化します
-func (f *ProviderFactory) initLogging(ctx context.Context) (*sdklog.LoggerProvider, error) {
+func (f *OTelProviderFactory) initLogging(ctx context.Context) (*sdklog.LoggerProvider, error) {
 	// OTLP Log Exporter
 	logExporter, err := otlploghttp.New(ctx,
 		otlploghttp.WithEndpoint(f.config.Collector.Endpoint),
@@ -185,7 +199,7 @@ func (f *ProviderFactory) initLogging(ctx context.Context) (*sdklog.LoggerProvid
 }
 
 // initMetrics はメトリクスを初期化します
-func (f *ProviderFactory) initMetrics(ctx context.Context) (*sdkmetric.MeterProvider, error) {
+func (f *OTelProviderFactory) initMetrics(ctx context.Context) (*sdkmetric.MeterProvider, error) {
 	// OTLP Metric Exporter
 	metricExporter, err := otlpmetrichttp.New(ctx,
 		otlpmetrichttp.WithEndpoint(f.config.Collector.Endpoint),
@@ -209,7 +223,7 @@ func (f *ProviderFactory) initMetrics(ctx context.Context) (*sdkmetric.MeterProv
 }
 
 // initTracing はトレースを初期化します
-func (f *ProviderFactory) initTracing(ctx context.Context) (*sdktrace.TracerProvider, error) {
+func (f *OTelProviderFactory) initTracing(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	// OTLP Trace Exporter
 	traceExporter, err := otlptracehttp.New(ctx,
 		otlptracehttp.WithEndpoint(f.config.Collector.Endpoint),

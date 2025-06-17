@@ -26,7 +26,8 @@ var SharedProviderSet = wire.NewSet(
 
 	// オブザーバビリティ関連
 	ProvideOTelConfig, // ObservabilityConfigからOTelConfigを抽出
-	observability.NewProviderFactory,
+	ProvideOTelProviderFactory,
+	wire.Bind(new(observability.ProviderFactory), new(*observability.OTelProviderFactory)),
 
 	// SqlBoiler用のバインド
 	wire.Bind(new(boil.ContextExecutor), new(*sql.DB)),
@@ -46,4 +47,9 @@ func ProvideDB(dbManager *database.DBManager) *sql.DB {
 // ProvideOTelConfig はObservabilityConfigからOTelConfigを抽出する
 func ProvideOTelConfig(observabilityConfig config.ObservabilityConfig) config.OTelConfig {
 	return observabilityConfig.OTel
+}
+
+// ProvideOTelProviderFactory はOTelProviderFactoryを提供する
+func ProvideOTelProviderFactory(otelConfig config.OTelConfig) (*observability.OTelProviderFactory, error) {
+	return observability.NewOTelProviderFactory(otelConfig, observability.DefaultProviderFactoryOptions())
 }

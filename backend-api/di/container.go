@@ -18,7 +18,7 @@ type AppContainer struct {
 	DBManager *database.DBManager
 
 	// Observability
-	ProviderFactory *observability.ProviderFactory
+	ProviderFactory observability.ProviderFactory
 
 	// AWS Services
 	AWSServiceRegistry *aws.ServiceRegistry
@@ -37,7 +37,7 @@ type AppContainer struct {
 func NewAppContainer(
 	db *sql.DB,
 	dbManager *database.DBManager,
-	providerFactory *observability.ProviderFactory,
+	providerFactory observability.ProviderFactory,
 	awsServiceRegistry *aws.ServiceRegistry,
 	clientFactory *aws.ClientFactory,
 	s3ClientWrapper *aws.S3ClientWrapper,
@@ -117,7 +117,7 @@ func (c *AppContainer) GetDBManager() *database.DBManager {
 }
 
 // GetProviderFactory はProviderFactoryを取得
-func (c *AppContainer) GetProviderFactory() *observability.ProviderFactory {
+func (c *AppContainer) GetProviderFactory() observability.ProviderFactory {
 	return c.ProviderFactory
 }
 

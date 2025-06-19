@@ -75,6 +75,7 @@
     "oapimiddleware",
     "ogen",
     "otelslog",
+    "otelsql",
     "otlplog",
     "otlploghttp",
     "otlpmetric",

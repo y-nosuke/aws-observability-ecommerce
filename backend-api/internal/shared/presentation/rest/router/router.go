@@ -52,6 +52,9 @@ func (r *Router) setupMiddleware() {
 	// OpenTelemetry公式のEchoインストゥルメンテーション（早期に配置）
 	r.echo.Use(otelecho.Middleware("aws-observability-ecommerce-backend-api"))
 
+	// トレースステータス設定ミドルウェア（otelecho直後に配置）
+	r.echo.Use(customMiddleware.TraceStatusMiddleware())
+
 	// ビジネスコンテキスト抽出ミドルウェア（トレーシング後）
 	r.echo.Use(customMiddleware.BusinessContextMiddleware())
 

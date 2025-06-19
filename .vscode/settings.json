@@ -74,6 +74,7 @@
     "oapi",
     "oapimiddleware",
     "ogen",
+    "otelecho",
     "otelslog",
     "otelsql",
     "otlplog",

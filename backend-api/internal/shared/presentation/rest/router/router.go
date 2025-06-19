@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 
@@ -48,8 +49,8 @@ func (r *Router) setupMiddleware() {
 	r.echo.Use(middleware.Recover())
 	r.echo.Use(middleware.CORS())
 
-	// トレーシングミドルウェア（早期に配置）
-	r.echo.Use(customMiddleware.TracingMiddleware())
+	// OpenTelemetry公式のEchoインストゥルメンテーション（早期に配置）
+	r.echo.Use(otelecho.Middleware("aws-observability-ecommerce-backend-api"))
 
 	// ビジネスコンテキスト抽出ミドルウェア（トレーシング後）
 	r.echo.Use(customMiddleware.BusinessContextMiddleware())

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"runtime"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体
@@ -37,12 +37,6 @@ func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler 
 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
 func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
-	log.Println("Health check request received",
-		"method", c.Request().Method,
-		"path", c.Path(),
-		"remote_ip", c.RealIP(),
-	)
-
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
 
@@ -59,11 +53,6 @@ func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckPa
 		Resources:  h.createResources(),
 		Components: h.createComponents(ctx, checks),
 	}
-
-	log.Println("Health check completed",
-		"status", response.Status,
-		"uptime", response.Uptime,
-	)
 
 	return c.JSON(http.StatusOK, response)
 }
@@ -98,7 +87,7 @@ func (h *HealthHandler) createComponents(ctx context.Context, checks []string) m
 				clientMsg = "unknown error"
 			}
 			components[n] = "ng: " + clientMsg
-			log.Println("[health]", n, "error:", e.Error())
+			logger.WithError(ctx, "ヘルスチェック失敗", e, "component", n, "layer", "health_check")
 		} else {
 			components[n] = "ok"
 		}

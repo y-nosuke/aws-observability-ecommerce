@@ -51,6 +51,12 @@ func (r *Router) setupMiddleware() {
 	// トレーシングミドルウェア（早期に配置）
 	r.echo.Use(customMiddleware.TracingMiddleware())
 
+	// ビジネスコンテキスト抽出ミドルウェア（トレーシング後）
+	r.echo.Use(customMiddleware.BusinessContextMiddleware())
+
+	// ファイルアップロード検出ミドルウェア
+	r.echo.Use(customMiddleware.FileUploadMiddleware())
+
 	// メトリクス収集ミドルウェア（早期に配置）
 	r.echo.Use(customMiddleware.HTTPMetricsMiddleware())
 

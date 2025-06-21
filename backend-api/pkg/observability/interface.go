@@ -42,11 +42,76 @@ type ProviderFactoryOptions struct {
 	EnableTracing bool
 }
 
+// ProviderFactoryOption はProviderFactoryのオプション関数型
+//
+// 使用例:
+//
+//	// デフォルト設定（すべて有効）
+//	factory, err := NewOTelProviderFactory(config)
+//
+//	// 特定の機能のみ無効化
+//	factory, err := NewOTelProviderFactory(config, WithMetricsDisabled())
+//
+//	// 複数のオプションを組み合わせ
+//	factory, err := NewOTelProviderFactory(config,
+//	    WithLoggingDisabled(),
+//	    WithTracingEnabled(true),
+//	)
+//
+//	// テスト環境での使用例
+//	factory, err := NewOTelProviderFactory(config,
+//	    WithMetricsDisabled(),
+//	    WithLoggingDisabled(),
+//	)
+type ProviderFactoryOption func(*ProviderFactoryOptions)
+
 // DefaultProviderFactoryOptions はデフォルトのオプションを返します
 func DefaultProviderFactoryOptions() ProviderFactoryOptions {
 	return ProviderFactoryOptions{
 		EnableLogging: true,
 		EnableMetrics: true,
 		EnableTracing: true,
+	}
+}
+
+// WithLoggingEnabled はログ機能を有効にするオプション
+func WithLoggingEnabled(enabled bool) ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableLogging = enabled
+	}
+}
+
+// WithLoggingDisabled はログ機能を無効にするオプション
+func WithLoggingDisabled() ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableLogging = false
+	}
+}
+
+// WithMetricsEnabled はメトリクス機能を有効にするオプション
+func WithMetricsEnabled(enabled bool) ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableMetrics = enabled
+	}
+}
+
+// WithMetricsDisabled はメトリクス機能を無効にするオプション
+func WithMetricsDisabled() ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableMetrics = false
+	}
+}
+
+// WithTracingEnabled はトレース機能を有効にするオプション
+func WithTracingEnabled(enabled bool) ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableTracing = enabled
+	}
+}
+
+// WithTracingDisabled はトレース機能を無効にするオプション
+func WithTracingDisabled() ProviderFactoryOption {
+	return func(opts *ProviderFactoryOptions) {
+		opts.EnableTracing = false
 	}
 }

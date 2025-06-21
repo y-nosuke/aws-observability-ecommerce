@@ -7,7 +7,6 @@ import (
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
-	observabilityInfra "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/observability"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
@@ -20,7 +19,7 @@ type AppContainer struct {
 
 	// Observability
 	ProviderFactory                observability.ProviderFactory
-	GlobalObservabilityInitializer *observabilityInfra.GlobalObservabilityInitializer
+	GlobalObservabilityInitializer *observability.GlobalObservabilityInitializer
 
 	// AWS Services
 	AWSServiceRegistry *aws.ServiceRegistry
@@ -40,7 +39,7 @@ func NewAppContainer(
 	db *sql.DB,
 	dbManager *database.DBManager,
 	providerFactory observability.ProviderFactory,
-	globalObservabilityInitializer *observabilityInfra.GlobalObservabilityInitializer,
+	globalObservabilityInitializer *observability.GlobalObservabilityInitializer,
 	awsServiceRegistry *aws.ServiceRegistry,
 	clientFactory *aws.ClientFactory,
 	s3ClientWrapper *aws.S3ClientWrapper,
@@ -131,6 +130,6 @@ func (c *AppContainer) GetAWSServiceRegistry() *aws.ServiceRegistry {
 }
 
 // GetGlobalObservabilityInitializer はグローバルオブザーバビリティ初期化サービスを取得
-func (c *AppContainer) GetGlobalObservabilityInitializer() *observabilityInfra.GlobalObservabilityInitializer {
+func (c *AppContainer) GetGlobalObservabilityInitializer() *observability.GlobalObservabilityInitializer {
 	return c.GlobalObservabilityInitializer
 }

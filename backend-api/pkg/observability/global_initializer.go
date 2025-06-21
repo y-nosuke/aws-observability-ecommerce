@@ -6,17 +6,16 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/metrics"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // GlobalObservabilityInitializer はグローバルオブザーバビリティの初期化を担当
 type GlobalObservabilityInitializer struct {
-	providerFactory observability.ProviderFactory
+	providerFactory ProviderFactory
 }
 
 // NewGlobalObservabilityInitializer は新しい初期化サービスを作成
-func NewGlobalObservabilityInitializer(providerFactory observability.ProviderFactory) *GlobalObservabilityInitializer {
+func NewGlobalObservabilityInitializer(providerFactory ProviderFactory) *GlobalObservabilityInitializer {
 	return &GlobalObservabilityInitializer{
 		providerFactory: providerFactory,
 	}

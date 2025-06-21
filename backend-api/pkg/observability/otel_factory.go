@@ -28,13 +28,13 @@ type OTelProviderFactory struct {
 }
 
 // NewOTelProviderFactory はOTelProviderFactoryのコンストラクタ
-func NewOTelProviderFactory(otelConfig config.OTelConfig, opts ...ProviderFactoryOptions) (*OTelProviderFactory, error) {
+func NewOTelProviderFactory(otelConfig config.OTelConfig, opts ...ProviderFactoryOption) (*OTelProviderFactory, error) {
 	ctx := context.Background()
 
 	// オプションの設定
 	options := DefaultProviderFactoryOptions()
-	if len(opts) > 0 {
-		options = opts[0]
+	for _, opt := range opts {
+		opt(&options)
 	}
 
 	// リソース情報を作成

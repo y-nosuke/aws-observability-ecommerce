@@ -33,12 +33,17 @@ func NewProductHandler(
 // UploadProductImage は商品画像をアップロードする
 func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.ProductIdParam) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "upload_product_image")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"upload_product_image",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
-	handler.RecordRequestInfo(ctx.Request().UserAgent(), ctx.RealIP(), ctx.Request().ContentLength)
 
 	// ファイル取得
 	file, err := ctx.FormFile("image")
@@ -95,11 +100,17 @@ func (h *ProductHandler) UploadProductImage(ctx echo.Context, id openapi.Product
 // GetProductImage は商品画像を取得する
 func (h *ProductHandler) GetProductImage(ctx echo.Context, id openapi.ProductIdParam, params openapi.GetProductImageParams) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "get_product_image")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"get_product_image",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
 
 	// サイズパラメータの取得（デフォルトはmedium）
 	size := "medium"

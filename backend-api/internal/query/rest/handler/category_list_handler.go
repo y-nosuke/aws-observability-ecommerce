@@ -28,11 +28,17 @@ func NewCategoryListHandler(db boil.ContextExecutor) *CategoryListHandler {
 // ListCategories はカテゴリー一覧を取得する
 func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "list_categories")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"list_categories",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
 
 	handler.LogInfo("Category list request received")
 

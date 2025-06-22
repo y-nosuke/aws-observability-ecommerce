@@ -21,7 +21,7 @@ type HandlerHelper struct {
 }
 
 // StartHandler は Handler のトレースを開始
-func StartHandler(ctx context.Context, operationName string) *HandlerHelper {
+func StartHandler(ctx context.Context, operationName string, method, path string, statusCode int, userAgent, remoteAddr string, contentLength int64) *HandlerHelper {
 	// contextからdomainを自動取得
 	domain := GetDomainFromContext(ctx)
 
@@ -30,6 +30,23 @@ func StartHandler(ctx context.Context, operationName string) *HandlerHelper {
 
 	// contextからentityIDを自動取得
 	span.SetAttributes(attribute.Int("app.entity_id", GetEntityIDFromContext(ctx)))
+
+	// HTTPリクエスト情報を記録
+	span.SetAttributes(
+		attribute.String("http.method", method),
+		attribute.String("http.route", path),
+		attribute.Int("http.status_code", statusCode),
+	)
+
+	// リクエスト情報を記録
+	attrs := []attribute.KeyValue{
+		attribute.String("http.user_agent", userAgent),
+		attribute.String("http.remote_addr", remoteAddr),
+	}
+	if contentLength > 0 {
+		attrs = append(attrs, attribute.Int64("http.request.content_length", contentLength))
+	}
+	span.SetAttributes(attrs...)
 
 	// 操作ログを開始
 	operationLog := logger.StartOperation(spanCtx, operationName,
@@ -51,27 +68,6 @@ func (h *HandlerHelper) Context() context.Context {
 
 // SetAttributes はスパンに属性を設定
 func (h *HandlerHelper) SetAttributes(attrs ...attribute.KeyValue) {
-	h.span.SetAttributes(attrs...)
-}
-
-// RecordHTTPRequest はHTTPリクエスト情報を記録
-func (h *HandlerHelper) RecordHTTPRequest(method, path string, statusCode int) {
-	h.span.SetAttributes(
-		attribute.String("http.method", method),
-		attribute.String("http.route", path),
-		attribute.Int("http.status_code", statusCode),
-	)
-}
-
-// RecordRequestInfo はリクエスト情報を記録
-func (h *HandlerHelper) RecordRequestInfo(userAgent, remoteAddr string, contentLength int64) {
-	attrs := []attribute.KeyValue{
-		attribute.String("http.user_agent", userAgent),
-		attribute.String("http.remote_addr", remoteAddr),
-	}
-	if contentLength > 0 {
-		attrs = append(attrs, attribute.Int64("http.request.content_length", contentLength))
-	}
 	h.span.SetAttributes(attrs...)
 }
 

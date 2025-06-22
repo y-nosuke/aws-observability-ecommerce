@@ -31,11 +31,17 @@ func NewProductDetailHandler(db boil.ContextExecutor) *ProductDetailHandler {
 // GetProductById は指定されたIDの商品を取得する
 func (h *ProductDetailHandler) GetProductById(ctx echo.Context, id openapi.ProductIdParam) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "get_product_by_id")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"get_product_by_id",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
 
 	// IDの整合性チェック
 	if id <= 0 {

@@ -30,11 +30,17 @@ func NewProductCatalogHandler(db boil.ContextExecutor) *ProductCatalogHandler {
 // ListProducts は商品一覧を取得する（OpenAPI仕様に準拠）
 func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.ListProductsParams) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "list_products")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"list_products",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
 
 	// パラメータ変換
 	readerParams := &reader.ProductListParams{}
@@ -83,11 +89,17 @@ func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.Li
 // ListProductsByCategory は指定されたカテゴリーの商品一覧を取得する
 func (h *ProductCatalogHandler) ListProductsByCategory(ctx echo.Context, id openapi.CategoryIdPathParam, params openapi.ListProductsByCategoryParams) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(ctx.Request().Context(), "list_products_by_category")
+	handler := observability.StartHandler(
+		ctx.Request().Context(),
+		"list_products_by_category",
+		ctx.Request().Method,
+		ctx.Request().URL.Path,
+		http.StatusOK,
+		ctx.Request().UserAgent(),
+		ctx.RealIP(),
+		ctx.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(ctx.Request().Method, ctx.Request().URL.Path, http.StatusOK)
 
 	// パラメータ変換
 	readerParams := &reader.ProductListParams{}

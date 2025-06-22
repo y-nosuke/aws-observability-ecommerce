@@ -84,10 +84,7 @@ func (b *BaseObservabilityHelper) initializeBase(ctx context.Context, span trace
 	// contextからentityIDを自動取得
 	if id := GetEntityIDFromContext(ctx); id > 0 {
 		span.SetAttributes(attribute.Int("app.entity_id", id))
-	}
-
-	if entityType := GetEntityTypeFromContext(ctx); entityType != "" {
-		span.SetAttributes(attribute.String("app.entity_type", entityType))
+		span.SetAttributes(attribute.String("app.entity_type", GetEntityTypeFromContext(ctx)))
 	}
 
 	// contextからdomainを自動取得

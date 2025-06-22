@@ -46,7 +46,7 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 			// Business domain の判定
 			domain := determineDomain(route)
 			span.SetAttributes(attribute.String("app.business_domain", domain))
-			observability.SetDomainToContext(ctx, domain)
+			ctx = observability.SetDomainToContext(ctx, domain)
 
 			if id := extractID(c, domain); id > 0 {
 				span.SetAttributes(
@@ -55,8 +55,8 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 					attribute.Int("app.entity_id", id),
 				)
 
-				observability.SetEntityIDToContext(ctx, id)
-				observability.SetEntityTypeToContext(ctx, domain)
+				ctx = observability.SetEntityIDToContext(ctx, id)
+				ctx = observability.SetEntityTypeToContext(ctx, domain)
 			}
 
 			c.SetRequest(c.Request().WithContext(ctx))

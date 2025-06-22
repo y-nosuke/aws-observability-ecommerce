@@ -1,15 +1,32 @@
 package middleware
 
 import (
-	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
+
+// PaginationInfo はページネーション情報を保持する構造体
+type PaginationInfo struct {
+	Page     *int
+	PageSize *int
+	Limit    *int
+	Offset   *int
+}
+
+// SearchInfo は検索情報を保持する構造体
+type SearchInfo struct {
+	Keyword       *string
+	SearchEnabled bool
+	SortBy        *string
+	Order         *string
+}
 
 // BusinessContextMiddleware はビジネスコンテキスト情報を自動抽出するミドルウェア
 func BusinessContextMiddleware() echo.MiddlewareFunc {
@@ -21,151 +38,101 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 				return next(c)
 			}
 
+			ctx := c.Request().Context()
+
 			// ルートパターンの取得
 			route := getRoutePattern(c)
 
-			// ビジネスドメイン情報を抽出・記録
-			extractBusinessContext(c, span, route)
+			// Business domain の判定
+			domain := determineDomain(route)
+			span.SetAttributes(attribute.String("app.business_domain", domain))
+			ctx = observability.SetDomainToContext(ctx, domain)
+
+			if id := extractID(c, domain); id > 0 {
+				span.SetAttributes(
+					attribute.Int(fmt.Sprintf("app.%s_id", domain), id),
+					attribute.String("app.entity_type", domain),
+					attribute.Int("app.entity_id", id),
+				)
+
+				ctx = observability.SetEntityIDToContext(ctx, id)
+				ctx = observability.SetEntityTypeToContext(ctx, domain)
+			}
+
+			c.SetRequest(c.Request().WithContext(ctx))
+
+			// Operation type の判定
+			operationType := determineOperationType(c.Request().Method, route)
+			span.SetAttributes(attribute.String("app.operation_type", operationType))
+
+			// ページネーション情報の抽出
+			paginationInfo := extractPaginationInfo(c)
+			if paginationInfo.Page != nil {
+				span.SetAttributes(attribute.Int("app.request.page", *paginationInfo.Page))
+			}
+			if paginationInfo.PageSize != nil {
+				span.SetAttributes(attribute.Int("app.request.page_size", *paginationInfo.PageSize))
+			}
+			if paginationInfo.Limit != nil {
+				span.SetAttributes(attribute.Int("app.request.limit", *paginationInfo.Limit))
+			}
+			if paginationInfo.Offset != nil {
+				span.SetAttributes(attribute.Int("app.request.offset", *paginationInfo.Offset))
+			}
+
+			// 検索クエリ情報の抽出
+			searchInfo := extractSearchInfo(c)
+			if searchInfo.Keyword != nil {
+				span.SetAttributes(
+					attribute.String("app.search.keyword", *searchInfo.Keyword),
+					attribute.Bool("app.search.enabled", true),
+				)
+			}
+			if searchInfo.SortBy != nil {
+				span.SetAttributes(attribute.String("app.request.sort_by", *searchInfo.SortBy))
+			}
+			if searchInfo.Order != nil {
+				span.SetAttributes(attribute.String("app.request.order", *searchInfo.Order))
+			}
 
 			return next(c)
 		}
 	}
 }
 
-// extractBusinessContext はルートからビジネスコンテキストを抽出
-func extractBusinessContext(c echo.Context, span trace.Span, route string) {
-	ctx := c.Request().Context()
-
-	// Product関連のパラメータ抽出
-	if productID := extractProductID(c, route); productID > 0 {
-		span.SetAttributes(
-			attribute.Int64("app.product_id", productID),
-			attribute.String("app.entity_type", "product"),
-		)
-
-		ctx = context.WithValue(ctx, observability.EntityIDKey, productID)
-		ctx = context.WithValue(ctx, observability.EntityTypeKey, "product")
-		ctx = context.WithValue(ctx, observability.BusinessDomainKey, "product")
-
-		c.SetRequest(c.Request().WithContext(ctx))
+// determineDomain はルートからビジネスドメインを判定
+func determineDomain(route string) string {
+	switch {
+	case regexp.MustCompile(`/products`).MatchString(route):
+		return "product"
+	case regexp.MustCompile(`/categories`).MatchString(route):
+		return "category"
+	case regexp.MustCompile(`/inventory`).MatchString(route):
+		return "inventory"
+	case regexp.MustCompile(`/health`).MatchString(route):
+		return "system"
+	default:
+		return "unknown"
 	}
-
-	// Category関連のパラメータ抽出
-	if categoryID := extractCategoryID(c, route); categoryID > 0 {
-		span.SetAttributes(
-			attribute.Int64("app.category_id", categoryID),
-			attribute.String("app.entity_type", "category"),
-		)
-
-		ctx = context.WithValue(ctx, observability.EntityIDKey, categoryID)
-		ctx = context.WithValue(ctx, observability.EntityTypeKey, "category")
-		ctx = context.WithValue(ctx, observability.BusinessDomainKey, "category")
-
-		c.SetRequest(c.Request().WithContext(ctx))
-	}
-
-	// ページネーション情報の抽出
-	extractPaginationInfo(c, span)
-
-	// 検索クエリ情報の抽出
-	extractSearchInfo(c, span)
-
-	// Operation type の判定
-	operationType := determineOperationType(c.Request().Method, route)
-	span.SetAttributes(attribute.String("app.operation_type", operationType))
-
-	// Business domain の判定
-	domain := determineDomain(route)
-	span.SetAttributes(attribute.String("app.business_domain", domain))
 }
 
-// extractProductID はルートからproduct_idを抽出
-func extractProductID(c echo.Context, route string) int64 {
+// extractID はルートパラメータまたはクエリパラメータからIDを抽出
+func extractID(c echo.Context, domain string) int {
 	// OpenAPIのルートパラメータから取得
 	if idParam := c.Param("id"); idParam != "" {
-		// /products/{id} のパターン
-		if matched, err := regexp.MatchString(`/products/\{id\}`, route); err == nil && matched {
-			if id, err := strconv.ParseInt(idParam, 10, 64); err == nil {
-				return id
-			}
+		if id, err := strconv.Atoi(idParam); err == nil {
+			return id
 		}
 	}
 
-	// product_idパラメータから取得
-	if idParam := c.Param("product_id"); idParam != "" {
-		if id, err := strconv.ParseInt(idParam, 10, 64); err == nil {
+	// idパラメータから取得（クエリパラメータ）
+	if idStr := c.QueryParam(fmt.Sprintf("%s_id", domain)); idStr != "" {
+		if id, err := strconv.Atoi(idStr); err == nil {
 			return id
 		}
 	}
 
 	return 0
-}
-
-// extractCategoryID はルートからcategory_idを抽出
-func extractCategoryID(c echo.Context, route string) int64 {
-	// OpenAPIのルートパラメータから取得
-	if idParam := c.Param("id"); idParam != "" {
-		// /categories/{id} のパターン
-		if matched, err := regexp.MatchString(`/categories/\{id\}`, route); err == nil && matched {
-			if id, err := strconv.ParseInt(idParam, 10, 64); err == nil {
-				return id
-			}
-		}
-	}
-
-	// category_idパラメータから取得（クエリパラメータ）
-	if categoryIDStr := c.QueryParam("category_id"); categoryIDStr != "" {
-		if id, err := strconv.ParseInt(categoryIDStr, 10, 64); err == nil {
-			return id
-		}
-	}
-
-	return 0
-}
-
-// extractPaginationInfo はページネーション情報を抽出
-func extractPaginationInfo(c echo.Context, span trace.Span) {
-	if pageStr := c.QueryParam("page"); pageStr != "" {
-		if page, err := strconv.Atoi(pageStr); err == nil {
-			span.SetAttributes(attribute.Int("app.request.page", page))
-		}
-	}
-
-	if pageSizeStr := c.QueryParam("page_size"); pageSizeStr != "" {
-		if pageSize, err := strconv.Atoi(pageSizeStr); err == nil {
-			span.SetAttributes(attribute.Int("app.request.page_size", pageSize))
-		}
-	}
-
-	if limitStr := c.QueryParam("limit"); limitStr != "" {
-		if limit, err := strconv.Atoi(limitStr); err == nil {
-			span.SetAttributes(attribute.Int("app.request.limit", limit))
-		}
-	}
-
-	if offsetStr := c.QueryParam("offset"); offsetStr != "" {
-		if offset, err := strconv.Atoi(offsetStr); err == nil {
-			span.SetAttributes(attribute.Int("app.request.offset", offset))
-		}
-	}
-}
-
-// extractSearchInfo は検索情報を抽出
-func extractSearchInfo(c echo.Context, span trace.Span) {
-	if keyword := c.QueryParam("keyword"); keyword != "" {
-		span.SetAttributes(
-			attribute.String("app.search.keyword", keyword),
-			attribute.Bool("app.search.enabled", true),
-		)
-	}
-
-	if sortBy := c.QueryParam("sort_by"); sortBy != "" {
-		span.SetAttributes(attribute.String("app.request.sort_by", sortBy))
-	}
-
-	if order := c.QueryParam("order"); order != "" {
-		span.SetAttributes(attribute.String("app.request.order", order))
-	}
 }
 
 // determineOperationType はHTTPメソッドとルートから操作タイプを判定
@@ -190,18 +157,53 @@ func determineOperationType(method, route string) string {
 	}
 }
 
-// determineDomain はルートからビジネスドメインを判定
-func determineDomain(route string) string {
-	switch {
-	case regexp.MustCompile(`/products`).MatchString(route):
-		return "product"
-	case regexp.MustCompile(`/categories`).MatchString(route):
-		return "category"
-	case regexp.MustCompile(`/inventory`).MatchString(route):
-		return "inventory"
-	case regexp.MustCompile(`/health`).MatchString(route):
-		return "system"
-	default:
-		return "unknown"
+// extractPaginationInfo はページネーション情報を抽出
+func extractPaginationInfo(c echo.Context) PaginationInfo {
+	info := PaginationInfo{}
+
+	if pageStr := c.QueryParam("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil {
+			info.Page = &page
+		}
 	}
+
+	if pageSizeStr := c.QueryParam("page_size"); pageSizeStr != "" {
+		if pageSize, err := strconv.Atoi(pageSizeStr); err == nil {
+			info.PageSize = &pageSize
+		}
+	}
+
+	if limitStr := c.QueryParam("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil {
+			info.Limit = &limit
+		}
+	}
+
+	if offsetStr := c.QueryParam("offset"); offsetStr != "" {
+		if offset, err := strconv.Atoi(offsetStr); err == nil {
+			info.Offset = &offset
+		}
+	}
+
+	return info
+}
+
+// extractSearchInfo は検索情報を抽出
+func extractSearchInfo(c echo.Context) SearchInfo {
+	info := SearchInfo{}
+
+	if keyword := c.QueryParam("keyword"); keyword != "" {
+		info.Keyword = &keyword
+		info.SearchEnabled = true
+	}
+
+	if sortBy := c.QueryParam("sort_by"); sortBy != "" {
+		info.SortBy = &sortBy
+	}
+
+	if order := c.QueryParam("order"); order != "" {
+		info.Order = &order
+	}
+
+	return info
 }

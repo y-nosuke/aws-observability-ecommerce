@@ -52,15 +52,21 @@ limits_config:
   otlp_config:
     resource_attributes:
       attributes_config:
+        # システム属性をラベルとして索引化
         - action: index_label
           attributes:
             - service.name
             - service.version
             - deployment.environment
+            - environment
+        # トレース情報を構造化メタデータとして保存
         - action: structured_metadata
           attributes:
-            - tracer.trace_id
-            - tracer.span_id
+            - trace_id
+            - span_id
+        # 全ての残りの属性を構造化メタデータとして保存
+        - action: structured_metadata
+          regex: ".*" # 全ての属性をキャッチ
 
 table_manager:
   retention_deletes_enabled: true

@@ -81,7 +81,7 @@ func (m *ProductCatalogMapper) toProductItem(p *models.Product) openapi.Product 
 	sku := p.Sku
 
 	return openapi.Product{
-		Id:            int64(p.ID),
+		Id:            p.ID,
 		Name:          p.Name,
 		Description:   description,
 		Sku:           &sku,
@@ -90,7 +90,7 @@ func (m *ProductCatalogMapper) toProductItem(p *models.Product) openapi.Product 
 		ImageUrl:      imageURL,
 		InStock:       inStock,
 		StockQuantity: quantity,
-		CategoryId:    int64(p.CategoryID),
+		CategoryId:    p.CategoryID,
 		CategoryName:  categoryName,
 		IsNew:         &isNew,
 		IsFeatured:    &isFeatured,

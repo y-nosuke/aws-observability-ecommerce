@@ -39,11 +39,17 @@ func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
 func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
 	// Handler トレーサーを開始
-	handler := observability.StartHandler(c.Request().Context(), "health_check")
+	handler := observability.StartHandler(
+		c.Request().Context(),
+		"health_check",
+		c.Request().Method,
+		c.Request().URL.Path,
+		http.StatusOK,
+		c.Request().UserAgent(),
+		c.RealIP(),
+		c.Request().ContentLength,
+	)
 	defer handler.FinishWithHTTPStatus(http.StatusOK)
-
-	// HTTPリクエスト情報を記録
-	handler.RecordHTTPRequest(c.Request().Method, c.Request().URL.Path, http.StatusOK)
 
 	ctx, cancel := context.WithTimeout(handler.Context(), 5*time.Second)
 	defer cancel()

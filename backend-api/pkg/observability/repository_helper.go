@@ -6,60 +6,23 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
 // RepositoryHelper は Repository 層でのトレース処理を簡素化するヘルパー
 type RepositoryHelper struct {
-	ctx          context.Context
-	span         trace.Span
-	operationLog func(success bool, args ...any)
+	BaseObservabilityHelper // 共通機能を埋め込み
 }
 
 // StartRepository は Repository のトレースを開始
 func StartRepository(ctx context.Context, operationName string) *RepositoryHelper {
-	// contextからdomainを自動取得
-	domain := GetDomainFromContext(ctx)
+	helper := &RepositoryHelper{}
 
-	// 既存のStartRepository関数を使用
-	spanCtx, span := tracer.StartRepository(ctx, operationName, domain)
+	// span作成から初期化まで一貫実行
+	helper.initializeWithSpan(ctx, operationName, "repository")
 
-	// contextからentityIDを自動取得
-	if id := GetEntityIDFromContext(ctx); id != nil {
-		switch v := id.(type) {
-		case int64:
-			span.SetAttributes(attribute.Int64("app.entity_id", v))
-		case int:
-			span.SetAttributes(attribute.Int64("app.entity_id", int64(v)))
-		case string:
-			span.SetAttributes(attribute.String("app.entity_id", v))
-		}
-	}
-
-	// 操作ログを開始
-	operationLog := logger.StartOperation(spanCtx, operationName,
-		"layer", "repository",
-		"domain", domain,
-	)
-
-	return &RepositoryHelper{
-		ctx:          spanCtx,
-		span:         span,
-		operationLog: operationLog,
-	}
-}
-
-// Context は現在のコンテキストを返す
-func (r *RepositoryHelper) Context() context.Context {
-	return r.ctx
-}
-
-// SetAttributes はスパンに属性を設定
-func (r *RepositoryHelper) SetAttributes(attrs ...attribute.KeyValue) {
-	r.span.SetAttributes(attrs...)
+	return helper
 }
 
 // RecordDatabaseOperation はデータベース操作情報を記録
@@ -81,7 +44,13 @@ func (r *RepositoryHelper) RecordQuery(operation string, affectedRows int64) {
 
 // AddDatabaseStep はデータベース操作ステップを記録
 func (r *RepositoryHelper) AddDatabaseStep(stepName, tableName string, fn func(context.Context) error) error {
-	stepCtx, stepSpan := tracer.StartDatabase(r.ctx, stepName, tableName)
+	// DB固有の追加属性を準備
+	dbAttrs := []attribute.KeyValue{
+		attribute.String("db.table", tableName),
+	}
+
+	// サブspanを作成
+	stepCtx, stepSpan := r.startSubSpan(stepName, "database", dbAttrs...)
 	defer stepSpan.End()
 
 	err := fn(stepCtx)
@@ -96,26 +65,6 @@ func (r *RepositoryHelper) AddDatabaseStep(stepName, tableName string, fn func(c
 	}
 
 	return err
-}
-
-// LogInfo は情報ログを記録
-func (r *RepositoryHelper) LogInfo(message string, args ...any) {
-	logger.Info(r.ctx, message, args...)
-}
-
-// LogError はエラーログを記録し、スパンにエラー情報を設定
-func (r *RepositoryHelper) LogError(message string, err error, args ...any) {
-	// エラーログを記録
-	allArgs := append([]any{"layer", "repository"}, args...)
-	logger.WithError(r.ctx, message, err, allArgs...)
-
-	// スパンにエラー情報を記録
-	r.span.RecordError(err)
-	r.span.SetStatus(codes.Error, err.Error())
-	r.span.SetAttributes(
-		attribute.Bool("error", true),
-		attribute.String("error.type", "repository_error"),
-	)
 }
 
 // RecordConstraintError は制約エラーを記録
@@ -153,29 +102,6 @@ func (r *RepositoryHelper) RecordNotFoundError(entityType string, searchCriteria
 		attribute.String("db.search_entity", entityType),
 		attribute.String("db.search_criteria", fmt.Sprintf("%v", searchCriteria)),
 	)
-}
-
-// Finish は Repository の処理を完了
-func (r *RepositoryHelper) Finish(success bool, args ...any) {
-	defer r.span.End()
-
-	// 成功/失敗をスパンに記録
-	r.span.SetAttributes(attribute.Bool("app.success", success))
-
-	// 操作ログを完了
-	r.operationLog(success, args...)
-}
-
-// FinishWithError はエラーで Repository の処理を完了
-func (r *RepositoryHelper) FinishWithError(err error, message string, args ...any) {
-	defer r.span.End()
-
-	// エラーログとスパン情報を記録
-	r.LogError(message, err, args...)
-
-	// 操作ログを失敗で完了
-	errorArgs := append([]any{"error_type", "repository_failure"}, args...)
-	r.operationLog(false, errorArgs...)
 }
 
 // FinishWithRecordCount は処理したレコード数と共に完了

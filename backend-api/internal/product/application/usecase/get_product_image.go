@@ -6,7 +6,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // GetProductImageUseCase は商品画像取得のユースケース
@@ -26,7 +26,7 @@ func NewGetProductImageUseCase(
 // Execute は商品画像取得を実行する
 func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int64, size string) (*dto.GetImageResponse, error) {
 	// UseCase トレーサーを開始
-	tracer := tracer.NewUseCaseTracer(ctx, "get_product_image", "product", productID)
+	tracer := observability.StartUseCase(ctx, "get_product_image")
 	defer tracer.Finish(true)
 
 	// 画像データを取得

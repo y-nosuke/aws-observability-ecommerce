@@ -46,7 +46,7 @@ func SetGlobalTracer(tracer Tracer) {
 func getGlobalTracer() Tracer {
 	if globalTracer == nil {
 		// フォールバック：デフォルトのOTelトレーサー
-		return &fallbackTracer{tracer: otel.Tracer("aws-observability-ecommerce")}
+		return &fallbackTracer{tracer: otel.Tracer("github.com/y-nosuke/aws-observability-ecommerce/backend-api")}
 	}
 	return globalTracer
 }

@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"regexp"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -32,12 +34,20 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 
 // extractBusinessContext はルートからビジネスコンテキストを抽出
 func extractBusinessContext(c echo.Context, span trace.Span, route string) {
+	ctx := c.Request().Context()
+
 	// Product関連のパラメータ抽出
 	if productID := extractProductID(c, route); productID > 0 {
 		span.SetAttributes(
 			attribute.Int64("app.product_id", productID),
 			attribute.String("app.entity_type", "product"),
 		)
+
+		ctx = context.WithValue(ctx, observability.EntityIDKey, productID)
+		ctx = context.WithValue(ctx, observability.EntityTypeKey, "product")
+		ctx = context.WithValue(ctx, observability.BusinessDomainKey, "product")
+
+		c.SetRequest(c.Request().WithContext(ctx))
 	}
 
 	// Category関連のパラメータ抽出
@@ -46,6 +56,12 @@ func extractBusinessContext(c echo.Context, span trace.Span, route string) {
 			attribute.Int64("app.category_id", categoryID),
 			attribute.String("app.entity_type", "category"),
 		)
+
+		ctx = context.WithValue(ctx, observability.EntityIDKey, categoryID)
+		ctx = context.WithValue(ctx, observability.EntityTypeKey, "category")
+		ctx = context.WithValue(ctx, observability.BusinessDomainKey, "category")
+
+		c.SetRequest(c.Request().WithContext(ctx))
 	}
 
 	// ページネーション情報の抽出

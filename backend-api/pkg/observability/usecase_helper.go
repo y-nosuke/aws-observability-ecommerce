@@ -1,4 +1,4 @@
-package tracer
+package observability
 
 import (
 	"context"
@@ -9,23 +9,27 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
 )
 
-// UseCaseTracer は UseCase 層でのトレース処理を簡素化するヘルパー
-type UseCaseTracer struct {
+// UseCaseHelper は UseCase 層でのトレース処理を簡素化するヘルパー
+type UseCaseHelper struct {
 	ctx          context.Context
 	span         trace.Span
-	operationLog func(success bool, args ...interface{})
+	operationLog func(success bool, args ...any)
 }
 
-// NewUseCaseTracer は UseCase のトレースを開始
-func NewUseCaseTracer(ctx context.Context, operationName, domain string, entityID interface{}) *UseCaseTracer {
-	// 既存のStartUseCase関数を使用
-	spanCtx, span := StartUseCase(ctx, operationName, domain)
+// StartUseCase は UseCase のトレースを開始
+func StartUseCase(ctx context.Context, operationName string) *UseCaseHelper {
+	// contextからdomainを自動取得
+	domain := GetDomainFromContext(ctx)
 
-	// EntityIDが提供されている場合は属性として記録
-	if entityID != nil {
-		switch v := entityID.(type) {
+	// 既存のStartUseCase関数を使用
+	spanCtx, span := tracer.StartUseCase(ctx, operationName, domain)
+
+	// contextからentityIDを自動取得
+	if id := GetEntityIDFromContext(ctx); id != nil {
+		switch v := id.(type) {
 		case int64:
 			span.SetAttributes(attribute.Int64("app.entity_id", v))
 		case int:
@@ -41,7 +45,7 @@ func NewUseCaseTracer(ctx context.Context, operationName, domain string, entityI
 		"domain", domain,
 	)
 
-	return &UseCaseTracer{
+	return &UseCaseHelper{
 		ctx:          spanCtx,
 		span:         span,
 		operationLog: operationLog,
@@ -49,18 +53,18 @@ func NewUseCaseTracer(ctx context.Context, operationName, domain string, entityI
 }
 
 // Context は現在のコンテキストを返す
-func (u *UseCaseTracer) Context() context.Context {
+func (u *UseCaseHelper) Context() context.Context {
 	return u.ctx
 }
 
 // SetAttributes はスパンに属性を設定
-func (u *UseCaseTracer) SetAttributes(attrs ...attribute.KeyValue) {
+func (u *UseCaseHelper) SetAttributes(attrs ...attribute.KeyValue) {
 	u.span.SetAttributes(attrs...)
 }
 
 // AddStep は処理ステップを記録
-func (u *UseCaseTracer) AddStep(stepName string, fn func(context.Context) error) error {
-	stepCtx, stepSpan := Start(u.ctx, fmt.Sprintf("usecase.%s", stepName))
+func (u *UseCaseHelper) AddStep(stepName string, fn func(context.Context) error) error {
+	stepCtx, stepSpan := tracer.Start(u.ctx, fmt.Sprintf("usecase.%s", stepName))
 	defer stepSpan.End()
 
 	err := fn(stepCtx)
@@ -77,14 +81,14 @@ func (u *UseCaseTracer) AddStep(stepName string, fn func(context.Context) error)
 }
 
 // LogInfo は情報ログを記録
-func (u *UseCaseTracer) LogInfo(message string, args ...interface{}) {
+func (u *UseCaseHelper) LogInfo(message string, args ...any) {
 	logger.Info(u.ctx, message, args...)
 }
 
 // LogError はエラーログを記録し、スパンにエラー情報を設定
-func (u *UseCaseTracer) LogError(message string, err error, args ...interface{}) {
+func (u *UseCaseHelper) LogError(message string, err error, args ...any) {
 	// エラーログを記録
-	allArgs := append([]interface{}{"layer", "usecase"}, args...)
+	allArgs := append([]any{"layer", "usecase"}, args...)
 	logger.WithError(u.ctx, message, err, allArgs...)
 
 	// スパンにエラー情報を記録
@@ -97,7 +101,7 @@ func (u *UseCaseTracer) LogError(message string, err error, args ...interface{})
 }
 
 // Finish は UseCase の処理を完了し、ログとスパンを閉じる
-func (u *UseCaseTracer) Finish(success bool, args ...interface{}) {
+func (u *UseCaseHelper) Finish(success bool, args ...any) {
 	defer u.span.End()
 
 	// 成功/失敗をスパンに記録
@@ -108,19 +112,19 @@ func (u *UseCaseTracer) Finish(success bool, args ...interface{}) {
 }
 
 // FinishWithError はエラーで UseCase の処理を完了
-func (u *UseCaseTracer) FinishWithError(err error, message string, args ...interface{}) {
+func (u *UseCaseHelper) FinishWithError(err error, message string, args ...any) {
 	defer u.span.End()
 
 	// エラーログとスパン情報を記録
 	u.LogError(message, err, args...)
 
 	// 操作ログを失敗で完了
-	errorArgs := append([]interface{}{"error_type", "usecase_failure"}, args...)
+	errorArgs := append([]any{"error_type", "usecase_failure"}, args...)
 	u.operationLog(false, errorArgs...)
 }
 
 // ValidationError はバリデーションエラーを記録
-func (u *UseCaseTracer) ValidationError(message string, field string, value interface{}) error {
+func (u *UseCaseHelper) ValidationError(message string, field string, value any) error {
 	err := fmt.Errorf("validation error: %s", message)
 
 	// エラーログを記録
@@ -145,7 +149,7 @@ func (u *UseCaseTracer) ValidationError(message string, field string, value inte
 }
 
 // BusinessEvent はビジネスイベントを記録
-func (u *UseCaseTracer) BusinessEvent(eventName, entityType, entityID string, args ...interface{}) {
+func (u *UseCaseHelper) BusinessEvent(eventName, entityType, entityID string, args ...any) {
 	logger.LogBusinessEvent(u.ctx, eventName, entityType, entityID, args...)
 	u.span.SetAttributes(
 		attribute.String("app.business_event", eventName),

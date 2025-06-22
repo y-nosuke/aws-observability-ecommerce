@@ -10,7 +10,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/tracer"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // UploadProductImageUseCase は商品画像アップロードのユースケース
@@ -28,7 +28,7 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 // Execute は商品画像アップロードを実行する
 func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
 	// UseCase トレーサーを開始
-	useCaseTracer := tracer.NewUseCaseTracer(ctx, "upload_product_image", "product", req.ProductID)
+	useCaseTracer := observability.StartUseCase(ctx, "upload_product_image")
 	defer useCaseTracer.Finish(true)
 
 	// ファイル拡張子の検証

@@ -15,6 +15,7 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体
@@ -37,13 +38,25 @@ func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler 
 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
 func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	// Handler トレーサーを開始
+	handler := observability.StartHandler(c.Request().Context(), "health_check")
+	defer handler.FinishWithHTTPStatus(http.StatusOK)
+
+	// HTTPリクエスト情報を記録
+	handler.RecordHTTPRequest(c.Request().Method, c.Request().URL.Path, http.StatusOK)
+
+	ctx, cancel := context.WithTimeout(handler.Context(), 5*time.Second)
 	defer cancel()
 
 	var checks []string
 	if params.Checks != nil {
 		checks = strings.Split(*params.Checks, ",")
 	}
+
+	handler.LogInfo("Health check requested",
+		"checks", checks,
+		"uptime_ms", time.Since(h.startTime).Milliseconds(),
+	)
 
 	response := &openapi.HealthResponse{
 		Status:     "ok",
@@ -53,6 +66,11 @@ func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckPa
 		Resources:  h.createResources(),
 		Components: h.createComponents(ctx, checks),
 	}
+
+	handler.LogInfo("Health check completed",
+		"status", response.Status,
+		"components_checked", len(response.Components),
+	)
 
 	return c.JSON(http.StatusOK, response)
 }

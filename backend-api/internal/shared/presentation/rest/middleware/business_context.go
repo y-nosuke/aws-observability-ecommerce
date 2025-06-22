@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -47,7 +46,7 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 			// Business domain の判定
 			domain := determineDomain(route)
 			span.SetAttributes(attribute.String("app.business_domain", domain))
-			ctx = context.WithValue(ctx, observability.BusinessDomainKey, "product")
+			observability.SetDomainToContext(ctx, domain)
 
 			if id := extractID(c, domain); id > 0 {
 				span.SetAttributes(
@@ -56,8 +55,8 @@ func BusinessContextMiddleware() echo.MiddlewareFunc {
 					attribute.Int("app.entity_id", id),
 				)
 
-				ctx = context.WithValue(ctx, observability.EntityIDKey, id)
-				ctx = context.WithValue(ctx, observability.EntityTypeKey, domain)
+				observability.SetEntityIDToContext(ctx, id)
+				observability.SetEntityTypeToContext(ctx, domain)
 			}
 
 			c.SetRequest(c.Request().WithContext(ctx))

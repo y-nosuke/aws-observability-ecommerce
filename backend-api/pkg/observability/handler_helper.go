@@ -29,7 +29,9 @@ func StartHandler(ctx context.Context, operationName string, method, path string
 	spanCtx, span := tracer.StartHandler(ctx, operationName, domain)
 
 	// contextからentityIDを自動取得
-	span.SetAttributes(attribute.Int("app.entity_id", GetEntityIDFromContext(ctx)))
+	if id := GetEntityIDFromContext(ctx); id > 0 {
+		span.SetAttributes(attribute.Int("app.entity_id", id))
+	}
 
 	// HTTPリクエスト情報を記録
 	span.SetAttributes(

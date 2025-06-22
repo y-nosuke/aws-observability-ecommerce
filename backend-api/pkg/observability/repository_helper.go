@@ -28,7 +28,9 @@ func StartRepository(ctx context.Context, operationName string) *RepositoryHelpe
 	spanCtx, span := tracer.StartRepository(ctx, operationName, domain)
 
 	// contextからentityIDを自動取得
-	span.SetAttributes(attribute.Int("app.entity_id", GetEntityIDFromContext(ctx)))
+	if id := GetEntityIDFromContext(ctx); id > 0 {
+		span.SetAttributes(attribute.Int("app.entity_id", id))
+	}
 
 	// 操作ログを開始
 	operationLog := logger.StartOperation(spanCtx, operationName,

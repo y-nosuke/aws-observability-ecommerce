@@ -24,11 +24,11 @@ func GetDomainFromContext(ctx context.Context) string {
 }
 
 // GetEntityIDFromContext はcontextからエンティティIDを取得
-func GetEntityIDFromContext(ctx context.Context) any {
-	if entityID := ctx.Value(EntityIDKey); entityID != nil {
+func GetEntityIDFromContext(ctx context.Context) int {
+	if entityID, ok := ctx.Value(EntityIDKey).(int); ok {
 		return entityID
 	}
-	return nil
+	return 0
 }
 
 // GetEntityTypeFromContext はcontextからエンティティタイプを取得

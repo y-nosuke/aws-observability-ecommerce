@@ -28,16 +28,7 @@ func StartUseCase(ctx context.Context, operationName string) *UseCaseHelper {
 	spanCtx, span := tracer.StartUseCase(ctx, operationName, domain)
 
 	// contextからentityIDを自動取得
-	if id := GetEntityIDFromContext(ctx); id != nil {
-		switch v := id.(type) {
-		case int64:
-			span.SetAttributes(attribute.Int64("app.entity_id", v))
-		case int:
-			span.SetAttributes(attribute.Int64("app.entity_id", int64(v)))
-		case string:
-			span.SetAttributes(attribute.String("app.entity_id", v))
-		}
-	}
+	span.SetAttributes(attribute.Int("app.entity_id", GetEntityIDFromContext(ctx)))
 
 	// 操作ログを開始
 	operationLog := logger.StartOperation(spanCtx, operationName,

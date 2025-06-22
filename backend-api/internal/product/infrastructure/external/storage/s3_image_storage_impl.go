@@ -26,7 +26,7 @@ func NewS3ImageStorageImpl(s3Wrapper *aws.S3ClientWrapper) service.ImageStorage 
 }
 
 // UploadImage は商品画像をS3にアップロードし、S3キーとURLマップを返却する
-func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int64, fileExt string, imageData []byte) (string, map[string]string, error) {
+func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int, fileExt string, imageData []byte) (string, map[string]string, error) {
 	// Repository トレーサーを開始
 	repo := observability.StartRepository(ctx, "upload_image")
 	defer repo.Finish(false)
@@ -94,7 +94,7 @@ func (s *S3ImageStorageImpl) buildImageURLs(s3Key, fileExt string) map[string]st
 }
 
 // GetImageData は指定されたサイズの画像データを取得する
-func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int64, size string) ([]byte, string, error) {
+func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int, size string) ([]byte, string, error) {
 	// Repository トレーサーを開始
 	repo := observability.StartRepository(ctx, "get_image_data")
 	defer repo.Finish(false)

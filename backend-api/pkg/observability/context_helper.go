@@ -2,8 +2,6 @@ package observability
 
 import (
 	"context"
-
-	"go.opentelemetry.io/otel/trace"
 )
 
 // contextKey はコンテキストキーの型
@@ -20,13 +18,6 @@ const (
 func GetDomainFromContext(ctx context.Context) string {
 	if domain, ok := ctx.Value(BusinessDomainKey).(string); ok && domain != "" {
 		return domain
-	}
-
-	// フォールバック：スパンから推測
-	span := trace.SpanFromContext(ctx)
-	if span.IsRecording() {
-		// 実際の実装では、スパン名やその他の属性から推測可能
-		// ここでは簡単な実装として"unknown"を返す
 	}
 
 	return "unknown"

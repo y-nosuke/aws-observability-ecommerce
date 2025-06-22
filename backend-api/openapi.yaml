@@ -324,7 +324,7 @@ components:
       description: カテゴリIDによる商品フィルタリング
       schema:
         type: integer
-        format: int64
+        format: int
 
     ProductIdParam:
       name: id
@@ -333,7 +333,7 @@ components:
       required: true
       schema:
         type: integer
-        format: int64
+        format: int
 
     CategoryIdPathParam:
       name: id
@@ -342,7 +342,7 @@ components:
       required: true
       schema:
         type: integer
-        format: int64
+        format: int
 
     KeywordParam:
       name: keyword
@@ -364,7 +364,7 @@ components:
       properties:
         id:
           type: integer
-          format: int64
+          format: int
           description: 商品の一意識別子
         name:
           type: string
@@ -394,7 +394,7 @@ components:
           description: 在庫数
         categoryId:
           type: integer
-          format: int64
+          format: int
           description: カテゴリー識別子
         categoryName:
           type: string
@@ -450,7 +450,7 @@ components:
       properties:
         id:
           type: integer
-          format: int64
+          format: int
           description: カテゴリーの一意識別子
         name:
           type: string
@@ -468,7 +468,7 @@ components:
           description: カテゴリー画像のURL
         parentId:
           type: integer
-          format: int64
+          format: int
           nullable: true
           description: 親カテゴリーのID（階層構造用）
         productCount:

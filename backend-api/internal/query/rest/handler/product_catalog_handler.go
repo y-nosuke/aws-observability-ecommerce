@@ -46,7 +46,7 @@ func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.Li
 		readerParams.PageSize = *params.PageSize
 	}
 	if params.CategoryId != nil {
-		categoryID := int(*params.CategoryId)
+		categoryID := *params.CategoryId
 		readerParams.CategoryID = &categoryID
 	}
 	if params.Keyword != nil && *params.Keyword != "" {
@@ -99,7 +99,7 @@ func (h *ProductCatalogHandler) ListProductsByCategory(ctx echo.Context, id open
 		readerParams.PageSize = *params.PageSize
 	}
 
-	categoryID := int(id)
+	categoryID := id
 	readerParams.CategoryID = &categoryID
 
 	handler.LogInfo("Products by category request received",

@@ -22,9 +22,9 @@ func (m *CategoryListMapper) ToCategoryListResponse(categories []*reader.Categor
 		productCount := int(c.ProductCount)
 
 		// 親カテゴリIDの処理
-		var parentId *int64
+		var parentId *int
 		if c.Category.ParentID.Valid {
-			id := int64(c.Category.ParentID.Int)
+			id := c.Category.ParentID.Int
 			parentId = &id
 		}
 
@@ -40,7 +40,7 @@ func (m *CategoryListMapper) ToCategoryListResponse(categories []*reader.Categor
 		}
 
 		items = append(items, openapi.Category{
-			Id:           int64(c.Category.ID),
+			Id:           c.Category.ID,
 			Name:         c.Category.Name,
 			Slug:         c.Category.Slug,
 			Description:  description,

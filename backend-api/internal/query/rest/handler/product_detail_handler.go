@@ -51,7 +51,7 @@ func (h *ProductDetailHandler) GetProductById(ctx echo.Context, id openapi.Produ
 	)
 
 	// 商品詳細取得
-	product, err := h.reader.FindProductByID(handler.Context(), int(id))
+	product, err := h.reader.FindProductByID(handler.Context(), id)
 	if err != nil {
 		// 商品が見つからない場合と内部エラーを区別
 		if isNotFoundError(err) {
@@ -60,7 +60,7 @@ func (h *ProductDetailHandler) GetProductById(ctx echo.Context, id openapi.Produ
 				"error", err.Error(),
 			)
 			handler.FinishWithHTTPStatus(http.StatusNotFound, "not_found")
-			errorResponse := h.mapper.PresentProductNotFound("Product not found", int(id))
+			errorResponse := h.mapper.PresentProductNotFound("Product not found", id)
 			return ctx.JSON(http.StatusNotFound, errorResponse)
 		}
 

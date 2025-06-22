@@ -6,9 +6,10 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // BusinessContextMiddleware はビジネスコンテキスト情報を自動抽出するミドルウェア

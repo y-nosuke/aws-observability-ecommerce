@@ -24,7 +24,7 @@ func NewGetProductImageUseCase(
 }
 
 // Execute は商品画像取得を実行する
-func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int64, size string) (*dto.GetImageResponse, error) {
+func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int, size string) (*dto.GetImageResponse, error) {
 	// UseCase トレーサーを開始
 	tracer := observability.StartUseCase(ctx, "get_product_image")
 	defer tracer.Finish(true)

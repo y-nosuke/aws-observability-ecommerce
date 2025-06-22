@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -120,7 +121,7 @@ func (h *HandlerHelper) RecordValidationError(err error, field string, value any
 		attribute.Bool("error", true),
 		attribute.String("error.type", "validation_error"),
 		attribute.String("validation.field", field),
-		attribute.String("validation.value", string(rune(value.(int)))),
+		attribute.String("validation.value", fmt.Sprintf("%v", value)),
 	)
 }
 

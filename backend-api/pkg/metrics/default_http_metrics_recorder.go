@@ -3,15 +3,14 @@ package metrics
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
-// DefaultHTTPMetrics はHTTPリクエストのメトリクスを管理する構造体
-type DefaultHTTPMetrics struct {
+// DefaultHTTPMetricsRecorder はHTTPリクエストのメトリクスを管理する構造体
+type DefaultHTTPMetricsRecorder struct {
 	requestsTotal     metric.Int64Counter
 	errorsTotal       metric.Int64Counter
 	requestDuration   metric.Float64Histogram
@@ -19,8 +18,8 @@ type DefaultHTTPMetrics struct {
 	responseSizeBytes metric.Int64Histogram
 }
 
-// NewHTTPMetrics はHTTPMetricsの新しいインスタンスを作成します
-func NewHTTPMetrics(meter metric.Meter) (HTTPMetricsRecorder, error) {
+// NewDefaultHTTPMetricsRecorder はHTTPMetricsの新しいインスタンスを作成します
+func NewDefaultHTTPMetricsRecorder(meter metric.Meter) (*DefaultHTTPMetricsRecorder, error) {
 	// HTTP リクエスト総数カウンター
 	requestsTotal, err := meter.Int64Counter(
 		"http_requests_total",
@@ -74,7 +73,7 @@ func NewHTTPMetrics(meter metric.Meter) (HTTPMetricsRecorder, error) {
 		return nil, fmt.Errorf("failed to create http_response_size_bytes histogram: %w", err)
 	}
 
-	return &DefaultHTTPMetrics{
+	return &DefaultHTTPMetricsRecorder{
 		requestsTotal:     requestsTotal,
 		errorsTotal:       errorsTotal,
 		requestDuration:   requestDuration,
@@ -84,7 +83,7 @@ func NewHTTPMetrics(meter metric.Meter) (HTTPMetricsRecorder, error) {
 }
 
 // RecordRequest はHTTPリクエストのメトリクスを記録します
-func (m *DefaultHTTPMetrics) RecordRequest(method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
+func (m *DefaultHTTPMetricsRecorder) RecordRequest(method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
 	// 共通のラベル属性
 	commonAttrs := []attribute.KeyValue{
 		attribute.String("http.method", method),
@@ -141,12 +140,58 @@ func (m *DefaultHTTPMetrics) RecordRequest(method, route string, statusCode int,
 }
 
 // RecordRequestWithContext はコンテキスト付きでHTTPリクエストのメトリクスを記録します
-func (m *DefaultHTTPMetrics) RecordRequestWithContext(method, route, statusCode string, duration time.Duration, requestSize, responseSize int64) {
-	// ステータスコードを整数に変換
-	code, err := strconv.Atoi(statusCode)
-	if err != nil {
-		code = 0 // パースできない場合は0
+func (m *DefaultHTTPMetricsRecorder) RecordRequestWithContext(ctx context.Context, method, route string, statusCode int, duration time.Duration, requestSize, responseSize int64) {
+	// 共通のラベル属性
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("http.method", method),
+		attribute.String("http.route", route),
+		attribute.Int("http.status_code", statusCode),
 	}
 
-	m.RecordRequest(method, route, code, duration, requestSize, responseSize)
+	// リクエスト総数を記録
+	m.requestsTotal.Add(ctx, 1, metric.WithAttributes(commonAttrs...))
+
+	// エラーの場合はエラーカウンターも増加
+	if statusCode >= 400 {
+		errorType := "client_error"
+		if statusCode >= 500 {
+			errorType = "server_error"
+		}
+
+		errorAttrs := append(commonAttrs, attribute.String("error.type", errorType))
+		m.errorsTotal.Add(
+			ctx,
+			1,
+			metric.WithAttributes(errorAttrs...),
+		)
+	}
+
+	// 処理時間を記録（レスポンス時間はステータスコードを含まない）
+	durationAttrs := []attribute.KeyValue{
+		attribute.String("http.method", method),
+		attribute.String("http.route", route),
+	}
+	m.requestDuration.Record(
+		ctx,
+		duration.Seconds(),
+		metric.WithAttributes(durationAttrs...),
+	)
+
+	// リクエストサイズを記録
+	if requestSize > 0 {
+		m.requestSizeBytes.Record(
+			ctx,
+			requestSize,
+			metric.WithAttributes(durationAttrs...),
+		)
+	}
+
+	// レスポンスサイズを記録
+	if responseSize > 0 {
+		m.responseSizeBytes.Record(
+			ctx,
+			responseSize,
+			metric.WithAttributes(durationAttrs...),
+		)
+	}
 }

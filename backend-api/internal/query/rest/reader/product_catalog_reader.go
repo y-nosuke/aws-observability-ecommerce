@@ -6,12 +6,9 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // ProductCatalogReader は商品カタログデータの読み取りを担当
@@ -36,16 +33,9 @@ type ProductListParams struct {
 
 // FindProductsWithDetails は商品一覧を詳細情報付きで取得
 func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, params *ProductListParams) ([]*models.Product, int64, error) {
-	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	ctx, span := tracer.Start(ctx, "reader.find_products_with_details", trace.WithAttributes(
-		attribute.String("app.layer", "reader"),
-		attribute.String("app.domain", "product_catalog"),
-		attribute.String("app.operation", "find_products_with_details"),
-		attribute.Int("app.page", params.Page),
-		attribute.Int("app.page_size", params.PageSize),
-	))
-	defer span.End()
+	// Repository トレーサーを開始
+	repo := observability.StartRepository(ctx, "find_products_with_details")
+	defer repo.Finish(false)
 
 	// ページネーション設定
 	if params.Page < 1 {
@@ -60,13 +50,13 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 
 	offset := (params.Page - 1) * params.PageSize
 
-	// フィルタ条件をスパンに記録
-	if params.CategoryID != nil {
-		span.SetAttributes(attribute.Int("app.filter.category_id", *params.CategoryID))
-	}
-	if params.Keyword != nil && *params.Keyword != "" {
-		span.SetAttributes(attribute.String("app.filter.keyword", *params.Keyword))
-	}
+	repo.LogInfo("Starting product catalog query",
+		"page", params.Page,
+		"page_size", params.PageSize,
+		"offset", offset,
+		"category_id", params.CategoryID,
+		"keyword", params.Keyword,
+	)
 
 	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
@@ -95,50 +85,47 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 		countMods = append(countMods, qm.Where("name LIKE ? OR description LIKE ?", "%"+*params.Keyword+"%", "%"+*params.Keyword+"%"))
 	}
 
-	// 子スパンでカウント処理
-	countCtx, countSpan := tracer.Start(ctx, "reader.count_products", trace.WithAttributes(
-		attribute.String("app.operation", "count_products"),
-	))
-	total, err := models.Products(countMods...).Count(countCtx, r.db)
+	var total int64
+	var products []*models.Product
+
+	// 総数取得
+	err := repo.AddDatabaseStep("count_products", "products", func(stepCtx context.Context) error {
+		var countErr error
+		total, countErr = models.Products(countMods...).Count(stepCtx, r.db)
+		return countErr
+	})
+
 	if err != nil {
-		countSpan.RecordError(err)
-		countSpan.SetStatus(codes.Error, err.Error())
-		countSpan.End()
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		repo.FinishWithError(err, "Failed to count products")
 		return nil, 0, fmt.Errorf("failed to count products: %w", err)
 	}
-	countSpan.SetAttributes(attribute.Int64("app.total_count", total))
-	countSpan.End()
+
+	repo.RecordDatabaseOperation("products", "COUNT", int(total))
 
 	// ページネーションを追加
 	mods = append(mods, qm.Limit(params.PageSize), qm.Offset(offset))
 
-	// 子スパンで商品取得処理
-	queryCtx, querySpan := tracer.Start(ctx, "reader.query_products", trace.WithAttributes(
-		attribute.String("app.operation", "query_products"),
-		attribute.Int("app.limit", params.PageSize),
-		attribute.Int("app.offset", offset),
-	))
-	products, err := models.Products(mods...).All(queryCtx, r.db)
+	// 商品一覧取得
+	err = repo.AddDatabaseStep("fetch_products", "products", func(stepCtx context.Context) error {
+		var fetchErr error
+		products, fetchErr = models.Products(mods...).All(stepCtx, r.db)
+		return fetchErr
+	})
+
 	if err != nil {
-		querySpan.RecordError(err)
-		querySpan.SetStatus(codes.Error, err.Error())
-		querySpan.End()
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		repo.FinishWithError(err, "Failed to fetch products")
 		return nil, 0, fmt.Errorf("failed to fetch products: %w", err)
 	}
-	querySpan.SetAttributes(attribute.Int("app.products_found", len(products)))
-	querySpan.End()
 
-	// 成功情報をスパンに記録
-	span.SetAttributes(
-		attribute.Int("app.products_found", len(products)),
-		attribute.Int64("app.total_count", total),
-		attribute.Int("app.calculated_offset", offset),
-		attribute.Bool("app.has_more_pages", int64(offset+params.PageSize) < total),
+	repo.RecordDatabaseOperation("products", "SELECT", len(products))
+
+	repo.LogInfo("Product catalog query completed successfully",
+		"total_count", total,
+		"fetched_count", len(products),
+		"has_category_filter", params.CategoryID != nil,
+		"has_keyword_filter", params.Keyword != nil && *params.Keyword != "",
 	)
 
+	repo.FinishWithRecordCount(true, len(products), "total_available", total)
 	return products, total, nil
 }

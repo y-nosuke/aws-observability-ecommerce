@@ -14,7 +14,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/metrics"
 )
 
 func main() {
@@ -24,10 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// グローバルロガーの初期化（早期初期化でどこでも使用可能に）
-	logger.Init(config.Observability)
-
-	// DIコンテナの初期化（OpenTelemetryも含めて一括初期化）
+	// DIコンテナの初期化
 	ctx := context.Background()
 	container, err := di.InitializeAppContainer(
 		ctx,
@@ -39,6 +35,12 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to initialize DI container: %v\n", err)
 		os.Exit(1)
+	}
+
+	// グローバルオブザーバビリティの一括初期化
+	globalObservabilityInitializer := container.GetGlobalObservabilityInitializer()
+	if err := globalObservabilityInitializer.Initialize(config.Observability); err != nil {
+		log.Fatalf("Failed to initialize global observability: %v\n", err)
 	}
 
 	// アプリケーション終了時のクリーンアップを設定
@@ -57,20 +59,6 @@ func main() {
 		"opentelemetry_enabled", true,
 		"stage", "initialization",
 		"action", "start")
-
-	// グローバルHTTPメトリクスの初期化
-	if container.OTelManager != nil {
-		meter := container.OTelManager.GetMeter()
-		if err := metrics.Init(meter); err != nil {
-			logger.WithError(ctx, "HTTPメトリクスの初期化に失敗", err,
-				"operation", "init_http_metrics",
-				"severity", "medium",
-				"business_impact", "metrics_collection_disabled")
-			// メトリクス初期化失敗は致命的エラーではないため、アプリケーションは継続
-		} else {
-			logger.Info(ctx, "HTTPメトリクスを初期化しました")
-		}
-	}
 
 	// ルーターの初期化とセットアップ
 	r := router.NewRouter()

@@ -6,7 +6,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // GetProductImageUseCase は商品画像取得のユースケース
@@ -25,35 +25,31 @@ func NewGetProductImageUseCase(
 
 // Execute は商品画像取得を実行する
 func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int64, size string) (*dto.GetImageResponse, error) {
-	completeOp := logger.StartOperation(ctx, "get_product_image",
-		"product_id", productID,
-		"requested_size", size,
-		"layer", "usecase")
+	// UseCase トレーサーを開始
+	tracer := observability.StartUseCase(ctx, "get_product_image")
+	defer tracer.Finish(true)
 
 	// 画像データを取得
-	imageData, contentType, err := u.imageStorage.GetImageData(ctx, productID, size)
-	if err != nil {
-		logger.WithError(ctx, "画像データの取得に失敗", err,
-			"product_id", productID,
-			"requested_size", size,
-			"layer", "usecase",
-			"storage_operation", "get_image_data")
+	var imageData []byte
+	var contentType string
+	var err error
 
-		// 操作失敗を記録
-		completeOp(false, "error_type", "storage_failure")
+	err = tracer.AddStep("get_image_data", func(stepCtx context.Context) error {
+		imageData, contentType, err = u.imageStorage.GetImageData(stepCtx, productID, size)
+		return err
+	})
+
+	if err != nil {
+		tracer.FinishWithError(err, "画像データの取得に失敗", "requested_size", size)
 		return nil, fmt.Errorf("failed to get image data: %w", err)
 	}
 
-	logger.Info(ctx, "画像データを正常に取得",
+	tracer.LogInfo("画像データを正常に取得",
 		"product_id", productID,
 		"content_type", contentType,
 		"image_size_bytes", len(imageData),
-		"layer", "usecase")
-
-	// 操作成功を記録
-	completeOp(true,
-		"content_type", contentType,
-		"image_size_bytes", len(imageData))
+		"requested_size", size,
+	)
 
 	// レスポンスを構築
 	return dto.NewGetImageResponse(productID, imageData, contentType), nil

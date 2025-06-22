@@ -3,13 +3,14 @@ module github.com/y-nosuke/aws-observability-ecommerce/backend-api
 go 1.24.2
 
 require (
+	github.com/XSAM/otelsql v0.39.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.2
 	github.com/friendsofgo/errors v0.9.2
 	github.com/getkin/kin-openapi v0.131.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/labstack/echo/v4 v4.13.3
+	github.com/labstack/echo/v4 v4.13.4
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/viper v1.20.1
@@ -17,6 +18,7 @@ require (
 	github.com/volatiletech/sqlboiler/v4 v4.18.0
 	github.com/volatiletech/strmangle v0.0.8
 	go.opentelemetry.io/contrib/bridges/otelslog v0.5.0
+	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.61.0
 
 	// OpenTelemetry Core
 	go.opentelemetry.io/otel v1.36.0

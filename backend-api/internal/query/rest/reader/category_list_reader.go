@@ -6,12 +6,9 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	models "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // CategoryListReader はカテゴリー一覧データの読み取りを担当
@@ -34,74 +31,81 @@ type CategoryWithCount struct {
 
 // FindCategoriesWithProductCount はカテゴリー一覧を商品数付きで取得
 func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context) ([]*CategoryWithCount, error) {
-	// トレーシングスパンを開始
-	tracer := otel.Tracer("aws-observability-ecommerce")
-	ctx, span := tracer.Start(ctx, "reader.find_categories_with_product_count", trace.WithAttributes(
-		attribute.String("app.layer", "reader"),
-		attribute.String("app.domain", "category"),
-		attribute.String("app.operation", "find_categories_with_product_count"),
-	))
-	defer span.End()
+	// Repository トレーサーを開始
+	repo := observability.StartRepository(ctx, "find_categories_with_product_count")
+	defer repo.Finish(false)
+
+	repo.LogInfo("Starting category list with product count query")
 
 	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
 		qm.OrderBy("name ASC"),
 	}
 
-	// 子スパンでカテゴリー取得処理
-	categoriesCtx, categoriesSpan := tracer.Start(ctx, "reader.query_categories", trace.WithAttributes(
-		attribute.String("app.operation", "query_categories"),
-	))
-	categories, err := models.Categories(mods...).All(categoriesCtx, r.db)
+	var categories []*models.Category
+
+	// カテゴリー一覧を取得
+	err := repo.AddDatabaseStep("fetch_categories", "categories", func(stepCtx context.Context) error {
+		var fetchErr error
+		categories, fetchErr = models.Categories(mods...).All(stepCtx, r.db)
+		return fetchErr
+	})
+
 	if err != nil {
-		categoriesSpan.RecordError(err)
-		categoriesSpan.SetStatus(codes.Error, err.Error())
-		categoriesSpan.End()
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		repo.FinishWithError(err, "Failed to fetch categories")
 		return nil, fmt.Errorf("failed to fetch categories: %w", err)
 	}
-	categoriesSpan.SetAttributes(attribute.Int("app.categories_found", len(categories)))
-	categoriesSpan.End()
+
+	repo.RecordDatabaseOperation("categories", "SELECT", len(categories))
 
 	// 各カテゴリーの商品数を取得
 	result := make([]*CategoryWithCount, 0, len(categories))
-	for i, category := range categories {
-		// 子スパンで商品数カウント処理（カテゴリー毎）
-		countCtx, countSpan := tracer.Start(ctx, "reader.count_products_by_category", trace.WithAttributes(
-			attribute.String("app.operation", "count_products_by_category"),
-			attribute.Int("app.category_id", category.ID),
-			attribute.String("app.category_name", category.Name),
-			attribute.Int("app.category_index", i),
-		))
 
-		count, err := models.Products(
-			qm.Where("category_id = ?", category.ID),
-		).Count(countCtx, r.db)
+	repo.LogInfo("Starting product count queries for categories",
+		"category_count", len(categories),
+	)
+
+	for i, category := range categories {
+		var count int64
+
+		// 商品数をカウント
+		err := repo.AddDatabaseStep(fmt.Sprintf("count_products_category_%d", category.ID), "products", func(stepCtx context.Context) error {
+			var countErr error
+			count, countErr = models.Products(
+				qm.Where("category_id = ?", category.ID),
+			).Count(stepCtx, r.db)
+			return countErr
+		})
 
 		if err != nil {
-			countSpan.RecordError(err)
-			countSpan.SetStatus(codes.Error, err.Error())
-			countSpan.End()
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
+			repo.FinishWithError(err, "Failed to count products for category",
+				"category_id", category.ID,
+				"category_name", category.Name,
+			)
 			return nil, fmt.Errorf("failed to count products for category %d: %w", category.ID, err)
 		}
-
-		countSpan.SetAttributes(attribute.Int64("app.product_count", count))
-		countSpan.End()
 
 		result = append(result, &CategoryWithCount{
 			Category:     category,
 			ProductCount: count,
 		})
+
+		// 進捗ログ（多数のカテゴリがある場合の可視性向上）
+		if (i+1)%10 == 0 || i == len(categories)-1 {
+			repo.LogInfo("Category product count progress",
+				"completed", i+1,
+				"total", len(categories),
+			)
+		}
 	}
 
-	// 成功情報をスパンに記録
-	span.SetAttributes(
-		attribute.Int("app.categories_processed", len(categories)),
-		attribute.Int("app.total_results", len(result)),
+	repo.RecordDatabaseOperation("products", "COUNT", len(categories)) // カテゴリ数分のCOUNTクエリ
+
+	repo.LogInfo("Category list with product count query completed successfully",
+		"total_categories", len(categories),
+		"result_count", len(result),
 	)
 
+	repo.FinishWithRecordCount(true, len(result), "categories_processed", len(categories))
 	return result, nil
 }

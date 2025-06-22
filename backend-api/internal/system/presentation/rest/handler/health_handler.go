@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"runtime"
 	"strings"
@@ -15,6 +14,8 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体
@@ -37,19 +38,25 @@ func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler 
 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
 func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
-	log.Println("Health check request received",
-		"method", c.Request().Method,
-		"path", c.Path(),
-		"remote_ip", c.RealIP(),
-	)
+	// Handler トレーサーを開始
+	handler := observability.StartHandler(c.Request().Context(), "health_check")
+	defer handler.FinishWithHTTPStatus(http.StatusOK)
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	// HTTPリクエスト情報を記録
+	handler.RecordHTTPRequest(c.Request().Method, c.Request().URL.Path, http.StatusOK)
+
+	ctx, cancel := context.WithTimeout(handler.Context(), 5*time.Second)
 	defer cancel()
 
 	var checks []string
 	if params.Checks != nil {
 		checks = strings.Split(*params.Checks, ",")
 	}
+
+	handler.LogInfo("Health check requested",
+		"checks", checks,
+		"uptime_ms", time.Since(h.startTime).Milliseconds(),
+	)
 
 	response := &openapi.HealthResponse{
 		Status:     "ok",
@@ -60,9 +67,9 @@ func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckPa
 		Components: h.createComponents(ctx, checks),
 	}
 
-	log.Println("Health check completed",
+	handler.LogInfo("Health check completed",
 		"status", response.Status,
-		"uptime", response.Uptime,
+		"components_checked", len(response.Components),
 	)
 
 	return c.JSON(http.StatusOK, response)
@@ -98,7 +105,7 @@ func (h *HealthHandler) createComponents(ctx context.Context, checks []string) m
 				clientMsg = "unknown error"
 			}
 			components[n] = "ng: " + clientMsg
-			log.Println("[health]", n, "error:", e.Error())
+			logger.WithError(ctx, "ヘルスチェック失敗", e, "component", n, "layer", "health_check")
 		} else {
 			components[n] = "ok"
 		}

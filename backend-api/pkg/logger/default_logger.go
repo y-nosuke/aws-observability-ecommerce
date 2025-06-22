@@ -24,8 +24,8 @@ type contextKey string
 
 const RequestIDKey contextKey = "request_id"
 
-// NewLogger は新しいLoggerを作成
-func NewLogger(cfg config.ObservabilityConfig) Logger {
+// NewDefaultLogger は新しいLoggerを作成
+func NewDefaultLogger(cfg config.ObservabilityConfig) *DefaultLogger {
 	var handler slog.Handler
 
 	opts := &slog.HandlerOptions{
@@ -42,7 +42,7 @@ func NewLogger(cfg config.ObservabilityConfig) Logger {
 	// OpenTelemetry ブリッジを使用
 	if cfg.Logging.EnableOTel {
 		handler = slogmulti.Fanout(
-			otelslog.NewHandler("aws-observability-ecommerce"),
+			otelslog.NewHandler("github.com/y-nosuke/aws-observability-ecommerce/backend-api"),
 			handler,
 		)
 	}
@@ -95,7 +95,7 @@ func (l *DefaultLogger) logWithContext(ctx context.Context, level slog.Level, ms
 
 	// トレース情報を追加（コンテキストから自動取得）
 	if traceID := extractTraceID(ctx); traceID != "" {
-		attrs = append(attrs, slog.Group("trace",
+		attrs = append(attrs, slog.Group("tracer",
 			slog.String("id", traceID),
 		))
 	}
@@ -121,8 +121,6 @@ func (l *DefaultLogger) logWithContext(ctx context.Context, level slog.Level, ms
 
 // extractTraceID はコンテキストからトレースIDを取得（OpenTelemetry対応）
 func extractTraceID(ctx context.Context) string {
-	// TODO: OpenTelemetryのSpanからトレースIDを取得する実装を追加
-	// 現在は簡易実装
 	if traceID, ok := ctx.Value("trace_id").(string); ok {
 		return traceID
 	}

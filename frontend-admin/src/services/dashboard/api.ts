@@ -1,4 +1,10 @@
-import { DashboardData, OrderItem, ProductItem, InventoryAlertItem, StatItem } from './types';
+import {
+  DashboardData,
+  InventoryAlertItem,
+  OrderItem,
+  ProductItem,
+  StatItem,
+} from "./types";
 
 // モックのダッシュボード統計データ
 const MOCK_STATS: StatItem[] = [
@@ -108,7 +114,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   // 本番環境では実際のAPIエンドポイントからデータを取得する
   // const response = await fetch('api/dashboard/stats');
   // return response.json();
-  
+
   // モックデータを返す
   return Promise.resolve({
     stats: MOCK_STATS,
@@ -131,7 +137,9 @@ export async function fetchDashboardStats(): Promise<StatItem[]> {
  * @param limit 取得する注文数
  * @returns 注文データ
  */
-export async function fetchLatestOrders(limit: number = 3): Promise<OrderItem[]> {
+export async function fetchLatestOrders(
+  limit: number = 3
+): Promise<OrderItem[]> {
   return Promise.resolve([...MOCK_LATEST_ORDERS].slice(0, limit));
 }
 
@@ -140,7 +148,9 @@ export async function fetchLatestOrders(limit: number = 3): Promise<OrderItem[]>
  * @param limit 取得する商品数
  * @returns 商品データ
  */
-export async function fetchPopularProducts(limit: number = 3): Promise<ProductItem[]> {
+export async function fetchPopularProducts(
+  limit: number = 3
+): Promise<ProductItem[]> {
   return Promise.resolve([...MOCK_POPULAR_PRODUCTS].slice(0, limit));
 }
 
@@ -149,6 +159,8 @@ export async function fetchPopularProducts(limit: number = 3): Promise<ProductIt
  * @param limit 取得するアラート数
  * @returns 在庫アラートデータ
  */
-export async function fetchInventoryAlerts(limit: number = 3): Promise<InventoryAlertItem[]> {
+export async function fetchInventoryAlerts(
+  limit: number = 3
+): Promise<InventoryAlertItem[]> {
   return Promise.resolve([...MOCK_INVENTORY_ALERTS].slice(0, limit));
 }

@@ -210,9 +210,7 @@ export default function SystemHealthStatus({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            {isLoading && (
-              <span className="ml-1 text-xs">更新中</span>
-            )}
+            {isLoading && <span className="ml-1 text-xs">更新中</span>}
           </button>
         </div>
       </div>
@@ -253,7 +251,6 @@ export default function SystemHealthStatus({
           <p className="text-xs text-gray-400">最終更新：{lastRefresh}</p>
         </div>
       )}
-
     </div>
   );
 
@@ -411,7 +408,6 @@ export default function SystemHealthStatus({
           <p className="text-xs text-gray-400">最終更新：{lastRefresh}</p>
         </div>
       )}
-
     </div>
   );
 

@@ -8,7 +8,6 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // ProductCatalogReader は商品カタログデータの読み取りを担当
@@ -33,10 +32,6 @@ type ProductListParams struct {
 
 // FindProductsWithDetails は商品一覧を詳細情報付きで取得
 func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, params *ProductListParams) ([]*models.Product, int64, error) {
-	// Repository トレーサーを開始
-	repo := observability.StartRepository(ctx, "find_products_with_details")
-	defer repo.Finish(false)
-
 	// ページネーション設定
 	if params.Page < 1 {
 		params.Page = 1
@@ -49,14 +44,6 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 	}
 
 	offset := (params.Page - 1) * params.PageSize
-
-	repo.LogInfo("Starting product catalog query",
-		"page", params.Page,
-		"page_size", params.PageSize,
-		"offset", offset,
-		"category_id", params.CategoryID,
-		"keyword", params.Keyword,
-	)
 
 	// クエリモディファイアの準備
 	mods := []qm.QueryMod{
@@ -89,43 +76,19 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 	var products []*models.Product
 
 	// 総数取得
-	err := repo.AddDatabaseStep("count_products", "products", func(stepCtx context.Context) error {
-		var countErr error
-		total, countErr = models.Products(countMods...).Count(stepCtx, r.db)
-		return countErr
-	})
-
+	total, err := models.Products(countMods...).Count(ctx, r.db)
 	if err != nil {
-		repo.FinishWithError(err, "Failed to count products")
 		return nil, 0, fmt.Errorf("failed to count products: %w", err)
 	}
-
-	repo.RecordDatabaseOperation("products", "COUNT", int(total))
 
 	// ページネーションを追加
 	mods = append(mods, qm.Limit(params.PageSize), qm.Offset(offset))
 
 	// 商品一覧取得
-	err = repo.AddDatabaseStep("fetch_products", "products", func(stepCtx context.Context) error {
-		var fetchErr error
-		products, fetchErr = models.Products(mods...).All(stepCtx, r.db)
-		return fetchErr
-	})
-
+	products, err = models.Products(mods...).All(ctx, r.db)
 	if err != nil {
-		repo.FinishWithError(err, "Failed to fetch products")
 		return nil, 0, fmt.Errorf("failed to fetch products: %w", err)
 	}
 
-	repo.RecordDatabaseOperation("products", "SELECT", len(products))
-
-	repo.LogInfo("Product catalog query completed successfully",
-		"total_count", total,
-		"fetched_count", len(products),
-		"has_category_filter", params.CategoryID != nil,
-		"has_keyword_filter", params.Keyword != nil && *params.Keyword != "",
-	)
-
-	repo.FinishWithRecordCount(true, len(products), "total_available", total)
 	return products, total, nil
 }

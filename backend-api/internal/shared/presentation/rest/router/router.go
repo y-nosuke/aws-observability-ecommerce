@@ -11,8 +11,6 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
-
-	customMiddleware "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/middleware"
 )
 
 // Router はアプリケーションのルーティングを管理する
@@ -51,23 +49,6 @@ func (r *Router) setupMiddleware() {
 
 	// OpenTelemetry公式のEchoインストゥルメンテーション（早期に配置）
 	r.echo.Use(otelecho.Middleware("aws-observability-ecommerce-backend-api"))
-
-	// トレースステータス設定ミドルウェア（otelecho直後に配置）
-	r.echo.Use(customMiddleware.TraceStatusMiddleware())
-
-	// ビジネスコンテキスト抽出ミドルウェア（トレーシング後）
-	r.echo.Use(customMiddleware.BusinessContextMiddleware())
-
-	// ファイルアップロード検出ミドルウェア
-	r.echo.Use(customMiddleware.FileUploadMiddleware())
-
-	// メトリクス収集ミドルウェア（早期に配置）
-	r.echo.Use(customMiddleware.HTTPMetricsMiddleware())
-
-	// ログミドルウェア（順序重要）
-	r.echo.Use(customMiddleware.RequestIDMiddleware())
-	r.echo.Use(customMiddleware.LoggingMiddleware())
-	r.echo.Use(customMiddleware.ErrorHandlingMiddleware())
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定

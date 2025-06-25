@@ -13,7 +13,6 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 func main() {
@@ -38,10 +37,10 @@ func main() {
 	}
 
 	// グローバルオブザーバビリティの一括初期化
-	globalObservabilityInitializer := container.GetGlobalObservabilityInitializer()
-	if err := globalObservabilityInitializer.Initialize(config.Observability); err != nil {
-		log.Fatalf("Failed to initialize global observability: %v\n", err)
-	}
+	// globalObservabilityInitializer := container.GetGlobalObservabilityInitializer()
+	// if err := globalObservabilityInitializer.Initialize(config.Observability); err != nil {
+	//   log.Fatalf("Failed to initialize global observability: %v\n", err)
+	// }
 
 	// アプリケーション終了時のクリーンアップを設定
 	defer func() {
@@ -51,22 +50,22 @@ func main() {
 	}()
 
 	// アプリケーション開始ログ
-	logger.LogBusinessEvent(ctx, "application_startup", "system", "main",
-		"config_loaded", true,
-		"di_container_ready", true,
-		"database_connected", true,
-		"aws_services_ready", true,
-		"opentelemetry_enabled", true,
-		"stage", "initialization",
-		"action", "start")
+	// logger.LogBusinessEvent(ctx, "application_startup", "system", "main",
+	//   "config_loaded", true,
+	//   "di_container_ready", true,
+	//   "database_connected", true,
+	//   "aws_services_ready", true,
+	//   "opentelemetry_enabled", true,
+	//   "stage", "initialization",
+	//   "action", "start")
 
 	// ルーターの初期化とセットアップ
 	r := router.NewRouter()
 	if err := r.SetupRoutes(container); err != nil {
-		logger.WithError(ctx, "ルーティングのセットアップに失敗", err,
-			"operation", "setup_routes",
-			"severity", "critical",
-			"business_impact", "service_startup_failure")
+		// logger.WithError(ctx, "ルーティングのセットアップに失敗", err,
+		//   "operation", "setup_routes",
+		//   "severity", "critical",
+		//   "business_impact", "service_startup_failure")
 		log.Fatalf("Failed to setup routes: %v", err)
 	}
 
@@ -81,18 +80,18 @@ func main() {
 	go func() {
 		address := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 		// サーバー起動ログ
-		logger.Info(ctx, "HTTPサーバーを起動中",
-			"address", address,
-			"environment", config.App.Environment,
-			"layer", "main")
+		// logger.Info(ctx, "HTTPサーバーを起動中",
+		//   "address", address,
+		//   "environment", config.App.Environment,
+		//   "layer", "main")
 
 		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			// サーバー起動エラーログ
-			logger.WithError(ctx, "HTTPサーバーの起動に失敗", err,
-				"address", address,
-				"operation", "start_server",
-				"severity", "critical",
-				"business_impact", "service_unavailable")
+			// logger.WithError(ctx, "HTTPサーバーの起動に失敗", err,
+			//   "address", address,
+			//   "operation", "start_server",
+			//   "severity", "critical",
+			//   "business_impact", "service_unavailable")
 			log.Printf("Failed to start server: %v\n", err)
 			os.Exit(1)
 		}
@@ -101,7 +100,7 @@ func main() {
 	// シグナルを待機
 	<-ctx.Done()
 	// シャットダウン開始ログ
-	logger.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
+	// logger.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
 
 	// グレースフルシャットダウン
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -109,20 +108,20 @@ func main() {
 
 	if err := e.Shutdown(shutdownCtx); err != nil {
 		// シャットダウンエラーログ
-		logger.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
-			"operation", "shutdown_server",
-			"severity", "medium",
-			"business_impact", "graceful_shutdown_failed")
+		// logger.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
+		//   "operation", "shutdown_server",
+		//   "severity", "medium",
+		//   "business_impact", "graceful_shutdown_failed")
 		log.Printf("Failed to shutdown server gracefully: %v\n", err)
 	} else {
 		// シャットダウン成功ログ
-		logger.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
+		// logger.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
 	}
 
 	// アプリケーション終了ログ
-	logger.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
-		"graceful_shutdown", true,
-		"cleanup_executed", true,
-		"stage", "completion",
-		"action", "stop")
+	// logger.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
+	//   "graceful_shutdown", true,
+	//   "cleanup_executed", true,
+	//   "stage", "completion",
+	//   "action", "stop")
 }

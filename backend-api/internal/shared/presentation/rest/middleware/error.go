@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/errors"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 // ErrorHandlingMiddleware はエラーハンドリングミドルウェアを作成
@@ -47,27 +46,27 @@ func handleError(c echo.Context, err error) error {
 		}
 
 		// エラーログ
-		logger.WithError(c.Request().Context(), "アプリケーションエラーが発生", e,
-			"error_type", e.Type,
-			"error_code", e.Code,
-			"operation", getOperationFromPath(c.Request().URL.Path),
-			"resource_type", getResourceTypeFromPath(c.Request().URL.Path),
-			"severity", getSeverityFromStatusCode(statusCode),
-			"business_impact", getBusinessImpactFromError(e),
-			"status_code", statusCode,
-			"layer", "middleware")
+		// logger.WithError(c.Request().Context(), "アプリケーションエラーが発生", e,
+		//   "error_type", e.Type,
+		//   "error_code", e.Code,
+		//   "operation", getOperationFromPath(c.Request().URL.Path),
+		//   "resource_type", getResourceTypeFromPath(c.Request().URL.Path),
+		//   "severity", getSeverityFromStatusCode(statusCode),
+		//   "business_impact", getBusinessImpactFromError(e),
+		//   "status_code", statusCode,
+		//   "layer", "middleware")
 
 	case *echo.HTTPError:
 		// Echo HTTPエラー
 		statusCode = e.Code
 		if e.Internal != nil {
 			// 内部エラーがある場合は詳細ログを出力
-			logger.WithError(c.Request().Context(), "HTTPエラー（内部エラー有り）", e.Internal,
-				"http_status", statusCode,
-				"operation", getOperationFromPath(c.Request().URL.Path),
-				"severity", "high",
-				"business_impact", "service_degradation",
-				"layer", "middleware")
+			// logger.WithError(c.Request().Context(), "HTTPエラー（内部エラー有り）", e.Internal,
+			//   "http_status", statusCode,
+			//   "operation", getOperationFromPath(c.Request().URL.Path),
+			//   "severity", "high",
+			//   "business_impact", "service_degradation",
+			//   "layer", "middleware")
 		}
 
 		errorResponse = map[string]interface{}{
@@ -82,12 +81,12 @@ func handleError(c echo.Context, err error) error {
 		// その他の予期しないエラー
 		statusCode = http.StatusInternalServerError
 
-		logger.WithError(c.Request().Context(), "予期しないエラーが発生", err,
-			"operation", getOperationFromPath(c.Request().URL.Path),
-			"severity", "critical",
-			"business_impact", "service_disruption",
-			"status_code", statusCode,
-			"layer", "middleware")
+		// logger.WithError(c.Request().Context(), "予期しないエラーが発生", err,
+		//   "operation", getOperationFromPath(c.Request().URL.Path),
+		//   "severity", "critical",
+		//   "business_impact", "service_disruption",
+		//   "status_code", statusCode,
+		//   "layer", "middleware")
 
 		errorResponse = map[string]interface{}{
 			"error": map[string]interface{}{

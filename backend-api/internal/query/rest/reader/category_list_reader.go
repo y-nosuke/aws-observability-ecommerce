@@ -4,22 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	models "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
 )
 
 // CategoryListReader はカテゴリー一覧データの読み取りを担当
-type CategoryListReader struct {
-	db boil.ContextExecutor
-}
+type CategoryListReader struct{}
 
 // NewCategoryListReader は新しいCategoryListReaderを作成
-func NewCategoryListReader(db boil.ContextExecutor) *CategoryListReader {
-	return &CategoryListReader{
-		db: db,
-	}
+func NewCategoryListReader() *CategoryListReader {
+	return &CategoryListReader{}
 }
 
 // CategoryWithCount はカテゴリーと商品数を保持する構造体
@@ -38,7 +33,7 @@ func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context)
 	var categories []*models.Category
 
 	// カテゴリー一覧を取得
-	categories, err := models.Categories(mods...).All(ctx, r.db)
+	categories, err := models.Categories(mods...).AllG(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch categories: %w", err)
 	}
@@ -50,7 +45,7 @@ func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context)
 		var count int64
 
 		// 商品数をカウント
-		count, err = models.Products(qm.Where("category_id = ?", category.ID)).Count(ctx, r.db)
+		count, err = models.Products(qm.Where("category_id = ?", category.ID)).CountG(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to count products for category %d: %w", category.ID, err)
 		}

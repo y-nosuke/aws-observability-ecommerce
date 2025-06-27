@@ -4,22 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
 )
 
 // ProductCatalogReader は商品カタログデータの読み取りを担当
-type ProductCatalogReader struct {
-	db boil.ContextExecutor
-}
+type ProductCatalogReader struct{}
 
 // NewProductCatalogReader は新しいProductCatalogReaderを作成
-func NewProductCatalogReader(db boil.ContextExecutor) *ProductCatalogReader {
-	return &ProductCatalogReader{
-		db: db,
-	}
+func NewProductCatalogReader() *ProductCatalogReader {
+	return &ProductCatalogReader{}
 }
 
 // ProductListParams は商品一覧取得のパラメータ
@@ -76,7 +71,7 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 	var products []*models.Product
 
 	// 総数取得
-	total, err := models.Products(countMods...).Count(ctx, r.db)
+	total, err := models.Products(countMods...).CountG(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count products: %w", err)
 	}
@@ -85,7 +80,7 @@ func (r *ProductCatalogReader) FindProductsWithDetails(ctx context.Context, para
 	mods = append(mods, qm.Limit(params.PageSize), qm.Offset(offset))
 
 	// 商品一覧取得
-	products, err = models.Products(mods...).All(ctx, r.db)
+	products, err = models.Products(mods...).AllG(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch products: %w", err)
 	}

@@ -8,51 +8,62 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
-
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/handler"
+	customMiddleware "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/middleware"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 )
 
-// Router はアプリケーションのルーティングを管理する
-type Router struct {
-	echo *echo.Echo
-}
-
-// NewRouter は新しいRouterインスタンスを作成
-func NewRouter() *Router {
+// NewRouter は新しいEchoインスタンスを作成し、全てのルーティングを設定
+func NewRouter(container *di.AppContainer) (*echo.Echo, error) {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	return &Router{
-		echo: e,
-	}
-}
 
-// SetupRoutes は全てのルーティングを設定
-func (r *Router) SetupRoutes(container *di.AppContainer) error {
+	e.HTTPErrorHandler = CustomHTTPErrorHandler
+
 	// 1. ミドルウェアの設定
-	r.setupMiddleware()
+	if err := setupMiddleware(e); err != nil {
+		return nil, fmt.Errorf("setup middleware error: %w", err)
+	}
 
 	// 2. 静的ファイル配信
-	r.setupStaticRoutes()
+	setupStaticRoutes(e)
 
 	// 3. OpenAPI仕様に基づくAPIルーティング
-	api := r.echo.Group("/api")
-	return r.setupAPIRoutes(api, container)
+	api := e.Group("/api")
+
+	if err := setupAPIRoutes(api, container); err != nil {
+		return nil, err
+	}
+
+	return e, nil
 }
 
 // setupMiddleware は共通ミドルウェアを設定
-func (r *Router) setupMiddleware() {
+func setupMiddleware(e *echo.Echo) error {
 	// 基本的なミドルウェア
-	r.echo.Use(middleware.Recover())
-	r.echo.Use(middleware.CORS())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+	e.Use(middleware.BodyLimit("10M"))
 
-	// OpenTelemetry公式のEchoインストゥルメンテーション（早期に配置）
-	r.echo.Use(otelecho.Middleware("aws-observability-ecommerce-backend-api"))
+	// ビジネスコンテキスト抽出ミドルウェア
+	e.Use(customMiddleware.ContextMiddleware())
+	e.Use(customMiddleware.RequestResponseCaptureMiddleware())
+
+	// OpenTelemetry公式のEchoインストゥルメンテーション
+	e.Use(otelecho.Middleware("aws-observability-ecommerce-backend-api"))
+
+	// メトリクス収集ミドルウェア
+	e.Use(customMiddleware.MetricsMiddleware())
+
+	// ログミドルウェア
+	e.Use(customMiddleware.LoggingMiddleware())
+
+	return nil
 }
 
 // setupAPIRoutes はoapi-codegenを使用してAPIルーティングを設定
-func (r *Router) setupAPIRoutes(api *echo.Group, container *di.AppContainer) error {
+func setupAPIRoutes(api *echo.Group, container *di.AppContainer) error {
 	// ハンドラーの初期化（DIコンテナから取得）
 	h, err := handler.NewHandler(container)
 	if err != nil {
@@ -66,13 +77,8 @@ func (r *Router) setupAPIRoutes(api *echo.Group, container *di.AppContainer) err
 }
 
 // setupStaticRoutes は静的ファイル配信を設定
-func (r *Router) setupStaticRoutes() {
-	r.echo.Static("/swagger", "static/swagger-ui")
-	r.echo.File("/swagger", "static/swagger-ui/index.html")
-	r.echo.File("/openapi.yaml", "openapi.yaml")
-}
-
-// GetEcho はEchoインスタンスを返す
-func (r *Router) GetEcho() *echo.Echo {
-	return r.echo
+func setupStaticRoutes(e *echo.Echo) {
+	e.Static("/swagger", "static/swagger-ui")
+	e.File("/swagger", "static/swagger-ui/index.html")
+	e.File("/openapi.yaml", "openapi.yaml")
 }

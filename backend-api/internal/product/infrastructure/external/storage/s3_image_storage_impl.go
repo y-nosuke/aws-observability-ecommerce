@@ -5,106 +5,110 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
-	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	configPkg "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/errors"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/utils"
 )
 
 // S3ImageStorageImpl はS3ClientWrapperを使用した画像ストレージの実装
 type S3ImageStorageImpl struct {
-	s3Wrapper *aws.S3ClientWrapper
+	s3Client *s3.Client
+	config   configPkg.S3Config
 }
 
 // NewS3ImageStorageImpl は新しいS3ImageStorageImplを作成する
-func NewS3ImageStorageImpl(s3Wrapper *aws.S3ClientWrapper) service.ImageStorage {
+func NewS3ImageStorageImpl(s3Client *s3.Client, config configPkg.S3Config) service.ImageStorage {
 	return &S3ImageStorageImpl{
-		s3Wrapper: s3Wrapper,
+		s3Client: s3Client,
+		config:   config,
 	}
 }
 
 // UploadImage は商品画像をS3にアップロードし、S3キーとURLマップを返却する
-func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int, fileExt string, imageData []byte) (string, map[string]string, error) {
+func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int, imageData []byte) (key string, urls map[string]string, err error) {
+	spanCtx, o := otel.Start(ctx,
+		attribute.String("s3.operation", "upload"),
+		attribute.String("s3.bucket", s.config.BucketName),
+		attribute.String("s3.key", key),
+	)
+	defer func() {
+		o.End(err)
+	}()
+
+	// content type 判定（先頭512バイトで判断）
+	contentType, ext := utils.Ext(imageData)
+
 	// S3へのアップロード先キーを生成
-	key := fmt.Sprintf("uploads/%d/original%s", productID, fileExt)
+	key = fmt.Sprintf("uploads/%d/original.%s", productID, ext)
 
-	// ファイル拡張子に基づいてContent-Typeを設定
-	contentType := "image/jpeg"
-	switch strings.ToLower(fileExt) {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
+	o.SetAttributes(attribute.String("s3.content_type", contentType))
+
+	input := &s3.PutObjectInput{
+		Bucket:      aws.String(s.config.BucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(imageData),
+		ContentType: aws.String(contentType),
 	}
 
-	// アップロードオプションを設定
-	options := &aws.UploadOptions{
-		ContentType: contentType,
-	}
-
-	if err := s.s3Wrapper.UploadObject(ctx, key, bytes.NewReader(imageData), options); err != nil {
-		return "", nil, fmt.Errorf("failed to upload image to S3: %w", err)
+	if _, err = s.s3Client.PutObject(spanCtx, input); err != nil {
+		return "", nil, fmt.Errorf("failed to upload object %s: %w", key, err)
 	}
 
 	// URLマップを構築
-	urls := s.buildImageURLs(key, fileExt)
+	bucketName := s.config.BucketName
+	urls = map[string]string{
+		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", bucketName, key),
+		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/original_thumbnail.%s", bucketName, ext),
+		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/original_medium.%s", bucketName, ext),
+		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/original_large.%s", bucketName, ext),
+	}
 
 	return key, urls, nil
 }
 
-// buildImageURLs は画像のURLマップを構築する
-func (s *S3ImageStorageImpl) buildImageURLs(s3Key, fileExt string) map[string]string {
-	bucketName := s.s3Wrapper.GetBucketName()
-	fileNameWithoutExt := strings.TrimSuffix(filepath.Base(s3Key), fileExt)
-
-	// LocalStack環境のURL構築
-	return map[string]string{
-		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", bucketName, s3Key),
-		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/%s_thumbnail%s", bucketName, fileNameWithoutExt, fileExt),
-		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/%s_medium%s", bucketName, fileNameWithoutExt, fileExt),
-		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/%s_large%s", bucketName, fileNameWithoutExt, fileExt),
-	}
-}
-
 // GetImageData は指定されたサイズの画像データを取得する
-func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int, size string) ([]byte, string, error) {
+func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int, size service.SizeType) (imageData []byte, contentType string, err error) {
+	spanCtx, o := otel.Start(ctx,
+		attribute.String("s3.operation", "get"),
+		attribute.String("s3.bucket", s.config.BucketName),
+	)
+	defer func() {
+		o.End(err)
+	}()
 	// サイズのバリデーション
 	if size != "thumbnail" && size != "medium" && size != "large" && size != "original" {
-		return nil, "", fmt.Errorf("invalid image size: %s", size)
+		return nil, "", errors.Newf("invalid image size: %s", size)
 	}
-
 	// S3のキーを構築
-	key := fmt.Sprintf("resized/%d/original_%s.jpg", productID, size)
-
-	var imageData []byte
-	var reader io.ReadCloser
-
-	reader, err := s.s3Wrapper.GetObject(ctx, key)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to get object from S3: %w", err)
+	key := fmt.Sprintf("resized/%d/original_%s.png", productID, size)
+	o.SetAttributes(attribute.String("s3.key", key))
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(s.config.BucketName),
+		Key:    aws.String(key),
 	}
-	defer reader.Close()
-
+	result, err := s.s3Client.GetObject(spanCtx, input)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get object %s: %w", key, err)
+	}
+	reader := result.Body
+	defer func(reader io.ReadCloser) {
+		if closeErr := reader.Close(); closeErr != nil {
+			err = errors.Wrapf(closeErr, "original error: %v, failed to close image data", err)
+			return
+		}
+	}(reader)
 	// 画像データを読み込む
-	imageData, err = io.ReadAll(reader)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to read image data: %w", err)
+	if imageData, err = io.ReadAll(reader); err != nil {
+		return nil, "", errors.Wrap(err, "failed to read image data")
 	}
-
 	// Content-Typeを拡張子から判断
-	contentType := "image/jpeg" // デフォルト
-	ext := strings.ToLower(filepath.Ext(key))
-	switch ext {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
-	}
-
+	contentType = utils.ContentType(imageData)
 	return imageData, contentType, nil
 }

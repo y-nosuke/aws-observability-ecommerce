@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
@@ -17,9 +17,9 @@ type CategoryListHandler struct {
 }
 
 // NewCategoryListHandler は新しいCategoryListHandlerを作成
-func NewCategoryListHandler(db boil.ContextExecutor) *CategoryListHandler {
+func NewCategoryListHandler() *CategoryListHandler {
 	return &CategoryListHandler{
-		reader: reader.NewCategoryListReader(db),
+		reader: reader.NewCategoryListReader(),
 		mapper: mapper.NewCategoryListMapper(),
 	}
 }
@@ -29,8 +29,7 @@ func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
 	// カテゴリー一覧取得
 	categories, err := h.reader.FindCategoriesWithProductCount(ctx.Request().Context())
 	if err != nil {
-		errorResponse := h.mapper.PresentInternalServerError("Failed to fetch categories", err)
-		return ctx.JSON(http.StatusInternalServerError, errorResponse)
+		return fmt.Errorf("failed to find categories: %w", err)
 	}
 
 	// レスポンス変換

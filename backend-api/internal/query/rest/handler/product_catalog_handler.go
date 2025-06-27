@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
@@ -19,9 +19,9 @@ type ProductCatalogHandler struct {
 }
 
 // NewProductCatalogHandler は新しいProductCatalogHandlerを作成
-func NewProductCatalogHandler(db boil.ContextExecutor) *ProductCatalogHandler {
+func NewProductCatalogHandler() *ProductCatalogHandler {
 	return &ProductCatalogHandler{
-		reader: reader.NewProductCatalogReader(db),
+		reader: reader.NewProductCatalogReader(),
 		mapper: mapper.NewProductCatalogMapper(),
 	}
 }
@@ -48,8 +48,7 @@ func (h *ProductCatalogHandler) ListProducts(ctx echo.Context, params openapi.Li
 	// データ取得
 	products, total, err := h.reader.FindProductsWithDetails(ctx.Request().Context(), readerParams)
 	if err != nil {
-		errorResponse := h.mapper.PresentInternalServerError("Failed to fetch products", err)
-		return ctx.JSON(http.StatusInternalServerError, errorResponse)
+		return fmt.Errorf("failed to fetch products by category: %s", err)
 	}
 
 	// レスポンス変換
@@ -76,8 +75,7 @@ func (h *ProductCatalogHandler) ListProductsByCategory(ctx echo.Context, id open
 	// データ取得
 	products, total, err := h.reader.FindProductsWithDetails(ctx.Request().Context(), readerParams)
 	if err != nil {
-		errorResponse := h.mapper.PresentInternalServerError("Failed to fetch products by category", err)
-		return ctx.JSON(http.StatusInternalServerError, errorResponse)
+		return fmt.Errorf("failed to fetch products by category: %s", err)
 	}
 
 	// レスポンス変換

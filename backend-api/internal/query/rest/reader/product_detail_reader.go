@@ -6,22 +6,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
 )
 
 // ProductDetailReader は商品詳細データの読み取りを担当
-type ProductDetailReader struct {
-	db boil.ContextExecutor
-}
+type ProductDetailReader struct{}
 
 // NewProductDetailReader は新しいProductDetailReaderを作成
-func NewProductDetailReader(db boil.ContextExecutor) *ProductDetailReader {
-	return &ProductDetailReader{
-		db: db,
-	}
+func NewProductDetailReader() *ProductDetailReader {
+	return &ProductDetailReader{}
 }
 
 // FindProductByID は指定されたIDの商品を詳細情報付きで取得
@@ -37,7 +32,7 @@ func (r *ProductDetailReader) FindProductByID(ctx context.Context, id int) (*mod
 	var product *models.Product
 
 	// 商品詳細を取得
-	product, err := models.Products(mods...).One(ctx, r.db)
+	product, err := models.Products(mods...).OneG(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("product not found: %d", id)

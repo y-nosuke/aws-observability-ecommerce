@@ -6,6 +6,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
 )
 
 // GetProductImageUseCase は商品画像取得のユースケース
@@ -23,13 +24,17 @@ func NewGetProductImageUseCase(
 }
 
 // Execute は商品画像取得を実行する
-func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int, size string) (*dto.GetImageResponse, error) {
+func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int, size service.SizeType) (res *dto.GetImageResponse, err error) {
+	spanCtx, o := otel.Start(ctx)
+	defer func() {
+		o.End(err)
+	}()
+
 	// 画像データを取得
 	var imageData []byte
 	var contentType string
-	var err error
 
-	imageData, contentType, err = u.imageStorage.GetImageData(ctx, productID, size)
+	imageData, contentType, err = u.imageStorage.GetImageData(spanCtx, productID, size)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get image data: %w", err)
 	}

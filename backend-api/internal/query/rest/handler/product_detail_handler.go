@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
 
@@ -19,9 +21,9 @@ type ProductDetailHandler struct {
 }
 
 // NewProductDetailHandler は新しいProductDetailHandlerを作成
-func NewProductDetailHandler(db boil.ContextExecutor) *ProductDetailHandler {
+func NewProductDetailHandler() *ProductDetailHandler {
 	return &ProductDetailHandler{
-		reader: reader.NewProductDetailReader(db),
+		reader: reader.NewProductDetailReader(),
 		mapper: mapper.NewProductDetailMapper(),
 	}
 }
@@ -30,32 +32,22 @@ func NewProductDetailHandler(db boil.ContextExecutor) *ProductDetailHandler {
 func (h *ProductDetailHandler) GetProductById(ctx echo.Context, id openapi.ProductIdParam) error {
 	// IDの整合性チェック
 	if id <= 0 {
-		errorResponse := h.mapper.PresentInvalidParameter("Invalid product ID")
-		return ctx.JSON(http.StatusBadRequest, errorResponse)
+		return fmt.Errorf("id must be a positive integer")
 	}
 
 	// 商品詳細取得
 	product, err := h.reader.FindProductByID(ctx.Request().Context(), id)
 	if err != nil {
 		// 商品が見つからない場合と内部エラーを区別
-		if isNotFoundError(err) {
-			errorResponse := h.mapper.PresentProductNotFound("Product not found", id)
-			return ctx.JSON(http.StatusNotFound, errorResponse)
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("product not found: %w", err)
 		}
 
-		errorResponse := h.mapper.PresentInternalServerError("Failed to fetch product details", err)
-		return ctx.JSON(http.StatusInternalServerError, errorResponse)
+		return fmt.Errorf("failed to fetch product by id: %w", err)
 	}
 
 	// レスポンス変換
 	response := h.mapper.ToProductResponse(product)
 
 	return ctx.JSON(http.StatusOK, response)
-}
-
-// isNotFoundError はエラーが「見つからない」エラーかどうかを判定
-func isNotFoundError(err error) bool {
-	// 実際の実装では、具体的なエラータイプをチェック
-	// 例: sql.ErrNoRows や独自のNotFoundError等
-	return err.Error() == "sql: no rows in result set"
 }

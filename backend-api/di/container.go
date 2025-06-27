@@ -1,25 +1,22 @@
 package di
 
 import (
-	"database/sql"
+	"log/slog"
+
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
 )
 
 // AppContainer はアプリケーション全体の依存関係を管理
 type AppContainer struct {
-	// Database
-	DB        *sql.DB
-	DBManager *database.DBManager
-
-	// AWS Services
-	AWSServiceRegistry *aws.ServiceRegistry
-	ClientFactory      *aws.ClientFactory
-	S3ClientWrapper    *aws.S3ClientWrapper
+	// Observability
+	Logger *slog.Logger
+	Tracer trace.Tracer
+	Meter  metric.Meter
 
 	// Handlers
 	ProductHandler        *handler.ProductHandler
@@ -31,11 +28,9 @@ type AppContainer struct {
 
 // NewAppContainer は新しいAppContainerを作成
 func NewAppContainer(
-	db *sql.DB,
-	dbManager *database.DBManager,
-	awsServiceRegistry *aws.ServiceRegistry,
-	clientFactory *aws.ClientFactory,
-	s3ClientWrapper *aws.S3ClientWrapper,
+	logger *slog.Logger,
+	tracer trace.Tracer,
+	meter metric.Meter,
 	productHandler *handler.ProductHandler,
 	categoryListHandler *queryHandler.CategoryListHandler,
 	productCatalogHandler *queryHandler.ProductCatalogHandler,
@@ -43,29 +38,15 @@ func NewAppContainer(
 	healthHandler *systemHandler.HealthHandler,
 ) *AppContainer {
 	return &AppContainer{
-		DB:                    db,
-		DBManager:             dbManager,
-		AWSServiceRegistry:    awsServiceRegistry,
-		ClientFactory:         clientFactory,
-		S3ClientWrapper:       s3ClientWrapper,
+		Logger:                logger,
+		Tracer:                tracer,
+		Meter:                 meter,
 		ProductHandler:        productHandler,
 		CategoryListHandler:   categoryListHandler,
 		ProductCatalogHandler: productCatalogHandler,
 		ProductDetailHandler:  productDetailHandler,
 		HealthHandler:         healthHandler,
 	}
-}
-
-// Cleanup はリソースをクリーンアップします
-func (c *AppContainer) Cleanup() error {
-	// データベース接続を閉じる
-	if c.DBManager != nil {
-		if err := c.DBManager.Close(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // GetProductHandler は商品ハンドラーを取得
@@ -91,19 +72,4 @@ func (c *AppContainer) GetProductDetailHandler() *queryHandler.ProductDetailHand
 // GetHealthHandler はヘルスハンドラーを取得
 func (c *AppContainer) GetHealthHandler() *systemHandler.HealthHandler {
 	return c.HealthHandler
-}
-
-// GetDB はデータベース接続を取得
-func (c *AppContainer) GetDB() *sql.DB {
-	return c.DB
-}
-
-// GetDBManager はDBManagerを取得
-func (c *AppContainer) GetDBManager() *database.DBManager {
-	return c.DBManager
-}
-
-// GetAWSServiceRegistry はAWSサービスレジストリを取得
-func (c *AppContainer) GetAWSServiceRegistry() *aws.ServiceRegistry {
-	return c.AWSServiceRegistry
 }

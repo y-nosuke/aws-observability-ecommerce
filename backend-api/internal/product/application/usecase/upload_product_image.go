@@ -3,11 +3,10 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
 )
 
 // UploadProductImageUseCase は商品画像アップロードのユースケース
@@ -23,20 +22,17 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 }
 
 // Execute は商品画像アップロードを実行する
-func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
-	// ファイル拡張子の検証
-	fileExt := strings.ToLower(filepath.Ext(req.Filename))
-
-	if fileExt != ".jpg" && fileExt != ".jpeg" && fileExt != ".png" {
-		return nil, fmt.Errorf("validation error: only JPG and PNG images are supported: %s", fileExt)
-	}
+func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (res *dto.UploadImageResponse, err error) {
+	spanCtx, o := otel.Start(ctx)
+	defer func() {
+		o.End(err)
+	}()
 
 	// 画像をアップロード
 	var s3Key string
 	var urls map[string]string
-	var err error
 
-	s3Key, urls, err = u.imageStorage.UploadImage(ctx, req.ProductID, fileExt, req.ImageData)
+	s3Key, urls, err = u.imageStorage.UploadImage(spanCtx, req.ProductID, req.ImageData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload image: %w", err)
 	}

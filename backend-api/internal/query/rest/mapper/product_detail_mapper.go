@@ -74,38 +74,3 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 		UpdatedAt:     &p.UpdatedAt,
 	}
 }
-
-// PresentError はエラーレスポンスを生成
-func (m *ProductDetailMapper) PresentError(code, message string, details any) openapi.ErrorResponse {
-	detailsMap := map[string]any{
-		"error": details,
-	}
-	if dm, ok := details.(map[string]any); ok {
-		detailsMap = dm
-	}
-
-	return openapi.ErrorResponse{
-		Code:    code,
-		Message: message,
-		Details: &detailsMap,
-	}
-}
-
-// PresentInvalidParameter は無効なパラメーターレスポンスを生成
-func (m *ProductDetailMapper) PresentInvalidParameter(message string) openapi.ErrorResponse {
-	return m.PresentError("invalid_parameter", message, map[string]any{
-		"id": "must be a positive integer",
-	})
-}
-
-// PresentProductNotFound は商品が見つからない場合のレスポンスを生成
-func (m *ProductDetailMapper) PresentProductNotFound(message string, id int) openapi.ErrorResponse {
-	return m.PresentError("product_not_found", message, map[string]any{
-		"id": id,
-	})
-}
-
-// PresentInternalServerError は内部サーバーエラーレスポンスを生成
-func (m *ProductDetailMapper) PresentInternalServerError(message string, err error) openapi.ErrorResponse {
-	return m.PresentError("internal_server_error", message, err.Error())
-}

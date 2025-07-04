@@ -9,49 +9,46 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/labstack/echo/v4"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
+
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/openapi"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // HealthHandler はヘルスチェックのハンドラーを表す構造体
 type HealthHandler struct {
-	startTime  time.Time
-	version    string
-	db         *sql.DB
-	awsFactory *aws.ClientFactory
+	startTime time.Time
+	version   string
+	db        *sql.DB
+	stsClient *sts.Client
+	s3Client  *s3.Client
+	config    config.S3Config
 }
 
 // NewHealthHandler は新しいヘルスハンドラーを作成します
-func NewHealthHandler(db *sql.DB, awsFactory *aws.ClientFactory) *HealthHandler {
+func NewHealthHandler(db *sql.DB, stsClient *sts.Client, s3Client *s3.Client, cfg config.S3Config) *HealthHandler {
 	return &HealthHandler{
-		startTime:  time.Now(),
-		version:    config.App.Version,
-		db:         db,
-		awsFactory: awsFactory,
+		startTime: time.Now(),
+		version:   config.App.Version,
+		db:        db,
+		stsClient: stsClient,
+		s3Client:  s3Client,
+		config:    cfg,
 	}
 }
 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
-func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
-	// Handler トレーサーを開始
-	handler := observability.StartHandler(
-		c.Request().Context(),
-		"health_check",
-		c.Request().Method,
-		c.Request().URL.Path,
-		http.StatusOK,
-		c.Request().UserAgent(),
-		c.RealIP(),
-		c.Request().ContentLength,
-	)
-	defer handler.FinishWithHTTPStatus(http.StatusOK)
+func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) (err error) {
+	spanCtx, o := otel.Start(c.Request().Context())
+	defer func() {
+		o.End(err)
+	}()
 
-	ctx, cancel := context.WithTimeout(handler.Context(), 5*time.Second)
+	spanCtx, cancel := context.WithTimeout(spanCtx, 5*time.Second)
 	defer cancel()
 
 	var checks []string
@@ -59,24 +56,14 @@ func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckPa
 		checks = strings.Split(*params.Checks, ",")
 	}
 
-	handler.LogInfo("Health check requested",
-		"checks", checks,
-		"uptime_ms", time.Since(h.startTime).Milliseconds(),
-	)
-
 	response := &openapi.HealthResponse{
 		Status:     "ok",
 		Timestamp:  time.Now(),
 		Version:    h.version,
 		Uptime:     time.Since(h.startTime).Milliseconds(),
 		Resources:  h.createResources(),
-		Components: h.createComponents(ctx, checks),
+		Components: h.createComponents(spanCtx, checks),
 	}
-
-	handler.LogInfo("Health check completed",
-		"status", response.Status,
-		"components_checked", len(response.Components),
-	)
 
 	return c.JSON(http.StatusOK, response)
 }
@@ -99,7 +86,7 @@ func (h *HealthHandler) createResources() openapi.SystemResources {
 func (h *HealthHandler) createComponents(ctx context.Context, checks []string) map[string]string {
 	components := map[string]string{}
 
-	healthCheckers := NewHealthCheckers(h.db, h.awsFactory, checks)
+	healthCheckers := NewHealthCheckers(h.db, h.stsClient, h.s3Client, h.config, checks)
 	results := healthCheckers.Check(ctx)
 	for n, e := range results {
 		if e != nil {
@@ -111,7 +98,6 @@ func (h *HealthHandler) createComponents(ctx context.Context, checks []string) m
 				clientMsg = "unknown error"
 			}
 			components[n] = "ng: " + clientMsg
-			logger.WithError(ctx, "ヘルスチェック失敗", e, "component", n, "layer", "health_check")
 		} else {
 			components[n] = "ok"
 		}

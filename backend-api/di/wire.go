@@ -20,7 +20,7 @@ func InitializeAppContainer(
 	awsConfig config.AWSConfig,
 	dbConfig config.DatabaseConfig,
 	observabilityConfig config.ObservabilityConfig,
-) (*AppContainer, error) {
+) (*AppContainer, func(), error) {
 	wire.Build(
 		// Provider sets
 		provider.SharedProviderSet,
@@ -31,5 +31,6 @@ func InitializeAppContainer(
 		// Container構築
 		NewAppContainer,
 	)
-	return &AppContainer{}, nil
+
+	return nil, nil, nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,19 +14,16 @@ import (
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/di"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/presentation/rest/router"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/logger"
 )
 
 func main() {
 	// 設定をロード
 	if err := config.LoadConfig(); err != nil {
-		log.Printf("Failed to load configuration: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
-
 	// DIコンテナの初期化
 	ctx := context.Background()
-	container, err := di.InitializeAppContainer(
+	container, cleanup, err := di.InitializeAppContainer(
 		ctx,
 		config.App,
 		config.AWS,
@@ -33,25 +31,13 @@ func main() {
 		config.Observability,
 	)
 	if err != nil {
-		log.Printf("Failed to initialize DI container: %v\n", err)
-		os.Exit(1)
+		slog.ErrorContext(ctx, "Failed to initialize DI container", "error", err)
+		log.Fatalf("Failed to initialize DI container: %v", err)
 	}
-
-	// グローバルオブザーバビリティの一括初期化
-	globalObservabilityInitializer := container.GetGlobalObservabilityInitializer()
-	if err := globalObservabilityInitializer.Initialize(config.Observability); err != nil {
-		log.Fatalf("Failed to initialize global observability: %v\n", err)
-	}
-
-	// アプリケーション終了時のクリーンアップを設定
-	defer func() {
-		if cleanupErr := container.Cleanup(); cleanupErr != nil {
-			log.Printf("Error during cleanup: %v\n", cleanupErr)
-		}
-	}()
+	defer cleanup()
 
 	// アプリケーション開始ログ
-	logger.LogBusinessEvent(ctx, "application_startup", "system", "main",
+	slog.InfoContext(ctx, "アプリケーションが正常に開始されました",
 		"config_loaded", true,
 		"di_container_ready", true,
 		"database_connected", true,
@@ -61,17 +47,15 @@ func main() {
 		"action", "start")
 
 	// ルーターの初期化とセットアップ
-	r := router.NewRouter()
-	if err := r.SetupRoutes(container); err != nil {
-		logger.WithError(ctx, "ルーティングのセットアップに失敗", err,
+	e, err := router.NewRouter(container)
+	if err != nil {
+		slog.ErrorContext(ctx, "ルーティングのセットアップに失敗しました",
+			"error", err,
 			"operation", "setup_routes",
 			"severity", "critical",
 			"business_impact", "service_startup_failure")
 		log.Fatalf("Failed to setup routes: %v", err)
 	}
-
-	// Echoインスタンスを取得
-	e := r.GetEcho()
 
 	// シグナルハンドリングの設定
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -81,27 +65,27 @@ func main() {
 	go func() {
 		address := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 		// サーバー起動ログ
-		logger.Info(ctx, "HTTPサーバーを起動中",
+		slog.InfoContext(ctx, "HTTPサーバーを起動中",
 			"address", address,
 			"environment", config.App.Environment,
 			"layer", "main")
 
 		if err := e.Start(address); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			// サーバー起動エラーログ
-			logger.WithError(ctx, "HTTPサーバーの起動に失敗", err,
+			slog.ErrorContext(ctx, "HTTPサーバーの起動に失敗しました",
+				"error", err,
 				"address", address,
 				"operation", "start_server",
 				"severity", "critical",
 				"business_impact", "service_unavailable")
-			log.Printf("Failed to start server: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
 	// シグナルを待機
 	<-ctx.Done()
 	// シャットダウン開始ログ
-	logger.Info(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウン開始")
+	slog.InfoContext(ctx, "シャットダウンシグナルを受信、グレースフルシャットダウンを開始します")
 
 	// グレースフルシャットダウン
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -109,18 +93,19 @@ func main() {
 
 	if err := e.Shutdown(shutdownCtx); err != nil {
 		// シャットダウンエラーログ
-		logger.WithError(shutdownCtx, "グレースフルシャットダウンに失敗", err,
+		slog.ErrorContext(shutdownCtx, "グレースフルシャットダウンに失敗しました",
+			"error", err,
 			"operation", "shutdown_server",
 			"severity", "medium",
 			"business_impact", "graceful_shutdown_failed")
-		log.Printf("Failed to shutdown server gracefully: %v\n", err)
+		log.Fatalf("Failed to shutdown server gracefully: %v", err)
 	} else {
 		// シャットダウン成功ログ
-		logger.Info(shutdownCtx, "サーバーが正常にシャットダウンしました")
+		slog.InfoContext(shutdownCtx, "サーバーが正常にシャットダウンしました")
 	}
 
 	// アプリケーション終了ログ
-	logger.LogBusinessEvent(shutdownCtx, "application_shutdown", "system", "main",
+	slog.InfoContext(shutdownCtx, "アプリケーションが正常に終了しました",
 		"graceful_shutdown", true,
 		"cleanup_executed", true,
 		"stage", "completion",

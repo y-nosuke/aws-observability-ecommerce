@@ -1,30 +1,22 @@
 package di
 
 import (
-	"database/sql"
+	"log/slog"
+
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/presentation/rest/handler"
 	queryHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
 	systemHandler "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/system/presentation/rest/handler"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
 )
 
 // AppContainer はアプリケーション全体の依存関係を管理
 type AppContainer struct {
-	// Database
-	DB        *sql.DB
-	DBManager *database.DBManager
-
 	// Observability
-	ProviderFactory                observability.ProviderFactory
-	GlobalObservabilityInitializer *observability.GlobalObservabilityInitializer
-
-	// AWS Services
-	AWSServiceRegistry *aws.ServiceRegistry
-	ClientFactory      *aws.ClientFactory
-	S3ClientWrapper    *aws.S3ClientWrapper
+	Logger *slog.Logger
+	Tracer trace.Tracer
+	Meter  metric.Meter
 
 	// Handlers
 	ProductHandler        *handler.ProductHandler
@@ -36,13 +28,9 @@ type AppContainer struct {
 
 // NewAppContainer は新しいAppContainerを作成
 func NewAppContainer(
-	db *sql.DB,
-	dbManager *database.DBManager,
-	providerFactory observability.ProviderFactory,
-	globalObservabilityInitializer *observability.GlobalObservabilityInitializer,
-	awsServiceRegistry *aws.ServiceRegistry,
-	clientFactory *aws.ClientFactory,
-	s3ClientWrapper *aws.S3ClientWrapper,
+	logger *slog.Logger,
+	tracer trace.Tracer,
+	meter metric.Meter,
 	productHandler *handler.ProductHandler,
 	categoryListHandler *queryHandler.CategoryListHandler,
 	productCatalogHandler *queryHandler.ProductCatalogHandler,
@@ -50,38 +38,15 @@ func NewAppContainer(
 	healthHandler *systemHandler.HealthHandler,
 ) *AppContainer {
 	return &AppContainer{
-		DB:                             db,
-		DBManager:                      dbManager,
-		ProviderFactory:                providerFactory,
-		GlobalObservabilityInitializer: globalObservabilityInitializer,
-		AWSServiceRegistry:             awsServiceRegistry,
-		ClientFactory:                  clientFactory,
-		S3ClientWrapper:                s3ClientWrapper,
-		ProductHandler:                 productHandler,
-		CategoryListHandler:            categoryListHandler,
-		ProductCatalogHandler:          productCatalogHandler,
-		ProductDetailHandler:           productDetailHandler,
-		HealthHandler:                  healthHandler,
+		Logger:                logger,
+		Tracer:                tracer,
+		Meter:                 meter,
+		ProductHandler:        productHandler,
+		CategoryListHandler:   categoryListHandler,
+		ProductCatalogHandler: productCatalogHandler,
+		ProductDetailHandler:  productDetailHandler,
+		HealthHandler:         healthHandler,
 	}
-}
-
-// Cleanup はリソースをクリーンアップします
-func (c *AppContainer) Cleanup() error {
-	// データベース接続を閉じる
-	if c.DBManager != nil {
-		if err := c.DBManager.Close(); err != nil {
-			return err
-		}
-	}
-
-	// OpenTelemetryをシャットダウン
-	if c.ProviderFactory != nil {
-		if err := c.ProviderFactory.Shutdown(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // GetProductHandler は商品ハンドラーを取得
@@ -107,29 +72,4 @@ func (c *AppContainer) GetProductDetailHandler() *queryHandler.ProductDetailHand
 // GetHealthHandler はヘルスハンドラーを取得
 func (c *AppContainer) GetHealthHandler() *systemHandler.HealthHandler {
 	return c.HealthHandler
-}
-
-// GetDB はデータベース接続を取得
-func (c *AppContainer) GetDB() *sql.DB {
-	return c.DB
-}
-
-// GetDBManager はDBManagerを取得
-func (c *AppContainer) GetDBManager() *database.DBManager {
-	return c.DBManager
-}
-
-// GetProviderFactory はProviderFactoryを取得
-func (c *AppContainer) GetProviderFactory() observability.ProviderFactory {
-	return c.ProviderFactory
-}
-
-// GetAWSServiceRegistry はAWSサービスレジストリを取得
-func (c *AppContainer) GetAWSServiceRegistry() *aws.ServiceRegistry {
-	return c.AWSServiceRegistry
-}
-
-// GetGlobalObservabilityInitializer はグローバルオブザーバビリティ初期化サービスを取得
-func (c *AppContainer) GetGlobalObservabilityInitializer() *observability.GlobalObservabilityInitializer {
-	return c.GlobalObservabilityInitializer
 }

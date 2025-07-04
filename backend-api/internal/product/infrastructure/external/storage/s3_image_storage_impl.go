@@ -5,171 +5,110 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
-	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
+	configPkg "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/errors"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/utils"
 )
 
 // S3ImageStorageImpl はS3ClientWrapperを使用した画像ストレージの実装
 type S3ImageStorageImpl struct {
-	s3Wrapper *aws.S3ClientWrapper
+	s3Client *s3.Client
+	config   configPkg.S3Config
 }
 
 // NewS3ImageStorageImpl は新しいS3ImageStorageImplを作成する
-func NewS3ImageStorageImpl(s3Wrapper *aws.S3ClientWrapper) service.ImageStorage {
+func NewS3ImageStorageImpl(s3Client *s3.Client, config configPkg.S3Config) service.ImageStorage {
 	return &S3ImageStorageImpl{
-		s3Wrapper: s3Wrapper,
+		s3Client: s3Client,
+		config:   config,
 	}
 }
 
 // UploadImage は商品画像をS3にアップロードし、S3キーとURLマップを返却する
-func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int, fileExt string, imageData []byte) (string, map[string]string, error) {
-	// External トレーサーを開始
-	external := observability.StartExternal(ctx, "upload_image")
-	defer external.Finish(false)
+func (s *S3ImageStorageImpl) UploadImage(ctx context.Context, productID int, imageData []byte) (key string, urls map[string]string, err error) {
+	spanCtx, o := otel.Start(ctx,
+		attribute.String("s3.operation", "upload"),
+		attribute.String("s3.bucket", s.config.BucketName),
+		attribute.String("s3.key", key),
+	)
+	defer func() {
+		o.End(err)
+	}()
+
+	// content type 判定（先頭512バイトで判断）
+	contentType, ext := utils.Ext(imageData)
 
 	// S3へのアップロード先キーを生成
-	key := fmt.Sprintf("uploads/%d/original%s", productID, fileExt)
-	bucketName := s.s3Wrapper.GetBucketName()
+	key = fmt.Sprintf("uploads/%d/original.%s", productID, ext)
 
-	// ファイル拡張子に基づいてContent-Typeを設定
-	contentType := "image/jpeg"
-	switch strings.ToLower(fileExt) {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
+	o.SetAttributes(attribute.String("s3.content_type", contentType))
+
+	input := &s3.PutObjectInput{
+		Bucket:      aws.String(s.config.BucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(imageData),
+		ContentType: aws.String(contentType),
 	}
 
-	// AWS S3サービス情報を記録
-	external.RecordAWSServiceInfo("s3", "us-east-1", "PutObject")
-	external.RecordS3Operation(bucketName, key, "upload", int64(len(imageData)))
-
-	external.LogInfo("Starting S3 image upload",
-		"product_id", productID,
-		"s3_bucket", bucketName,
-		"s3_key", key,
-		"content_type", contentType,
-		"file_size_bytes", len(imageData),
-	)
-
-	// アップロードオプションを設定
-	options := &aws.UploadOptions{
-		ContentType: contentType,
-	}
-
-	err := external.AddExternalStep("s3_upload", "aws-s3", func(stepCtx context.Context) error {
-		return s.s3Wrapper.UploadObject(stepCtx, key, bytes.NewReader(imageData), options)
-	})
-
-	if err != nil {
-		external.FinishWithError(err, "Failed to upload image to S3", "s3_bucket", bucketName, "s3_key", key)
-		return "", nil, fmt.Errorf("failed to upload image to S3: %w", err)
+	if _, err = s.s3Client.PutObject(spanCtx, input); err != nil {
+		return "", nil, fmt.Errorf("failed to upload object %s: %w", key, err)
 	}
 
 	// URLマップを構築
-	urls := s.buildImageURLs(key, fileExt)
+	bucketName := s.config.BucketName
+	urls = map[string]string{
+		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", bucketName, key),
+		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/original_thumbnail.%s", bucketName, ext),
+		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/original_medium.%s", bucketName, ext),
+		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/original_large.%s", bucketName, ext),
+	}
 
-	external.LogInfo("S3 image upload completed successfully",
-		"product_id", productID,
-		"s3_bucket", bucketName,
-		"s3_key", key,
-		"generated_urls", len(urls),
-	)
-
-	external.FinishWithBytesTransferred(true, int64(len(imageData)), "upload", "s3_key", key, "urls_generated", len(urls))
 	return key, urls, nil
 }
 
-// buildImageURLs は画像のURLマップを構築する
-func (s *S3ImageStorageImpl) buildImageURLs(s3Key, fileExt string) map[string]string {
-	bucketName := s.s3Wrapper.GetBucketName()
-	fileNameWithoutExt := strings.TrimSuffix(filepath.Base(s3Key), fileExt)
-
-	// LocalStack環境のURL構築
-	return map[string]string{
-		"original":  fmt.Sprintf("http://localhost:4566/%s/%s", bucketName, s3Key),
-		"thumbnail": fmt.Sprintf("http://localhost:4566/%s/resized/thumbnail/%s_thumbnail%s", bucketName, fileNameWithoutExt, fileExt),
-		"medium":    fmt.Sprintf("http://localhost:4566/%s/resized/medium/%s_medium%s", bucketName, fileNameWithoutExt, fileExt),
-		"large":     fmt.Sprintf("http://localhost:4566/%s/resized/large/%s_large%s", bucketName, fileNameWithoutExt, fileExt),
-	}
-}
-
 // GetImageData は指定されたサイズの画像データを取得する
-func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int, size string) ([]byte, string, error) {
-	// External トレーサーを開始
-	external := observability.StartExternal(ctx, "get_image_data")
-	defer external.Finish(false)
-
+func (s *S3ImageStorageImpl) GetImageData(ctx context.Context, productID int, size service.SizeType) (imageData []byte, contentType string, err error) {
+	spanCtx, o := otel.Start(ctx,
+		attribute.String("s3.operation", "get"),
+		attribute.String("s3.bucket", s.config.BucketName),
+	)
+	defer func() {
+		o.End(err)
+	}()
 	// サイズのバリデーション
 	if size != "thumbnail" && size != "medium" && size != "large" && size != "original" {
-		err := fmt.Errorf("invalid image size: %s", size)
-		external.FinishWithError(err, "Invalid image size provided", "size", size)
-		return nil, "", err
+		return nil, "", errors.Newf("invalid image size: %s", size)
 	}
-
 	// S3のキーを構築
-	key := fmt.Sprintf("resized/%d/original_%s.jpg", productID, size)
-	bucketName := s.s3Wrapper.GetBucketName()
-
-	// AWS S3サービス情報を記録
-	external.RecordAWSServiceInfo("s3", "us-east-1", "GetObject")
-	external.RecordS3Operation(bucketName, key, "download", 0) // サイズは後で更新
-
-	external.LogInfo("Starting S3 image retrieval",
-		"product_id", productID,
-		"requested_size", size,
-		"s3_bucket", bucketName,
-		"s3_key", key,
-	)
-
-	var imageData []byte
-	var reader io.ReadCloser
-
-	err := external.AddExternalStep("s3_get_object", "aws-s3", func(stepCtx context.Context) error {
-		var getErr error
-		reader, getErr = s.s3Wrapper.GetObject(stepCtx, key)
-		return getErr
-	})
-
-	if err != nil {
-		external.FinishWithError(err, "Failed to get object from S3", "s3_bucket", bucketName, "s3_key", key)
-		return nil, "", fmt.Errorf("failed to get object from S3: %w", err)
+	key := fmt.Sprintf("resized/%d/original_%s.png", productID, size)
+	o.SetAttributes(attribute.String("s3.key", key))
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(s.config.BucketName),
+		Key:    aws.String(key),
 	}
-	defer reader.Close()
-
+	result, err := s.s3Client.GetObject(spanCtx, input)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get object %s: %w", key, err)
+	}
+	reader := result.Body
+	defer func(reader io.ReadCloser) {
+		if closeErr := reader.Close(); closeErr != nil {
+			err = errors.Wrapf(closeErr, "original error: %v, failed to close image data", err)
+			return
+		}
+	}(reader)
 	// 画像データを読み込む
-	imageData, err = io.ReadAll(reader)
-	if err != nil {
-		external.FinishWithError(err, "Failed to read image data", "s3_bucket", bucketName, "s3_key", key)
-		return nil, "", fmt.Errorf("failed to read image data: %w", err)
+	if imageData, err = io.ReadAll(reader); err != nil {
+		return nil, "", errors.Wrap(err, "failed to read image data")
 	}
-
 	// Content-Typeを拡張子から判断
-	contentType := "image/jpeg" // デフォルト
-	ext := strings.ToLower(filepath.Ext(key))
-	switch ext {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
-	}
-
-	external.LogInfo("S3 image retrieval completed successfully",
-		"product_id", productID,
-		"s3_bucket", bucketName,
-		"s3_key", key,
-		"content_type", contentType,
-		"image_size_bytes", len(imageData),
-	)
-
-	external.FinishWithBytesTransferred(true, int64(len(imageData)), "download", "content_type", contentType, "image_size", len(imageData))
+	contentType = utils.ContentType(imageData)
 	return imageData, contentType, nil
 }

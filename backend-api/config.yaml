@@ -36,7 +36,6 @@ observability:
     level: "info" # debug, info, warn, error
     format: "json" # json, text (開発時はtext推奨)
     enable_otel: true # OpenTelemetry連携有効化
-    enable_trace_context: true # トレースコンテキスト埋め込み
     max_log_size_mb: 100 # 単一ログファイル最大サイズ
 
   otel:
@@ -45,34 +44,44 @@ observability:
     service_namespace: "ecommerce"
     deployment_environment: "development" # development, staging, production
 
-    collector:
-      endpoint: "otel-collector:4318" # OTLP HTTP endpoint (スキーム不要)
-      timeout: "10s"
-      retry_enabled: true
-      retry_max_attempts: 3
-      retry_initial_interval: "1s"
-      retry_max_interval: "30s"
-      compression: "gzip"
-
-    tracing:
-      enabled: true
-      sampling_ratio: 1.0 # 開発: 1.0, ステージング: 0.1, 本番: 0.01
-      batch_timeout: "1s"
-      max_queue_size: 2048
-      max_export_batch_size: 512
-      export_timeout: "30s"
-
     logging:
       enabled: true
-      batch_timeout: "1s"
+      endpoint: "otel-collector:4317" # OTLP gRPC endpoint
+      timeout: "10s"
+      compression: "gzip"
+      retry_enabled: true
+      retry_initial_interval: "1s"
+      retry_max_interval: "30s"
+      retry_max_elapsed_time: "60s"
+      export_timeout: "30s"
       max_queue_size: 2048
       max_export_batch_size: 512
-      export_timeout: "30s"
 
     metrics:
       enabled: true
+      endpoint: "otel-collector:4317" # OTLP gRPC endpoint
+      timeout: "10s"
+      compression: "gzip"
+      retry_enabled: true
+      retry_initial_interval: "1s"
+      retry_max_interval: "30s"
+      retry_max_elapsed_time: "60s"
+      interval: "1s"
+      request_time_histogram_boundaries:
+        [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+      request_size_histogram_boundaries:
+        [64, 256, 1024, 4096, 16384, 65536, 262144, 1048576]
+
+    tracing:
+      enabled: true
+      endpoint: "otel-collector:4317" # OTLP gRPC endpoint
+      timeout: "10s"
+      compression: "gzip"
+      retry_enabled: true
+      retry_initial_interval: "1s"
+      retry_max_interval: "30s"
+      retry_max_elapsed_time: "60s"
       batch_timeout: "1s"
       max_queue_size: 2048
       max_export_batch_size: 512
-      export_timeout: "30s"
-      histogram_boundaries: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+      sampling_ratio: 1.0 # 開発: 1.0, ステージング: 0.1, 本番: 0.01

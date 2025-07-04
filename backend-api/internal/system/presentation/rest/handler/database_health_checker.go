@@ -10,6 +10,7 @@ type DatabaseHealthChecker struct {
 }
 
 func (d *DatabaseHealthChecker) Name() string { return "database" }
+
 func (d *DatabaseHealthChecker) Check(ctx context.Context) error {
 	if d.DB == nil {
 		return &HealthCheckError{Msg: "not initialized"}

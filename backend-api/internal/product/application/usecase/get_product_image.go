@@ -6,7 +6,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/application/dto"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/product/domain/service"
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/observability"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
 )
 
 // GetProductImageUseCase は商品画像取得のユースケース
@@ -24,32 +24,20 @@ func NewGetProductImageUseCase(
 }
 
 // Execute は商品画像取得を実行する
-func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int, size string) (*dto.GetImageResponse, error) {
-	// UseCase トレーサーを開始
-	tracer := observability.StartUseCase(ctx, "get_product_image")
-	defer tracer.Finish(true)
+func (u *GetProductImageUseCase) Execute(ctx context.Context, productID int, size service.SizeType) (res *dto.GetImageResponse, err error) {
+	spanCtx, o := otel.Start(ctx)
+	defer func() {
+		o.End(err)
+	}()
 
 	// 画像データを取得
 	var imageData []byte
 	var contentType string
-	var err error
 
-	err = tracer.AddStep("get_image_data", func(stepCtx context.Context) error {
-		imageData, contentType, err = u.imageStorage.GetImageData(stepCtx, productID, size)
-		return err
-	})
-
+	imageData, contentType, err = u.imageStorage.GetImageData(spanCtx, productID, size)
 	if err != nil {
-		tracer.FinishWithError(err, "画像データの取得に失敗", "requested_size", size)
 		return nil, fmt.Errorf("failed to get image data: %w", err)
 	}
-
-	tracer.LogInfo("画像データを正常に取得",
-		"product_id", productID,
-		"content_type", contentType,
-		"image_size_bytes", len(imageData),
-		"requested_size", size,
-	)
 
 	// レスポンスを構築
 	return dto.NewGetImageResponse(productID, imageData, contentType), nil

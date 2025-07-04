@@ -5,7 +5,10 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/config"
 )
 
 // クライアント用・ログ用メッセージを持つエラー型
@@ -35,11 +38,11 @@ type HealthCheckers struct {
 	items []HealthChecker
 }
 
-func NewHealthCheckers(db *sql.DB, awsFactory *aws.ClientFactory, checks []string) *HealthCheckers {
+func NewHealthCheckers(db *sql.DB, stsClient *sts.Client, s3Client *s3.Client, config config.S3Config, checks []string) *HealthCheckers {
 	mapper := map[string]HealthChecker{
 		"db":  &DatabaseHealthChecker{DB: db},
-		"iam": &IAMHealthChecker{AWSFactory: awsFactory},
-		"s3":  &S3HealthChecker{AWSFactory: awsFactory},
+		"iam": &IAMHealthChecker{stsClient: stsClient},
+		"s3":  &S3HealthChecker{s3Client: s3Client, config: config},
 	}
 
 	items := []HealthChecker{&ApiHealthChecker{}}

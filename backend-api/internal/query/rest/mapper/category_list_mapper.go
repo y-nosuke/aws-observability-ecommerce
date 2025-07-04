@@ -54,24 +54,3 @@ func (m *CategoryListMapper) ToCategoryListResponse(categories []*reader.Categor
 		Items: items,
 	}
 }
-
-// PresentError はエラーレスポンスを生成
-func (m *CategoryListMapper) PresentError(code, message string, details any) openapi.ErrorResponse {
-	detailsMap := map[string]any{
-		"error": details,
-	}
-	if dm, ok := details.(map[string]any); ok {
-		detailsMap = dm
-	}
-
-	return openapi.ErrorResponse{
-		Code:    code,
-		Message: message,
-		Details: &detailsMap,
-	}
-}
-
-// PresentInternalServerError は内部サーバーエラーレスポンスを生成
-func (m *CategoryListMapper) PresentInternalServerError(message string, err error) openapi.ErrorResponse {
-	return m.PresentError("internal_server_error", message, err.Error())
-}

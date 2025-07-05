@@ -7,21 +7,80 @@ alwaysApply: false
 
 ユーザーから「このブランチのPRを作成して」という指示を受けたら、以下の手順に従ってプルリクエストを自動で作成してください。
 
+## 重要：コマンド実行時の注意事項
+
+**すべてのgitコマンドは `--no-pager` オプションを使用し、必要に応じて `| cat` を追加してページャーが起動しないようにしてください。**
+
 ## 1. 情報収集
 
 まず、プルリクエスト作成に必要な情報を収集します。すべてのコマンドは `run_terminal_cmd` を使用して実行してください。
 
-1.  **現在のブランチ名:** `git symbolic-ref --short HEAD` または `git rev-parse --abbrev-ref HEAD` を実行して取得します。
-2.  **リポジトリ情報:** `git remote -v` を実行し、出力からGitHubのオーナー名とリポジトリ名を抽出します。 (例: `git@github.com:OWNER/REPO.git` から `OWNER` と `REPO` を取得)
-3.  **ベースブランチ:** `git remote show origin | grep 'HEAD branch'` を実行し、デフォルトブランチ（例: `main`）を特定します。
-4.  **変更内容（コミットログ）:**
-    - ベースブランチ（例: `main`）から現在のブランチまでのコミットログを取得します。 `git log main..HEAD --pretty=format:"- %s"` のようなコマンドを使用します。これをPRの本文のベースにします。
-    - 取得したコミットログ全体を要約し、PRのタイトルとします。
-5.  **PRテンプレート:** `.github/PULL_REQUEST_TEMPLATE.md` ファイルが存在するか確認し、存在すればその内容を読み込んでPR本文のテンプレートとして使用します。
+1. **現在のブランチ名:**
+
+   ```bash
+   git --no-pager symbolic-ref --short HEAD
+   ```
+
+   または
+
+   ```bash
+   git --no-pager rev-parse --abbrev-ref HEAD
+   ```
+
+2. **リポジトリ情報:**
+
+   ```bash
+   git --no-pager remote -v
+   ```
+
+   出力からGitHubのオーナー名とリポジトリ名を抽出します。 (例: `git@github.com:OWNER/REPO.git` から `OWNER` と `REPO` を取得)
+
+3. **ベースブランチ:**
+
+   ```bash
+   git --no-pager remote show origin | grep 'HEAD branch' | cat
+   ```
+
+   デフォルトブランチ（例: `main`）を特定します。
+
+4. **変更内容の確認:**
+   - **コミットログ（1行で表示）:**
+
+     ```bash
+     git --no-pager log main..HEAD --oneline | cat
+     ```
+
+   - **変更ファイル一覧:**
+
+     ```bash
+     git --no-pager diff main..HEAD --name-only
+     ```
+
+   - **変更統計:**
+
+     ```bash
+     git --no-pager diff main..HEAD --stat
+     ```
+
+   - **詳細なコミットログ（PR本文用）:**
+
+     ```bash
+     git --no-pager log main..HEAD --pretty=format:"- %s" | cat
+     ```
+
+5. **PRテンプレート:**
+
+   ```bash
+   cat .github/PULL_REQUEST_TEMPLATE.md
+   ```
+
+   ファイルが存在するか確認し、存在すればその内容を読み込んでPR本文のテンプレートとして使用します。
 
 ## 2. 作成内容の確認
 
 収集した情報とユーザーの指示を基に、作成するプルリクエストのタイトルと本文を生成し、チャットに表示して承認を求めます。
+
+**注意：ユーザーから明示的に承認を求められていない場合は、確認なしで直接PRを作成してください。**
 
 ```markdown
 以下の内容でプルリクエストを作成します。よろしいですか？
@@ -43,15 +102,46 @@ alwaysApply: false
 
 ## 3. プルリクエストの作成
 
-ユーザーの承認後、`mcp_github_create_pull_request` ツールを以下のパラメータで実行します。
--   `owner`: (収集したオーナー名)
--   `repo`: (収集したリポジトリ名)
--   `title`: (確認済みのタイトル)
--   `head`: (現在のブランチ名)
--   `base`: (特定したベースブランチ名)
--   `body`: (確認済みの本文)
+ユーザーの承認後（または承認不要の場合）、`mcp_github_create_pull_request` ツールを以下のパラメータで実行します。
+
+- `owner`: (収集したオーナー名)
+- `repo`: (収集したリポジトリ名)
+- `title`: (確認済みのタイトル)
+- `head`: (現在のブランチ名)
+- `base`: (特定したベースブランチ名)
+- `body`: (確認済みの本文)
 
 ## 4. 結果報告
 
 プルリクエストの作成に成功したら、そのURLをユーザーに報告してください。
 失敗した場合は、エラーメッセージと原因を報告し、次の対応をユーザーに確認してください。
+
+## 5. トラブルシューティング
+
+コマンドが途中で止まった場合の対処法：
+
+1. **ページャーが起動した場合:**
+   - 上記の `--no-pager` オプションを必ず使用する
+   - 必要に応じて `| cat` を追加する
+
+2. **長い出力で止まった場合:**
+   - 環境変数を設定: `PAGER=cat git コマンド`
+   - または `git --no-pager コマンド | head -n 100` で出力を制限
+
+3. **コマンドが応答しない場合:**
+   - 新しいシェルを開始して再実行
+   - 問題のあるコマンドをスキップして次のステップに進む
+
+## 6. 実行例
+
+```bash
+# 基本的な情報収集の流れ
+git --no-pager branch --show-current
+git --no-pager status
+git --no-pager remote -v
+git --no-pager log --oneline main..HEAD | cat
+git --no-pager diff main..HEAD --name-only
+git --no-pager diff main..HEAD --stat
+```
+
+すべてのコマンドでページャーを無効化し、スムーズな実行を確保してください。

@@ -64,7 +64,7 @@ jobs:
           migrate -path migrations -database "mysql://ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" up
 
           # Generate models
-          go run github.com/stephenafamo/bob/gen/bobgen-mysql@latest -c bobgen.yaml
+          MYSQL_DSN="ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" go run github.com/stephenafamo/bob/gen/bobgen-mysql@latest -c bobgen.yaml
 
       - name: Generate code (wire)
         run: |
@@ -72,8 +72,6 @@ jobs:
           wire ./...
 
       - name: Test (api)
-        env:
-          DB_DSN: ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce
         run: |
           cd backend-api
           go test -v ./...

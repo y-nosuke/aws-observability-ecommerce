@@ -18,15 +18,15 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 	// 在庫状態の取得
 	inStock := false
 	var quantity *int
-	if p.R != nil && p.R.Inventories != nil && len(p.R.Inventories) > 0 {
+	if len(p.R.Inventories) > 0 {
 		inStock = p.R.Inventories[0].Quantity > 0
-		q := p.R.Inventories[0].Quantity
+		q := int(p.R.Inventories[0].Quantity)
 		quantity = &q
 	}
 
 	// カテゴリー名の取得
 	var categoryName *string
-	if p.R != nil && p.R.Category != nil {
+	if p.R.Category != nil {
 		categoryName = &p.R.Category.Name
 	}
 
@@ -35,8 +35,8 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 
 	// セール価格は値がある場合のみ設定
 	var salePrice *float32
-	if !p.SalePrice.IsZero() {
-		sp, _ := p.SalePrice.Float64()
+	if p.SalePrice.Valid {
+		sp, _ := p.SalePrice.V.Float64()
 		spFloat := float32(sp)
 		salePrice = &spFloat
 	}
@@ -44,12 +44,12 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 	// null.Stringをポインタに変換
 	var description *string
 	if p.Description.Valid {
-		description = &p.Description.String
+		description = &p.Description.V
 	}
 
 	var imageURL *string
 	if p.ImageURL.Valid {
-		imageURL = &p.ImageURL.String
+		imageURL = &p.ImageURL.V
 	}
 
 	isNew := p.IsNew
@@ -57,7 +57,7 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 	sku := p.Sku
 
 	return openapi.Product{
-		Id:            p.ID,
+		Id:            int(p.ID),
 		Name:          p.Name,
 		Description:   description,
 		Sku:           &sku,
@@ -66,7 +66,7 @@ func (m *ProductDetailMapper) ToProductResponse(p *models.Product) openapi.Produ
 		ImageUrl:      imageURL,
 		InStock:       inStock,
 		StockQuantity: quantity,
-		CategoryId:    p.CategoryID,
+		CategoryId:    int(p.CategoryID),
 		CategoryName:  categoryName,
 		IsNew:         &isNew,
 		IsFeatured:    &isFeatured,

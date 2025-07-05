@@ -45,9 +45,6 @@ jobs:
       - name: Install oapi-codegen
         run: go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
-      - name: Install sqlboiler
-        run: go install github.com/volatiletech/sqlboiler/v4@latest && go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@latest
-
       - name: Install golang-migrate
         run: go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
@@ -60,14 +57,14 @@ jobs:
           mkdir -p internal/shared/presentation/rest/openapi
           oapi-codegen -config oapi-codegen-config.yaml openapi.yaml
 
-      - name: Generate code (sqlboiler)
+      - name: Generate code (bob)
         run: |
           cd backend-api
           # Run database migrations
           migrate -path migrations -database "mysql://ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" up
 
           # Generate models
-          sqlboiler mysql
+          MYSQL_DSN="ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce" go run github.com/stephenafamo/bob/gen/bobgen-mysql@latest -c bobgen.yaml
 
       - name: Generate code (wire)
         run: |
@@ -75,8 +72,6 @@ jobs:
           wire ./...
 
       - name: Test (api)
-        env:
-          DB_DSN: ecommerce_user:ecommerce_password@tcp(localhost:3306)/ecommerce
         run: |
           cd backend-api
           go test -v ./...

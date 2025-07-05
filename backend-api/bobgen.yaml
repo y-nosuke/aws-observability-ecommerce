@@ -1,0 +1,21 @@
+# Bob設定ファイル（SQLBoilerからの移行用）
+# 基本設定（全ドライバー共通）
+no_factory: false
+no_tests: true
+struct_tag_casing: "snake"
+tags: ["json", "db"]
+type_system: "database/sql"
+
+# MySQL設定（mysql: プレフィックスが必要）
+mysql:
+  # データベース接続文字列
+  dsn: "ecommerce_user:ecommerce_password@tcp(mysql:3306)/ecommerce?parseTime=true&loc=Asia%2FTokyo"
+  # 生成ファイルの出力フォルダ
+  output: "internal/shared/infrastructure/models"
+  # パッケージ名
+  pkgname: "models"
+  # 並行処理数
+  concurrency: 10
+  # 除外するテーブル
+  except:
+    schema_migrations:

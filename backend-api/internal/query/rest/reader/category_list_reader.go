@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/stephenafamo/bob/dialect/mysql/sm"
 
-	models "github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/database"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/shared/infrastructure/models"
 )
 
 // CategoryListReader はカテゴリー一覧データの読み取りを担当
@@ -25,15 +26,14 @@ type CategoryWithCount struct {
 
 // FindCategoriesWithProductCount はカテゴリー一覧を商品数付きで取得
 func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context) ([]*CategoryWithCount, error) {
-	// クエリモディファイアの準備
-	mods := []qm.QueryMod{
-		qm.OrderBy("name ASC"),
-	}
-
-	var categories []*models.Category
+	db := database.GetDB()
 
 	// カテゴリー一覧を取得
-	categories, err := models.Categories(mods...).AllG(ctx)
+	query := models.Categories.Query(
+		sm.OrderBy(models.CategoryColumns.Name).Asc(),
+	)
+	categories, err := query.All(ctx, db)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch categories: %w", err)
 	}
@@ -45,7 +45,10 @@ func (r *CategoryListReader) FindCategoriesWithProductCount(ctx context.Context)
 		var count int64
 
 		// 商品数をカウント
-		count, err = models.Products(qm.Where("category_id = ?", category.ID)).CountG(ctx)
+		countQuery := models.Products.Query(
+			models.SelectWhere.Products.CategoryID.EQ(category.ID),
+		)
+		count, err := countQuery.Count(ctx, db)
 		if err != nil {
 			return nil, fmt.Errorf("failed to count products for category %d: %w", category.ID, err)
 		}

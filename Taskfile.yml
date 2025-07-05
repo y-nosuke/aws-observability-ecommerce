@@ -107,8 +107,37 @@ tasks:
     desc: 環境をクリーンアップします（ボリュームも削除）
     cmds:
       - docker compose down -v
+      - task: clean:backend-api
+      - task: clean:backend-image-processor
+      - task: clean:frontend-customer
+      - task: clean:frontend-admin
       - cmd: 'echo "環境をクリーンアップしました（ボリュームも削除されました）"'
         silent: true
+
+  clean:backend-api:
+    desc: バックエンドのファイルをクリーンアップします
+    cmds:
+      - sudo rm -rf backend-api/tmp
+      - sudo rm -rf backend-api/di/wire_gen.go
+      - sudo rm -rf backend-api/internal/shared/infrastructure/models
+      - sudo rm -rf backend-api/internal/shared/presentation/rest/openapi
+
+  clean:backend-image-processor:
+    desc: バックエンドのファイルをクリーンアップします
+    cmds:
+      - rm -rf backend-image-processor/build
+
+  clean:frontend-customer:
+    desc: 顧客向けフロントエンドのファイルをクリーンアップします
+    cmds:
+      - sudo rm -rf frontend-customer/node_modules
+      - sudo rm -rf frontend-customer/.next
+
+  clean:frontend-admin:
+    desc: 管理者向けフロントエンドのファイルをクリーンアップします
+    cmds:
+      - sudo rm -rf frontend-admin/node_modules
+      - sudo rm -rf frontend-admin/.next
 
   logs:
     desc: 全コンテナのログを表示します
@@ -287,10 +316,10 @@ tasks:
       - task: generate:wire
 
   generate:models:
-    desc: SQLBoilerでモデルを生成
+    desc: Bobでモデルを生成
     dir: backend-api
     cmds:
-      - sqlboiler mysql
+      - docker compose exec backend-api go run github.com/stephenafamo/bob/gen/bobgen-mysql@latest -c bobgen.yaml
 
   generate:openapi:
     desc: OpenAPIでモデルを生成

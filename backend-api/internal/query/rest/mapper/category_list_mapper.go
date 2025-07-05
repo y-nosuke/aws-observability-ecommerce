@@ -24,23 +24,23 @@ func (m *CategoryListMapper) ToCategoryListResponse(categories []*reader.Categor
 		// 親カテゴリIDの処理
 		var parentId *int
 		if c.Category.ParentID.Valid {
-			id := c.Category.ParentID.Int
+			id := int(c.Category.ParentID.V)
 			parentId = &id
 		}
 
 		// null.Stringをポインタに変換
 		var description *string
 		if c.Category.Description.Valid {
-			description = &c.Category.Description.String
+			description = &c.Category.Description.V
 		}
 
 		var imageURL *string
 		if c.Category.ImageURL.Valid {
-			imageURL = &c.Category.ImageURL.String
+			imageURL = &c.Category.ImageURL.V
 		}
 
 		items = append(items, openapi.Category{
-			Id:           c.Category.ID,
+			Id:           int(c.Category.ID),
 			Name:         c.Category.Name,
 			Slug:         c.Category.Slug,
 			Description:  description,

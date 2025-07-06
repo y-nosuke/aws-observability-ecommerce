@@ -84,9 +84,7 @@ services:
       - NEXT_PUBLIC_API_URL=/api
       - BACKEND_API_URL=http://backend-api:8000/api
     volumes:
-      - ./frontend-customer:/app # ホットリロード用
-      - /app/node_modules # node_modulesはコンテナ内のまま
-      - /app/.next # .nextディレクトリはコンテナ内のまま
+      - ./frontend-customer:/app # ホットリロード用（node_modulesも同期）
     expose:
       - "3000"
     depends_on:
@@ -117,8 +115,7 @@ services:
       - NEXT_PUBLIC_API_URL=/api
       - BACKEND_API_URL=http://backend-api:8000/api
     volumes:
-      - ./frontend-admin:/app
-      - /app/node_modules
+      - ./frontend-admin:/app # ホットリロード用（node_modulesも同期）
     expose:
       - "3000"
     depends_on:

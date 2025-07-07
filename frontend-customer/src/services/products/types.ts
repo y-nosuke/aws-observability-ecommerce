@@ -35,4 +35,4 @@ export interface Category {
   productCount?: number;
 }
 
-export type SortOption = "recommended" | "newest" | "price-asc" | "price-desc";
+export type SortOption = 'recommended' | 'newest' | 'price-asc' | 'price-desc';

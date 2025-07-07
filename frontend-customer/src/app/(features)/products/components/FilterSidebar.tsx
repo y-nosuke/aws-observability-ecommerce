@@ -1,6 +1,6 @@
-import CategoryFilter from "./CategoryFilter";
-import PriceFilter from "./PriceFilter";
-import StatusFilter from "./StatusFilter";
+import CategoryFilter from './CategoryFilter';
+import PriceFilter from './PriceFilter';
+import StatusFilter from './StatusFilter';
 
 interface FilterSidebarProps {
   categories: Array<{
@@ -25,19 +25,19 @@ export default function FilterSidebar({
   onStatusFilterChange,
 }: FilterSidebarProps) {
   return (
-    <div className="w-full md:w-64 shrink-0">
+    <div className="w-full shrink-0 md:w-64">
       <div className="sticky top-28">
         <CategoryFilter
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={onCategoryChange}
         />
-        
+
         <PriceFilter
           selectedPriceRanges={selectedPriceRanges}
           onPriceFilterChange={onPriceFilterChange}
         />
-        
+
         <StatusFilter
           selectedStatuses={selectedStatuses}
           onStatusFilterChange={onStatusFilterChange}

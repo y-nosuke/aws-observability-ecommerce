@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { OrderItem } from "../types";
+import { OrderItem } from '../types';
 
 type LatestOrdersTableProps = {
   orders: OrderItem[];
@@ -13,35 +13,35 @@ export default function LatestOrdersTable({ orders }: LatestOrdersTableProps) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead>
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                 注文番号
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                 顧客
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                 金額
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                 状態
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
             {orders.map((order) => (
               <tr key={order.id}>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-300">
                   {order.id}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-300">
                   {order.customer}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-900 dark:text-gray-300">
                   {order.amount}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${order.statusColor}-100 text-${order.statusColor}-800`}
+                    className={`inline-flex rounded-full px-2 text-xs leading-5 font-semibold bg-${order.statusColor}-100 text-${order.statusColor}-800`}
                   >
                     {order.status}
                   </span>
@@ -54,7 +54,7 @@ export default function LatestOrdersTable({ orders }: LatestOrdersTableProps) {
       <div className="text-right">
         <a
           href="/orders"
-          className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
+          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           すべての注文を表示 →
         </a>

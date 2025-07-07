@@ -1,5 +1,5 @@
-import { apiClient } from "../api-client";
-import { Category, Product, ProductListResponse } from "./types";
+import { apiClient } from '../api-client';
+import { Category, Product, ProductListResponse } from './types';
 
 // 商品関連のAPI関数
 export const productsApi = {
@@ -10,7 +10,7 @@ export const productsApi = {
     categoryId?: number;
     keyword?: string;
   }): Promise<ProductListResponse> {
-    const response = await apiClient.get("/products", { params });
+    const response = await apiClient.get('/products', { params });
     return response.data;
   },
 
@@ -27,7 +27,7 @@ export const productsApi = {
       page?: number;
       pageSize?: number;
       keyword?: string;
-    }
+    },
   ): Promise<ProductListResponse> {
     const response = await apiClient.get(`/categories/${categoryId}/products`, {
       params,
@@ -37,7 +37,7 @@ export const productsApi = {
 
   // カテゴリー一覧取得
   async getCategories(): Promise<{ items: Category[] }> {
-    const response = await apiClient.get("/categories");
+    const response = await apiClient.get('/categories');
     return response.data;
   },
 };
@@ -53,21 +53,19 @@ export async function fetchProducts(params?: {
     const result = await productsApi.getProducts(params);
     return result.items;
   } catch (error) {
-    console.error("Failed to fetch products:", error);
+    console.error('Failed to fetch products:', error);
     return [];
   }
 }
 
 // 人気商品の取得（フィーチャー商品を取得）
-export async function fetchPopularProducts(
-  limit: number = 4
-): Promise<Product[]> {
+export async function fetchPopularProducts(limit: number = 4): Promise<Product[]> {
   try {
     const result = await productsApi.getProducts({ pageSize: 100 }); // 多めに取得
     const featured = result.items.filter((p) => p.isFeatured);
     return featured.slice(0, limit);
   } catch (error) {
-    console.error("Failed to fetch popular products:", error);
+    console.error('Failed to fetch popular products:', error);
     return [];
   }
 }
@@ -78,7 +76,7 @@ export async function fetchCategories(): Promise<Category[]> {
     const result = await productsApi.getCategories();
     return result.items;
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
+    console.error('Failed to fetch categories:', error);
     return [];
   }
 }
@@ -88,7 +86,7 @@ export async function fetchProductById(id: number): Promise<Product | null> {
   try {
     return await productsApi.getProduct(id);
   } catch (error) {
-    console.error("Failed to fetch product:", error);
+    console.error('Failed to fetch product:', error);
     return null;
   }
 }
@@ -97,17 +95,11 @@ export async function fetchProductById(id: number): Promise<Product | null> {
 export function filterAndSortProducts(
   products: Product[],
   category: number = 0,
-  sortOption:
-    | "recommended"
-    | "price-asc"
-    | "price-desc"
-    | "newest" = "recommended"
+  sortOption: 'recommended' | 'price-asc' | 'price-desc' | 'newest' = 'recommended',
 ): Product[] {
   // カテゴリーでフィルタリング
   const filtered =
-    category === 0
-      ? products
-      : products.filter((product) => product.categoryId === category);
+    category === 0 ? products : products.filter((product) => product.categoryId === category);
 
   // 並び替え
   return sortProducts(filtered, sortOption);
@@ -116,30 +108,18 @@ export function filterAndSortProducts(
 // 商品の並び替え（クライアントサイド用）
 export function sortProducts(
   products: Product[],
-  sortOption:
-    | "recommended"
-    | "price-asc"
-    | "price-desc"
-    | "newest" = "recommended"
+  sortOption: 'recommended' | 'price-asc' | 'price-desc' | 'newest' = 'recommended',
 ): Product[] {
   switch (sortOption) {
-    case "price-asc":
-      return [...products].sort(
-        (a, b) => (a.salePrice || a.price) - (b.salePrice || b.price)
-      );
-    case "price-desc":
-      return [...products].sort(
-        (a, b) => (b.salePrice || b.price) - (a.salePrice || a.price)
-      );
-    case "newest":
+    case 'price-asc':
+      return [...products].sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+    case 'price-desc':
+      return [...products].sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+    case 'newest':
       return [...products].sort((a, b) => (a.isNew ? -1 : b.isNew ? 1 : 0));
     default: // recommended
       return [...products].sort((a, b) =>
-        a.isFeatured && !b.isFeatured
-          ? -1
-          : !a.isFeatured && b.isFeatured
-          ? 1
-          : 0
+        a.isFeatured && !b.isFeatured ? -1 : !a.isFeatured && b.isFeatured ? 1 : 0,
       );
   }
 }

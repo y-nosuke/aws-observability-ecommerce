@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
-import Footer from "./Footer";
-import Header from "./Header";
+import { ReactNode } from 'react';
+
+import Footer from './Footer';
+import Header from './Header';
 
 type MainLayoutProps = {
   children: ReactNode;
@@ -8,9 +9,9 @@ type MainLayoutProps = {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <Header />
-      <main className="flex-grow pt-24 md:pt-28 pb-12">{children}</main>
+      <main className="flex-grow pt-24 pb-12 md:pt-28">{children}</main>
       <Footer />
     </div>
   );

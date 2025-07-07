@@ -1,9 +1,11 @@
-import { fetchProductById } from "@/services/products/api";
-import { notFound } from "next/navigation";
-import ProductDetailClient from "./client";
+import { notFound } from 'next/navigation';
+
+import { fetchProductById } from '@/services/products/api';
+
+import ProductDetailClient from './client';
 
 // 動的レンダリングを強制（ビルド時の静的生成を無効化）
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 // 商品IDの型をより厳密に定義
 type ProductId = number & { readonly brand: unique symbol };
@@ -24,9 +26,7 @@ function validateAndConvertProductId(id: string): ProductId | null {
 }
 
 // サーバーコンポーネント：商品詳細データを取得し、クライアントコンポーネントに渡す
-export default async function ProductDetailPage({
-  params,
-}: ProductDetailPageProps) {
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const resolvedParams = await params;
   const productId = validateAndConvertProductId(resolvedParams.id);
 
@@ -45,7 +45,7 @@ export default async function ProductDetailPage({
     // クライアントコンポーネントにデータを渡す
     return <ProductDetailClient product={product} />;
   } catch (error) {
-    console.error("Failed to fetch product:", error);
+    console.error('Failed to fetch product:', error);
     // エラーが発生した場合はNext.jsのエラーバウンダリに委ねる
     throw error;
   }
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps) {
 
   if (!productId) {
     return {
-      title: "商品が見つかりません",
+      title: '商品が見つかりません',
     };
   }
 
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps) {
 
     if (!product) {
       return {
-        title: "商品が見つかりません",
+        title: '商品が見つかりません',
       };
     }
 
@@ -81,9 +81,9 @@ export async function generateMetadata({ params }: ProductDetailPageProps) {
       },
     };
   } catch (error) {
-    console.error("Failed to generate metadata:", error);
+    console.error('Failed to generate metadata:', error);
     return {
-      title: "商品詳細",
+      title: '商品詳細',
     };
   }
 }

@@ -1,40 +1,35 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import {
-  getStatusBgColor,
-  getStatusColor,
-  getStatusIconType,
-} from "../../lib/utils/health";
+import { useCallback, useEffect, useState } from 'react';
+
+import { getStatusBgColor, getStatusColor, getStatusIconType } from '../../lib/utils/health';
 import {
   determineOverallStatus,
   healthApi,
   parseComponentStatuses,
-} from "../../services/health/api";
-import { ComponentStatus, OverallStatus } from "../../services/health/types";
-import StatusIcon from "./StatusIcon";
+} from '../../services/health/api';
+import { ComponentStatus, OverallStatus } from '../../services/health/types';
+import StatusIcon from './StatusIcon';
 
 interface SystemHealthStatusProps {
   /** コンポーネントの表示モード */
-  mode?: "compact" | "detailed";
+  mode?: 'compact' | 'detailed';
   /** 自動更新間隔（分）。0の場合は自動更新なし */
   autoRefreshMinutes?: number;
 }
 
 export default function SystemHealthStatus({
-  mode = "compact",
+  mode = 'compact',
   autoRefreshMinutes = 0,
 }: SystemHealthStatusProps) {
   const [components, setComponents] = useState<ComponentStatus[]>([]);
-  const [overallStatus, setOverallStatus] = useState<OverallStatus | null>(
-    null
-  );
+  const [overallStatus, setOverallStatus] = useState<OverallStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<string>("");
+  const [lastRefresh, setLastRefresh] = useState<string>('');
 
   // キャッシュ設定
-  const CACHE_KEY = "admin_health_status_cache";
+  const CACHE_KEY = 'admin_health_status_cache';
   const CACHE_DURATION = 5 * 60 * 1000; // 5分（ミリ秒）
 
   /**
@@ -57,7 +52,7 @@ export default function SystemHealthStatus({
       sessionStorage.removeItem(CACHE_KEY);
       return null;
     } catch (error) {
-      console.warn("Failed to read health status cache:", error);
+      console.warn('Failed to read health status cache:', error);
       sessionStorage.removeItem(CACHE_KEY);
       return null;
     }
@@ -79,10 +74,10 @@ export default function SystemHealthStatus({
         };
         sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
       } catch (error) {
-        console.warn("Failed to save health status cache:", error);
+        console.warn('Failed to save health status cache:', error);
       }
     },
-    [CACHE_KEY]
+    [CACHE_KEY],
   );
 
   /**
@@ -113,7 +108,7 @@ export default function SystemHealthStatus({
         const healthResponse = await healthApi.getHealthStatus();
         const componentStatuses = parseComponentStatuses(healthResponse);
         const overall = determineOverallStatus(componentStatuses);
-        const refreshTime = new Date().toLocaleString("ja-JP");
+        const refreshTime = new Date().toLocaleString('ja-JP');
 
         setComponents(componentStatuses);
         setOverallStatus(overall);
@@ -126,15 +121,14 @@ export default function SystemHealthStatus({
           lastRefresh: refreshTime,
         });
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "不明なエラーが発生しました";
+        const errorMessage = err instanceof Error ? err.message : '不明なエラーが発生しました';
         setError(errorMessage);
-        console.error("Health status fetch error:", err);
+        console.error('Health status fetch error:', err);
       } finally {
         setIsLoading(false);
       }
     },
-    [getCachedData, setCachedData]
+    [getCachedData, setCachedData],
   );
 
   /**
@@ -152,9 +146,12 @@ export default function SystemHealthStatus({
   // 自動更新の設定（キャッシュを使用）
   useEffect(() => {
     if (autoRefreshMinutes > 0) {
-      const interval = setInterval(() => {
-        fetchHealthStatus(false); // 自動更新時もキャッシュを使用
-      }, autoRefreshMinutes * 60 * 1000);
+      const interval = setInterval(
+        () => {
+          fetchHealthStatus(false); // 自動更新時もキャッシュを使用
+        },
+        autoRefreshMinutes * 60 * 1000,
+      );
       return () => clearInterval(interval);
     }
   }, [autoRefreshMinutes, fetchHealthStatus]);
@@ -163,13 +160,13 @@ export default function SystemHealthStatus({
    * コンパクトモードの表示
    */
   const renderCompactMode = () => (
-    <div className="bg-indigo-700/20 rounded-lg p-4">
+    <div className="rounded-lg bg-indigo-700/20 p-4">
       {/* ヘッダー部分 */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-indigo-400 mr-2"
+            className="mr-2 h-5 w-5 text-indigo-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -186,19 +183,15 @@ export default function SystemHealthStatus({
 
         {/* 更新ボタン - 改善版 */}
         <div className="flex items-center space-x-2">
-          {isLoading && (
-            <span className="text-xs text-indigo-300 animate-pulse">
-              更新中...
-            </span>
-          )}
+          {isLoading && <span className="animate-pulse text-xs text-indigo-300">更新中...</span>}
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="flex items-center text-indigo-300 hover:text-white transition-colors disabled:opacity-50"
+            className="flex items-center text-indigo-300 transition-colors hover:text-white disabled:opacity-50"
             title="ヘルスステータスを更新"
           >
             <svg
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -217,7 +210,7 @@ export default function SystemHealthStatus({
 
       {/* エラー表示 */}
       {error && (
-        <div className="mb-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-xs">
+        <div className="mb-3 rounded border border-red-300 bg-red-100 p-2 text-xs text-red-700">
           {error}
         </div>
       )}
@@ -225,25 +218,21 @@ export default function SystemHealthStatus({
       {/* ステータス表示 */}
       {overallStatus && !error && (
         <div>
-          <div className="flex items-center mb-2">
+          <div className="mb-2 flex items-center">
             <span className={getStatusColor(overallStatus.status)}>
               <StatusIcon type={getStatusIconType(overallStatus.status)} />
             </span>
-            <span className="ml-2 text-xs text-gray-300">
-              {overallStatus.message}
-            </span>
+            <span className="ml-2 text-xs text-gray-300">{overallStatus.message}</span>
           </div>
 
           {/* コンポーネント一覧（コンパクト表示） */}
-          <div className="grid grid-cols-2 gap-1 mb-2">
+          <div className="mb-2 grid grid-cols-2 gap-1">
             {components.map((component) => (
               <div key={component.name} className="flex items-center">
                 <span className={`${getStatusColor(component.status)} mr-1`}>
                   <StatusIcon type={getStatusIconType(component.status)} />
                 </span>
-                <span className="text-xs text-gray-300 truncate">
-                  {component.displayName}
-                </span>
+                <span className="truncate text-xs text-gray-300">{component.displayName}</span>
               </div>
             ))}
           </div>
@@ -258,20 +247,14 @@ export default function SystemHealthStatus({
    * 詳細モードの表示
    */
   const renderDetailedMode = () => (
-    <div className="bg-indigo-700/20 rounded-lg shadow-md p-6">
+    <div className="rounded-lg bg-indigo-700/20 p-6 shadow-md">
       {/* ヘッダー部分 */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-indigo-200">
-          システムヘルスステータス
-        </h3>
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-indigo-200">システムヘルスステータス</h3>
         <div className="flex items-center space-x-3">
           {isLoading && (
             <div className="flex items-center text-indigo-600">
-              <svg
-                className="w-4 h-4 animate-spin mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
+              <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -292,10 +275,10 @@ export default function SystemHealthStatus({
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="flex items-center px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-all"
+            className="flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm text-white transition-all hover:bg-indigo-700 disabled:opacity-50"
           >
             <svg
-              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -307,20 +290,16 @@ export default function SystemHealthStatus({
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            {isLoading ? "更新中" : "更新"}
+            {isLoading ? '更新中' : '更新'}
           </button>
         </div>
       </div>
 
       {/* エラー表示 */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
           <div className="flex">
-            <svg
-              className="w-5 h-5 text-red-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+            <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -328,9 +307,7 @@ export default function SystemHealthStatus({
               />
             </svg>
             <div className="ml-3">
-              <h4 className="text-sm font-medium text-red-800">
-                エラーが発生しました
-              </h4>
+              <h4 className="text-sm font-medium text-red-800">エラーが発生しました</h4>
               <p className="mt-1 text-sm text-red-700">{error}</p>
             </div>
           </div>
@@ -339,22 +316,18 @@ export default function SystemHealthStatus({
 
       {/* 全体ステータス */}
       {overallStatus && !error && (
-        <div
-          className={`mb-6 p-4 rounded-md ${getStatusBgColor(
-            overallStatus.status
-          )}`}
-        >
+        <div className={`mb-6 rounded-md p-4 ${getStatusBgColor(overallStatus.status)}`}>
           <div className="flex items-center">
             <span className={getStatusColor(overallStatus.status)}>
               <StatusIcon type={getStatusIconType(overallStatus.status)} />
             </span>
             <div className="ml-3">
               <h4 className="text-sm font-medium text-gray-900">
-                {overallStatus.status === "healthy"
-                  ? "正常"
-                  : overallStatus.status === "warning"
-                  ? "警告"
-                  : "エラー"}
+                {overallStatus.status === 'healthy'
+                  ? '正常'
+                  : overallStatus.status === 'warning'
+                    ? '警告'
+                    : 'エラー'}
               </h4>
               <p className="text-sm text-gray-700">{overallStatus.message}</p>
             </div>
@@ -365,14 +338,12 @@ export default function SystemHealthStatus({
       {/* コンポーネント詳細一覧 */}
       {components.length > 0 && !error && (
         <div>
-          <h4 className="text-sm font-medium text-indigo-200 mb-3">
-            コンポーネント詳細
-          </h4>
+          <h4 className="mb-3 text-sm font-medium text-indigo-200">コンポーネント詳細</h4>
           <div className="space-y-3">
             {components.map((component) => (
               <div
                 key={component.name}
-                className="flex items-center justify-between p-3 bg-indigo-600/10 rounded-md"
+                className="flex items-center justify-between rounded-md bg-indigo-600/10 p-3"
               >
                 <div className="flex items-center">
                   <span className={getStatusColor(component.status)}>
@@ -383,17 +354,11 @@ export default function SystemHealthStatus({
                   </span>
                 </div>
                 <div className="text-right">
-                  <span
-                    className={`text-sm font-medium ${getStatusColor(
-                      component.status
-                    )}`}
-                  >
-                    {component.status === "ok" ? "正常" : "エラー"}
+                  <span className={`text-sm font-medium ${getStatusColor(component.status)}`}>
+                    {component.status === 'ok' ? '正常' : 'エラー'}
                   </span>
                   {component.message && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {component.message}
-                    </p>
+                    <p className="mt-1 text-xs text-gray-400">{component.message}</p>
                   )}
                 </div>
               </div>
@@ -404,12 +369,12 @@ export default function SystemHealthStatus({
 
       {/* 最終更新時刻 */}
       {lastRefresh && !error && (
-        <div className="mt-6 pt-4 border-t border-indigo-600/20">
+        <div className="mt-6 border-t border-indigo-600/20 pt-4">
           <p className="text-xs text-gray-400">最終更新：{lastRefresh}</p>
         </div>
       )}
     </div>
   );
 
-  return mode === "compact" ? renderCompactMode() : renderDetailedMode();
+  return mode === 'compact' ? renderCompactMode() : renderDetailedMode();
 }

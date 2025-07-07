@@ -1,8 +1,7 @@
-import axios from "axios";
-import { NextRequest, NextResponse } from "next/server";
+import axios from 'axios';
+import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_API_URL =
-  process.env.BACKEND_API_URL || "http://backend-api:8000/api";
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://backend-api:8000/api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error("API Route error:", error);
+    console.error('API Route error:', error);
 
     // axiosエラーの詳細なハンドリング
     if (axios.isAxiosError(error)) {
@@ -28,21 +27,21 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: "Failed to fetch products",
+          error: 'Failed to fetch products',
           message,
-          code: "FETCH_PRODUCTS_ERROR",
+          code: 'FETCH_PRODUCTS_ERROR',
         },
-        { status }
+        { status },
       );
     }
 
     return NextResponse.json(
       {
-        error: "Failed to fetch products",
-        message: "Unknown error",
-        code: "FETCH_PRODUCTS_ERROR",
+        error: 'Failed to fetch products',
+        message: 'Unknown error',
+        code: 'FETCH_PRODUCTS_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

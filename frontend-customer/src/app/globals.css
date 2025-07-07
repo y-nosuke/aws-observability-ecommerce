@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -40,11 +40,7 @@ body {
 }
 
 .bg-gradient-secondary {
-  background: linear-gradient(
-    to right,
-    var(--secondary-dark),
-    var(--secondary)
-  );
+  background: linear-gradient(to right, var(--secondary-dark), var(--secondary));
 }
 
 .bg-gradient-accent {

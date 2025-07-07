@@ -1,8 +1,7 @@
-import axios from "axios";
-import { NextRequest, NextResponse } from "next/server";
+import axios from 'axios';
+import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_API_URL =
-  process.env.BACKEND_API_URL || "http://backend-api:8000/api";
+const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://backend-api:8000/api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error("API Route error:", error);
+    console.error('API Route error:', error);
 
     if (axios.isAxiosError(error)) {
       const status = error.response?.status || 500;
@@ -26,21 +25,21 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: "Failed to fetch categories",
+          error: 'Failed to fetch categories',
           message,
-          code: "FETCH_CATEGORIES_ERROR",
+          code: 'FETCH_CATEGORIES_ERROR',
         },
-        { status }
+        { status },
       );
     }
 
     return NextResponse.json(
       {
-        error: "Failed to fetch categories",
-        message: "Unknown error",
-        code: "FETCH_CATEGORIES_ERROR",
+        error: 'Failed to fetch categories',
+        message: 'Unknown error',
+        code: 'FETCH_CATEGORIES_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

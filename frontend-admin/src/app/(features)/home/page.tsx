@@ -1,6 +1,7 @@
 // Container Component (Server Component)
-import { fetchDashboardData } from "@/services/dashboard/api";
-import HomeClient from "./client";
+import { fetchDashboardData } from '@/services/dashboard/api';
+
+import HomeClient from './client';
 
 export default async function HomePage() {
   // ダッシュボードデータをサービスから取得

@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import SystemHealthStatus from "../ui/SystemHealthStatus";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+import SystemHealthStatus from '../ui/SystemHealthStatus';
 
 type AdminSidebarProps = {
   isOpen?: boolean;
@@ -13,8 +14,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
 
   const navigationItems = [
     {
-      name: "ダッシュボード",
-      href: "/",
+      name: 'ダッシュボード',
+      href: '/',
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -22,7 +23,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
@@ -33,8 +34,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
       ),
     },
     {
-      name: "商品管理",
-      href: "/products",
+      name: '商品管理',
+      href: '/products',
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -42,7 +43,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
@@ -53,8 +54,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
       ),
     },
     {
-      name: "カテゴリー管理",
-      href: "/categories",
+      name: 'カテゴリー管理',
+      href: '/categories',
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +63,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
@@ -73,8 +74,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
       ),
     },
     {
-      name: "注文管理",
-      href: "/orders",
+      name: '注文管理',
+      href: '/orders',
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +83,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
@@ -93,8 +94,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
       ),
     },
     {
-      name: "在庫管理",
-      href: "/inventory",
+      name: '在庫管理',
+      href: '/inventory',
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +103,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path
             strokeLinecap="round"
@@ -116,8 +117,8 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
 
   return (
     <aside
-      className={`bg-sidebar text-white min-h-screen transition-all duration-300 overflow-hidden ${
-        isOpen ? "w-64 p-4" : "w-0"
+      className={`bg-sidebar min-h-screen overflow-hidden text-white transition-all duration-300 ${
+        isOpen ? 'w-64 p-4' : 'w-0'
       }`}
     >
       {isOpen && (
@@ -128,9 +129,9 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
                 // 活性状態判定ロジックの改善
                 let isActive = false;
 
-                if (item.href === "/") {
+                if (item.href === '/') {
                   // ルートページの場合は完全一致の場合のみアクティブ
-                  isActive = pathname === "/";
+                  isActive = pathname === '/';
                 } else {
                   // その他のページの場合はパスの前方一致でアクティブ判定
                   isActive = pathname.startsWith(item.href);
@@ -140,22 +141,18 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg ${
+                      className={`flex items-center space-x-3 rounded-lg px-4 py-3 ${
                         isActive
-                          ? "bg-indigo-700 text-white shadow-lg shadow-indigo-700/30"
-                          : "text-gray-300 hover:bg-indigo-700/20 hover:text-white"
+                          ? 'bg-indigo-700 text-white shadow-lg shadow-indigo-700/30'
+                          : 'text-gray-300 hover:bg-indigo-700/20 hover:text-white'
                       } transition-all duration-200 ease-in-out hover:translate-x-1`}
                     >
-                      <span
-                        className={`${
-                          isActive ? "text-white" : "text-indigo-400"
-                        }`}
-                      >
+                      <span className={`${isActive ? 'text-white' : 'text-indigo-400'}`}>
                         {item.icon}
                       </span>
                       <span className="font-medium">{item.name}</span>
                       {isActive && (
-                        <span className="ml-auto bg-white w-1.5 h-1.5 rounded-full"></span>
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white"></span>
                       )}
                     </Link>
                   </li>
@@ -163,13 +160,13 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
               })}
             </ul>
 
-            <div className="border-t border-gray-700 my-6"></div>
+            <div className="my-6 border-t border-gray-700"></div>
 
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/settings"
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-indigo-700/20 hover:text-white transition-all duration-200 ease-in-out hover:translate-x-1"
+                  className="flex items-center space-x-3 rounded-lg px-4 py-3 text-gray-300 transition-all duration-200 ease-in-out hover:translate-x-1 hover:bg-indigo-700/20 hover:text-white"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -177,7 +174,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-5 h-5 text-indigo-400"
+                    className="h-5 w-5 text-indigo-400"
                   >
                     <path
                       strokeLinecap="round"
@@ -196,7 +193,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
               <li>
                 <Link
                   href="/help"
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-indigo-700/20 hover:text-white transition-all duration-200 ease-in-out hover:translate-x-1"
+                  className="flex items-center space-x-3 rounded-lg px-4 py-3 text-gray-300 transition-all duration-200 ease-in-out hover:translate-x-1 hover:bg-indigo-700/20 hover:text-white"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -204,7 +201,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-5 h-5 text-indigo-400"
+                    className="h-5 w-5 text-indigo-400"
                   >
                     <path
                       strokeLinecap="round"
@@ -219,7 +216,7 @@ export default function AdminSidebar({ isOpen = true }: AdminSidebarProps) {
           </nav>
 
           {/* サイドバー底部のシステムヘルス表示 */}
-          <div className="mt-auto pt-6 border-t border-gray-700/50">
+          <div className="mt-auto border-t border-gray-700/50 pt-6">
             <SystemHealthStatus mode="compact" />
           </div>
         </div>

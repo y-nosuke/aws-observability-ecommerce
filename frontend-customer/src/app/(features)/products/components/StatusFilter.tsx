@@ -9,10 +9,10 @@ export default function StatusFilter({
 }: StatusFilterProps) {
   // 商品状態の定義
   const statuses = [
-    { id: "status-new", label: "新着商品", value: "new" },
-    { id: "status-sale", label: "セール中", value: "sale" },
+    { id: 'status-new', label: '新着商品', value: 'new' },
+    { id: 'status-sale', label: 'セール中', value: 'sale' },
   ];
-  
+
   // チェックボックスの状態変更ハンドラー
   const handleStatusFilterChange = (value: string) => {
     if (selectedStatuses.includes(value)) {
@@ -26,7 +26,7 @@ export default function StatusFilter({
 
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-bold mb-4">状態</h2>
+      <h2 className="mb-4 text-xl font-bold">状態</h2>
       <div className="space-y-2">
         {statuses.map((status) => (
           <div key={status.id} className="flex items-center">

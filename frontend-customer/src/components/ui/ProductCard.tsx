@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface ProductCardProps {
   id: number;
@@ -23,14 +23,12 @@ export default function ProductCard({
   imageUrl = null,
 }: ProductCardProps) {
   return (
-    <div className="product-card bg-white dark:bg-gray-800 shadow-md">
+    <div className="product-card bg-white shadow-md dark:bg-gray-800">
       {isNew && <div className="sale-badge">新着</div>}
       {salePrice && (
-        <div className="sale-badge bg-gradient-to-r from-red-500 to-pink-500">
-          SALE
-        </div>
+        <div className="sale-badge bg-gradient-to-r from-red-500 to-pink-500">SALE</div>
       )}
-      <div className="image-container h-52 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+      <div className="image-container h-52 overflow-hidden bg-gray-100 dark:bg-gray-700">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -38,10 +36,10 @@ export default function ProductCard({
             width={400}
             height={300}
             priority={true}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 h-full w-full flex items-center justify-center">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-16 w-16 text-gray-400"
@@ -61,14 +59,12 @@ export default function ProductCard({
       </div>
       <div className="p-4">
         <Link href={`/products/${id}`} className="block">
-          <h3 className="font-semibold text-lg mb-1 hover:text-primary transition-colors">
+          <h3 className="hover:text-primary mb-1 text-lg font-semibold transition-colors">
             {name}
           </h3>
         </Link>
-        <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">
-          {description}
-        </p>
-        <div className="flex justify-between items-center">
+        <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{description}</p>
+        <div className="flex items-center justify-between">
           {salePrice ? (
             <div className="price sale">
               <span>¥{salePrice.toLocaleString()}</span>
@@ -77,7 +73,7 @@ export default function ProductCard({
           ) : (
             <div className="price">¥{price.toLocaleString()}</div>
           )}
-          <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+          <button className="rounded-full bg-gray-100 p-2 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"

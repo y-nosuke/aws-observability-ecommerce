@@ -16,15 +16,15 @@ export default function CategoryFilter({
 }: CategoryFilterProps) {
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-bold mb-4">カテゴリー</h2>
+      <h2 className="mb-4 text-xl font-bold">カテゴリー</h2>
       <ul className="space-y-2" role="listbox" aria-label="商品カテゴリー">
         <li role="option" aria-selected={activeCategory === 0}>
           <button
             onClick={() => onCategoryChange(0)}
-            className={`w-full text-left py-3 px-4 rounded-lg transition-all duration-200 border-2 ${
+            className={`w-full rounded-lg border-2 px-4 py-3 text-left transition-all duration-200 ${
               activeCategory === 0
-                ? "bg-blue-600 text-white font-bold border-blue-700 shadow-lg scale-[1.02]"
-                : "border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? 'scale-[1.02] border-blue-700 bg-blue-600 font-bold text-white shadow-lg'
+                : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
             aria-selected={activeCategory === 0}
             role="option"
@@ -33,17 +33,13 @@ export default function CategoryFilter({
           </button>
         </li>
         {categories.map((category) => (
-          <li
-            key={category.id}
-            role="option"
-            aria-selected={activeCategory === category.id}
-          >
+          <li key={category.id} role="option" aria-selected={activeCategory === category.id}>
             <button
               onClick={() => onCategoryChange(category.id)}
-              className={`w-full text-left py-3 px-4 rounded-lg transition-all duration-200 border-2 ${
+              className={`w-full rounded-lg border-2 px-4 py-3 text-left transition-all duration-200 ${
                 activeCategory === category.id
-                  ? "bg-blue-600 text-white font-bold border-blue-700 shadow-lg scale-[1.02]"
-                  : "border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? 'scale-[1.02] border-blue-700 bg-blue-600 font-bold text-white shadow-lg'
+                  : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
               aria-selected={activeCategory === category.id}
               role="option"
@@ -53,8 +49,8 @@ export default function CategoryFilter({
                 <span
                   className={`ml-2 text-sm ${
                     activeCategory === category.id
-                      ? "text-blue-100"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? 'text-blue-100'
+                      : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   ({category.productCount})

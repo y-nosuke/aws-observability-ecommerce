@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect } from "react";
+import Link from 'next/link';
+import { useEffect } from 'react';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -11,12 +11,12 @@ interface ErrorProps {
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
     // エラーをログに記録（本番環境では適切なログサービスに送信）
-    console.error("Product detail page error:", error);
+    console.error('Product detail page error:', error);
   }, [error]);
 
   return (
     <div className="container mx-auto px-4 py-16 text-center">
-      <div className="max-w-md mx-auto">
+      <div className="mx-auto max-w-md">
         <div className="mb-8">
           <svg
             className="mx-auto h-24 w-24 text-red-400"
@@ -33,11 +33,9 @@ export default function Error({ error, reset }: ErrorProps) {
           </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          エラーが発生しました
-        </h1>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900">エラーが発生しました</h1>
 
-        <p className="text-gray-600 mb-8 leading-relaxed">
+        <p className="mb-8 leading-relaxed text-gray-600">
           商品詳細の読み込み中にエラーが発生しました。
           <br />
           再度お試しいただくか、しばらく時間をおいてからアクセスしてください。
@@ -46,32 +44,32 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="space-y-3">
           <button
             onClick={reset}
-            className="inline-block w-full bg-primary text-white py-3 px-6 rounded-md font-medium hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="bg-primary hover:bg-primary-dark focus:ring-primary inline-block w-full rounded-md px-6 py-3 font-medium text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
           >
             再試行
           </button>
 
           <Link
             href="/products"
-            className="inline-block w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-md font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="inline-block w-full rounded-md bg-gray-100 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
           >
             商品一覧に戻る
           </Link>
 
           <Link
             href="/"
-            className="inline-block w-full bg-white border border-gray-300 text-gray-700 py-3 px-6 rounded-md font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="inline-block w-full rounded-md border border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
           >
             ホームに戻る
           </Link>
         </div>
 
-        {process.env.NODE_ENV === "development" && (
+        {process.env.NODE_ENV === 'development' && (
           <details className="mt-8 text-left">
             <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
               エラー詳細 (開発環境)
             </summary>
-            <pre className="mt-4 p-4 bg-gray-100 rounded-md text-xs text-gray-700 overflow-auto">
+            <pre className="mt-4 overflow-auto rounded-md bg-gray-100 p-4 text-xs text-gray-700">
               {error.message}
             </pre>
           </details>

@@ -1,9 +1,9 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
     <div className="container mx-auto px-4 py-16 text-center">
-      <div className="max-w-md mx-auto">
+      <div className="mx-auto max-w-md">
         <div className="mb-8">
           <svg
             className="mx-auto h-24 w-24 text-gray-400"
@@ -20,11 +20,9 @@ export default function NotFound() {
           </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          商品が見つかりません
-        </h1>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900">商品が見つかりません</h1>
 
-        <p className="text-gray-600 mb-8 leading-relaxed">
+        <p className="mb-8 leading-relaxed text-gray-600">
           お探しの商品は見つかりませんでした。
           <br />
           商品が削除されているか、URLが間違っている可能性があります。
@@ -33,14 +31,14 @@ export default function NotFound() {
         <div className="space-y-3">
           <Link
             href="/products"
-            className="inline-block w-full bg-primary text-white py-3 px-6 rounded-md font-medium hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="bg-primary hover:bg-primary-dark focus:ring-primary inline-block w-full rounded-md px-6 py-3 font-medium text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
           >
             商品一覧に戻る
           </Link>
 
           <Link
             href="/"
-            className="inline-block w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-md font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="inline-block w-full rounded-md bg-gray-100 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
           >
             ホームに戻る
           </Link>

@@ -1,5 +1,6 @@
-import AnimateInView from "@/components/ui/AnimateInView";
-import CampaignCard from "./CampaignCard";
+import AnimateInView from '@/components/ui/AnimateInView';
+
+import CampaignCard from './CampaignCard';
 
 interface CampaignSectionProps {
   title: string;
@@ -20,9 +21,9 @@ export default function CampaignSection({ title, campaigns }: CampaignSectionPro
     <section className="mb-16">
       <AnimateInView direction="up" delay={200}>
         <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold mb-8">{title}</h2>
+          <h2 className="mb-8 text-2xl font-bold">{title}</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {campaigns.map((campaign) => (
               <CampaignCard
                 key={campaign.id}

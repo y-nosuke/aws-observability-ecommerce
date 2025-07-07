@@ -1,10 +1,10 @@
-import axios from "axios";
+import axios from 'axios';
 
 // APIのベースURL（フロントエンドのAPI Routes）
 const getApiBaseUrl = () => {
   // ブラウザ環境（クライアントサイド）
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "/api";
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL || '/api';
   }
 
   // サーバー環境（SSR）での自分自身のAPI Routes呼び出し
@@ -22,7 +22,7 @@ export const apiClient = axios.create({
   baseURL: getApiBaseUrl(),
   timeout: 10000,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -30,17 +30,17 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // トークンがある場合はヘッダーに追加（ブラウザ環境でのみ）
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("auth_token");
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
       if (token) {
-        config.headers["Authorization"] = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
       }
     }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // レスポンスインターセプター
@@ -52,11 +52,11 @@ apiClient.interceptors.response.use(
     // エラーハンドリング
     if (error.response) {
       // 認証エラーの場合（ブラウザ環境でのみ）
-      if (error.response.status === 401 && typeof window !== "undefined") {
+      if (error.response.status === 401 && typeof window !== 'undefined') {
         // ログアウト処理など
-        localStorage.removeItem("auth_token");
+        localStorage.removeItem('auth_token');
       }
     }
     return Promise.reject(error);
-  }
+  },
 );

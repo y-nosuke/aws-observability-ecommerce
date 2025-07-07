@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { Product } from "@/services/products/types";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import ImageModal from "./components/ImageModal";
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+
+import { Product } from '@/services/products/types';
+
+import ImageModal from './components/ImageModal';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
-export default function ProductDetailClient({
-  product,
-}: ProductDetailClientProps) {
+export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
@@ -36,14 +36,12 @@ export default function ProductDetailClient({
   const hasDiscount = product.salePrice && product.salePrice < product.price;
 
   // 商品説明文のXSS対策
-  const sanitizedDescription = product.description
-    ? product.description.replace(/[<>]/g, "")
-    : "";
+  const sanitizedDescription = product.description ? product.description.replace(/[<>]/g, '') : '';
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* パンくずナビゲーション */}
-      <nav className="flex mb-8 text-sm" aria-label="パンくずリスト">
+      <nav className="mb-8 flex text-sm" aria-label="パンくずリスト">
         <Link href="/" className="text-gray-500 hover:text-gray-700">
           ホーム
         </Link>
@@ -59,7 +57,7 @@ export default function ProductDetailClient({
         <span className="text-gray-900">{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {/* 商品画像 */}
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
@@ -68,13 +66,13 @@ export default function ProductDetailClient({
                 src={product.imageUrl}
                 alt={product.name}
                 fill
-                className="object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                className="cursor-pointer object-cover transition-transform duration-300 hover:scale-105"
                 onClick={() => setImageModalOpen(true)}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-24 w-24 text-gray-400"
@@ -96,7 +94,7 @@ export default function ProductDetailClient({
             {/* バッジ */}
             {product.isNew && (
               <div
-                className="absolute top-4 left-4 badge bg-blue-500"
+                className="badge absolute top-4 left-4 bg-blue-500"
                 role="status"
                 aria-label="新着商品"
               >
@@ -105,7 +103,7 @@ export default function ProductDetailClient({
             )}
             {hasDiscount && (
               <div
-                className="absolute top-4 right-4 badge bg-red-500"
+                className="badge absolute top-4 right-4 bg-red-500"
                 role="status"
                 aria-label="セール中"
               >
@@ -116,32 +114,24 @@ export default function ProductDetailClient({
 
           {/* 画像クリックヒント */}
           {product.imageUrl && (
-            <p className="text-sm text-gray-500 text-center">
-              画像をクリックして拡大表示
-            </p>
+            <p className="text-center text-sm text-gray-500">画像をクリックして拡大表示</p>
           )}
         </div>
 
         {/* 商品情報 */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {product.name}
-            </h1>
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">{product.name}</h1>
             {product.categoryName && (
-              <p className="text-sm text-gray-500 mb-4">
-                カテゴリー: {product.categoryName}
-              </p>
+              <p className="mb-4 text-sm text-gray-500">カテゴリー: {product.categoryName}</p>
             )}
-            {product.sku && (
-              <p className="text-sm text-gray-500 mb-4">SKU: {product.sku}</p>
-            )}
+            {product.sku && <p className="mb-4 text-sm text-gray-500">SKU: {product.sku}</p>}
           </div>
 
           {/* 価格 */}
           <div className="space-y-2">
             <div className="flex items-center gap-4">
-              <span className="text-3xl font-bold text-primary">
+              <span className="text-primary text-3xl font-bold">
                 ¥{displayPrice.toLocaleString()}
               </span>
               {hasDiscount && (
@@ -151,11 +141,8 @@ export default function ProductDetailClient({
               )}
             </div>
             {hasDiscount && (
-              <p className="text-sm text-red-600 font-medium">
-                {Math.round(
-                  ((product.price - product.salePrice!) / product.price) * 100
-                )}
-                % OFF
+              <p className="text-sm font-medium text-red-600">
+                {Math.round(((product.price - product.salePrice!) / product.price) * 100)}% OFF
               </p>
             )}
           </div>
@@ -163,8 +150,8 @@ export default function ProductDetailClient({
           {/* 商品説明 */}
           {sanitizedDescription && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">商品説明</h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+              <h2 className="mb-2 text-lg font-semibold">商品説明</h2>
+              <p className="leading-relaxed whitespace-pre-line text-gray-700">
                 {sanitizedDescription}
               </p>
             </div>
@@ -175,9 +162,9 @@ export default function ProductDetailClient({
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">在庫状況:</span>
               {product.inStock ? (
-                <span className="text-green-600 font-medium flex items-center gap-1">
+                <span className="flex items-center gap-1 font-medium text-green-600">
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     aria-hidden="true"
@@ -191,9 +178,9 @@ export default function ProductDetailClient({
                   在庫あり
                 </span>
               ) : (
-                <span className="text-red-600 font-medium flex items-center gap-1">
+                <span className="flex items-center gap-1 font-medium text-red-600">
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     aria-hidden="true"
@@ -209,9 +196,7 @@ export default function ProductDetailClient({
               )}
             </div>
             {product.stockQuantity && product.stockQuantity > 0 && (
-              <p className="text-sm text-gray-600">
-                残り{product.stockQuantity}個
-              </p>
+              <p className="text-sm text-gray-600">残り{product.stockQuantity}個</p>
             )}
           </div>
 
@@ -222,10 +207,10 @@ export default function ProductDetailClient({
                 <label htmlFor="quantity" className="text-sm font-medium">
                   数量:
                 </label>
-                <div className="flex items-center border rounded-md">
+                <div className="flex items-center rounded-md border">
                   <button
                     onClick={() => handleQuantityChange(quantity - 1)}
-                    className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                     disabled={quantity <= 1}
                     aria-label="数量を減らす"
                   >
@@ -237,15 +222,13 @@ export default function ProductDetailClient({
                     min="1"
                     max={product.stockQuantity || 99}
                     value={quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(parseInt(e.target.value) || 1)
-                    }
-                    className="w-16 px-3 py-2 text-center border-x focus:outline-none focus:ring-2 focus:ring-primary"
+                    onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                    className="focus:ring-primary w-16 border-x px-3 py-2 text-center focus:ring-2 focus:outline-none"
                     aria-label="商品の数量"
                   />
                   <button
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                     disabled={quantity >= (product.stockQuantity || 99)}
                     aria-label="数量を増やす"
                   >
@@ -256,7 +239,7 @@ export default function ProductDetailClient({
 
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-primary text-white py-3 px-6 rounded-md font-medium hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="bg-primary hover:bg-primary-dark focus:ring-primary w-full rounded-md px-6 py-3 font-medium text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
                 aria-label={`${product.name}を${quantity}個カートに追加`}
               >
                 カートに追加 - ¥{(displayPrice * quantity).toLocaleString()}
@@ -265,18 +248,12 @@ export default function ProductDetailClient({
           )}
 
           {/* 商品情報 */}
-          <div className="border-t pt-6 space-y-2 text-sm text-gray-600">
+          <div className="space-y-2 border-t pt-6 text-sm text-gray-600">
             {product.createdAt && (
-              <p>
-                登録日:{" "}
-                {new Date(product.createdAt).toLocaleDateString("ja-JP")}
-              </p>
+              <p>登録日: {new Date(product.createdAt).toLocaleDateString('ja-JP')}</p>
             )}
             {product.updatedAt && (
-              <p>
-                更新日:{" "}
-                {new Date(product.updatedAt).toLocaleDateString("ja-JP")}
-              </p>
+              <p>更新日: {new Date(product.updatedAt).toLocaleDateString('ja-JP')}</p>
             )}
           </div>
         </div>

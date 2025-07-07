@@ -34,14 +34,14 @@ export interface HealthResponse {
 // コンポーネントのステータス（フロントエンド用の変換後データ）
 export interface ComponentStatus {
   name: string;
-  status: "ok" | "error" | "warning";
+  status: 'ok' | 'error' | 'warning';
   message?: string;
   displayName: string;
 }
 
 // システム全体のステータス
 export interface OverallStatus {
-  status: "healthy" | "warning" | "error";
+  status: 'healthy' | 'warning' | 'error';
   message: string;
   lastUpdated: string;
 }
@@ -80,10 +80,10 @@ export interface HealthCheckParams {
 }
 
 // コンポーネントフィルタリングの型
-export type ComponentStatusFilter = "all" | "ok" | "error" | "warning";
+export type ComponentStatusFilter = 'all' | 'ok' | 'error' | 'warning';
 
 // コンポーネントソートの型
-export type ComponentSortOption = "name" | "status" | "displayName";
+export type ComponentSortOption = 'name' | 'status' | 'displayName';
 
 // ヘルスチェック設定
 export interface HealthCheckConfig {
@@ -95,10 +95,10 @@ export interface HealthCheckConfig {
 
 // リアルタイム更新用の型
 export interface HealthUpdateEvent {
-  type: "status_change" | "component_update" | "system_restart";
+  type: 'status_change' | 'component_update' | 'system_restart';
   timestamp: string;
   component?: string;
-  oldStatus?: ComponentStatus["status"];
-  newStatus?: ComponentStatus["status"];
+  oldStatus?: ComponentStatus['status'];
+  newStatus?: ComponentStatus['status'];
   message?: string;
 }

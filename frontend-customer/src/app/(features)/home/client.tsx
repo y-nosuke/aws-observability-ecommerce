@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
-import { Product } from "@/services/products/types";
-import HeroSection from "./components/HeroSection";
-import FeaturedProductsSection from "./components/FeaturedProductsSection";
-import CampaignSection from "./components/CampaignSection";
-import NewsletterSignup from "./components/NewsletterSignup";
+import { Product } from '@/services/products/types';
+
+import CampaignSection from './components/CampaignSection';
+import FeaturedProductsSection from './components/FeaturedProductsSection';
+import HeroSection from './components/HeroSection';
+import NewsletterSignup from './components/NewsletterSignup';
 
 interface HomeClientProps {
   popularProducts: Product[];
@@ -14,24 +15,24 @@ export default function HomeClient({ popularProducts }: HomeClientProps) {
   // キャンペーン情報
   const campaigns = [
     {
-      id: "summer-sale",
-      title: "夏のビッグセール",
-      description: "期間限定で全商品20%オフ。今すぐチェック！",
-      badgeText: "SALE",
-      badgeColor: "blue" as const,
-      bgGradient: "bg-gradient-to-r from-indigo-500 to-purple-600",
-      linkText: "詳細を見る",
-      linkUrl: "/sale",
+      id: 'summer-sale',
+      title: '夏のビッグセール',
+      description: '期間限定で全商品20%オフ。今すぐチェック！',
+      badgeText: 'SALE',
+      badgeColor: 'blue' as const,
+      bgGradient: 'bg-gradient-to-r from-indigo-500 to-purple-600',
+      linkText: '詳細を見る',
+      linkUrl: '/sale',
     },
     {
-      id: "new-arrivals",
-      title: "新商品登場",
-      description: "最新モデルが登場。先行予約で特典プレゼント！",
-      badgeText: "限定商品",
-      badgeColor: "yellow" as const,
-      bgGradient: "bg-gradient-to-r from-rose-400 to-red-500",
-      linkText: "チェックする",
-      linkUrl: "/new-arrivals",
+      id: 'new-arrivals',
+      title: '新商品登場',
+      description: '最新モデルが登場。先行予約で特典プレゼント！',
+      badgeText: '限定商品',
+      badgeColor: 'yellow' as const,
+      bgGradient: 'bg-gradient-to-r from-rose-400 to-red-500',
+      linkText: 'チェックする',
+      linkUrl: '/new-arrivals',
     },
   ];
 

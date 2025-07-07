@@ -1,14 +1,8 @@
-"use client";
+'use client';
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from 'react';
 
-type AnimationDirection =
-  | "up"
-  | "down"
-  | "left"
-  | "right"
-  | "scale"
-  | "opacity";
+type AnimationDirection = 'up' | 'down' | 'left' | 'right' | 'scale' | 'opacity';
 
 interface AnimateInViewProps {
   children: ReactNode;
@@ -21,11 +15,11 @@ interface AnimateInViewProps {
 
 export default function AnimateInView({
   children,
-  direction = "up",
+  direction = 'up',
   delay = 0,
   duration = 500,
   once = true,
-  className = "",
+  className = '',
 }: AnimateInViewProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -48,7 +42,7 @@ export default function AnimateInView({
       },
       {
         threshold: 0.1,
-      }
+      },
     );
 
     observer.observe(currentRef);
@@ -64,26 +58,26 @@ export default function AnimateInView({
   const getAnimationStyles = () => {
     const baseStyles = {
       opacity: 0,
-      transform: "translateY(0) translateX(0) scale(1)",
+      transform: 'translateY(0) translateX(0) scale(1)',
     };
 
     switch (direction) {
-      case "up":
-        baseStyles.transform = "translateY(30px)";
+      case 'up':
+        baseStyles.transform = 'translateY(30px)';
         break;
-      case "down":
-        baseStyles.transform = "translateY(-30px)";
+      case 'down':
+        baseStyles.transform = 'translateY(-30px)';
         break;
-      case "left":
-        baseStyles.transform = "translateX(30px)";
+      case 'left':
+        baseStyles.transform = 'translateX(30px)';
         break;
-      case "right":
-        baseStyles.transform = "translateX(-30px)";
+      case 'right':
+        baseStyles.transform = 'translateX(-30px)';
         break;
-      case "scale":
-        baseStyles.transform = "scale(0.9)";
+      case 'scale':
+        baseStyles.transform = 'scale(0.9)';
         break;
-      case "opacity":
+      case 'opacity':
         // opacity のみを変更
         break;
     }
@@ -94,14 +88,14 @@ export default function AnimateInView({
   const animationStyles = isVisible
     ? {
         opacity: 1,
-        transform: "translateY(0) translateX(0) scale(1)",
+        transform: 'translateY(0) translateX(0) scale(1)',
         transition: `opacity ${duration}ms, transform ${duration}ms ease-out`,
         transitionDelay: `${delay}ms`,
       }
     : {
         ...getAnimationStyles(),
         transition: `opacity ${duration}ms, transform ${duration}ms ease-out`,
-        transitionDelay: "0ms",
+        transitionDelay: '0ms',
       };
 
   return (

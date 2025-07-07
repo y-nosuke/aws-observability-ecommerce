@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function ProductsError({
   error,
@@ -11,15 +11,15 @@ export default function ProductsError({
 }) {
   useEffect(() => {
     // エラーログを記録
-    console.error("Products page error:", error);
+    console.error('Products page error:', error);
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <svg
-            className="w-6 h-6 text-red-600"
+            className="h-6 w-6 text-red-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -33,34 +33,34 @@ export default function ProductsError({
           </svg>
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
+        <h2 className="mb-2 text-center text-xl font-semibold text-gray-900">
           商品データの取得中にエラーが発生しました
         </h2>
 
-        <p className="text-gray-600 text-center mb-6">
+        <p className="mb-6 text-center text-gray-600">
           申し訳ございませんが、商品情報を読み込むことができませんでした。
           しばらく時間をおいてから再度お試しください。
         </p>
 
-        {process.env.NODE_ENV === "development" && (
-          <div className="mb-4 p-3 bg-gray-100 rounded text-sm text-gray-700">
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 rounded bg-gray-100 p-3 text-sm text-gray-700">
             <strong>開発者向け情報:</strong>
             <br />
             {error.message}
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <button
             onClick={reset}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
             再試行
           </button>
 
           <button
-            onClick={() => (window.location.href = "/")}
-            className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+            onClick={() => (window.location.href = '/')}
+            className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-gray-800 transition-colors hover:bg-gray-300"
           >
             ホームに戻る
           </button>

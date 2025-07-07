@@ -1,14 +1,11 @@
 interface StatusIconProps {
-  type: "success" | "warning" | "error" | "default";
+  type: 'success' | 'warning' | 'error' | 'default';
   className?: string;
 }
 
-export default function StatusIcon({
-  type,
-  className = "w-4 h-4",
-}: StatusIconProps) {
+export default function StatusIcon({ type, className = 'w-4 h-4' }: StatusIconProps) {
   switch (type) {
-    case "success":
+    case 'success':
       return (
         <svg className={className} fill="currentColor" viewBox="0 0 20 20">
           <path
@@ -18,7 +15,7 @@ export default function StatusIcon({
           />
         </svg>
       );
-    case "warning":
+    case 'warning':
       return (
         <svg className={className} fill="currentColor" viewBox="0 0 20 20">
           <path
@@ -28,7 +25,7 @@ export default function StatusIcon({
           />
         </svg>
       );
-    case "error":
+    case 'error':
       return (
         <svg className={className} fill="currentColor" viewBox="0 0 20 20">
           <path

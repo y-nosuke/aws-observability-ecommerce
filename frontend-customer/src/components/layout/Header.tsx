@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -17,32 +17,30 @@ export default function Header() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <header
-      className={`fixed w-full z-50 text-white transition-all duration-300 ${
-        isScrolled
-          ? "bg-gradient-primary shadow-lg py-2"
-          : "bg-transparent py-4"
+      className={`fixed z-50 w-full text-white transition-all duration-300 ${
+        isScrolled ? 'bg-gradient-primary py-2 shadow-lg' : 'bg-transparent py-4'
       }`}
     >
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold flex items-center">
+      <div className="container mx-auto flex items-center justify-between px-4">
+        <Link href="/" className="flex items-center text-2xl font-bold">
           <span className="mr-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="w-8 h-8"
+              className="h-8 w-8"
             >
               <path d="M11.25 3v4.046a3 3 0 00-4.277 4.204H1.5v-6A2.25 2.25 0 013.75 3h7.5zM12.75 3v4.011a3 3 0 014.239 4.239H22.5v-6A2.25 2.25 0 0020.25 3h-7.5zM22.5 12.75h-8.983a4.125 4.125 0 004.108 3.75.75.75 0 010 1.5 5.623 5.623 0 01-4.875-2.817V21h7.5a2.25 2.25 0 002.25-2.25v-6zM11.25 21v-5.817A5.623 5.623 0 016.375 18a.75.75 0 010-1.5 4.126 4.126 0 004.108-3.75H1.5v6A2.25 2.25 0 003.75 21h7.5z" />
               <path d="M11.085 10.354c.03.297.038.575.036.805a7.484 7.484 0 01-.805-.036c-.833-.084-1.677-.325-2.195-.843a1.5 1.5 0 012.122-2.12c.517.517.759 1.36.842 2.194zM12.877 10.354c-.03.297-.038.575-.036.805.23.002.508-.006.805-.036.833-.084 1.677-.325 2.195-.843A1.5 1.5 0 0013.72 8.16c-.518.518-.76 1.362-.843 2.194z" />
             </svg>
           </span>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
+          <span className="bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">
             Observability Shop
           </span>
         </Link>
@@ -53,11 +51,11 @@ export default function Header() {
             <li>
               <Link
                 href="/products"
-                className="hover:text-indigo-200 transition-colors flex items-center font-medium"
+                className="flex items-center font-medium transition-colors hover:text-indigo-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="mr-1 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -75,11 +73,11 @@ export default function Header() {
             <li>
               <Link
                 href="/cart"
-                className="hover:text-indigo-200 transition-colors flex items-center font-medium"
+                className="flex items-center font-medium transition-colors hover:text-indigo-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="mr-1 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -97,11 +95,11 @@ export default function Header() {
             <li>
               <Link
                 href="/orders"
-                className="hover:text-indigo-200 transition-colors flex items-center font-medium"
+                className="flex items-center font-medium transition-colors hover:text-indigo-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="mr-1 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -119,11 +117,11 @@ export default function Header() {
             <li>
               <Link
                 href="/account"
-                className="hover:text-indigo-200 transition-colors flex items-center font-medium"
+                className="flex items-center font-medium transition-colors hover:text-indigo-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="mr-1 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -142,9 +140,9 @@ export default function Header() {
         </nav>
 
         {/* 検索ボタン */}
-        <div className="hidden md:flex items-center">
-          <div className="relative group">
-            <button className="flex items-center justify-center w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors">
+        <div className="hidden items-center md:flex">
+          <div className="group relative">
+            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-colors hover:bg-white/30">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -160,14 +158,14 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+            <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 transform rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               商品を検索
             </div>
           </div>
-          <div className="relative group ml-4">
+          <div className="group relative ml-4">
             <Link
               href="/cart"
-              className="relative flex items-center justify-center w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-colors hover:bg-white/30"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -183,11 +181,11 @@ export default function Header() {
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                 2
               </span>
             </Link>
-            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+            <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 transform rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               カートを見る
             </div>
           </div>
@@ -195,7 +193,7 @@ export default function Header() {
 
         {/* モバイルメニューボタン */}
         <button
-          className="md:hidden bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/30 transition-colors"
+          className="rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors hover:bg-white/30 md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? (
@@ -234,17 +232,17 @@ export default function Header() {
 
       {/* モバイルメニュー */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-gradient-primary shadow-lg mt-2 py-4 px-4 rounded-b-xl">
+        <div className="bg-gradient-primary mt-2 rounded-b-xl px-4 py-4 shadow-lg md:hidden">
           <ul className="space-y-4">
             <li>
               <Link
                 href="/products"
-                className="flex items-center py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-3"
+                  className="mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -262,12 +260,12 @@ export default function Header() {
             <li>
               <Link
                 href="/cart"
-                className="flex items-center py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-3"
+                  className="mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -280,7 +278,7 @@ export default function Header() {
                   />
                 </svg>
                 カート
-                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="ml-auto rounded-full bg-red-500 px-2 py-1 text-xs text-white">
                   2
                 </span>
               </Link>
@@ -288,12 +286,12 @@ export default function Header() {
             <li>
               <Link
                 href="/orders"
-                className="flex items-center py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-3"
+                  className="mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -311,12 +309,12 @@ export default function Header() {
             <li>
               <Link
                 href="/account"
-                className="flex items-center py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-3"
+                  className="mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -334,12 +332,12 @@ export default function Header() {
             <li>
               <Link
                 href="/search"
-                className="flex items-center py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-3"
+                  className="mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

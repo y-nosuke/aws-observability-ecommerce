@@ -1,12 +1,13 @@
-"use client";
+'use client';
 
-import DashboardCard from "@/components/ui/DashboardCard";
-import DashboardStats from "@/components/ui/DashboardStats";
-import SystemHealthStatus from "@/components/ui/SystemHealthStatus";
-import InventoryAlertsTable from "./components/InventoryAlertsTable";
-import LatestOrdersTable from "./components/LatestOrdersTable";
-import PopularProductsTable from "./components/PopularProductsTable";
-import { InventoryAlertItem, OrderItem, ProductItem, StatItem } from "./types";
+import DashboardCard from '@/components/ui/DashboardCard';
+import DashboardStats from '@/components/ui/DashboardStats';
+import SystemHealthStatus from '@/components/ui/SystemHealthStatus';
+
+import InventoryAlertsTable from './components/InventoryAlertsTable';
+import LatestOrdersTable from './components/LatestOrdersTable';
+import PopularProductsTable from './components/PopularProductsTable';
+import { InventoryAlertItem, OrderItem, ProductItem, StatItem } from './types';
 
 // Presentational コンポーネントの props 型定義
 type HomeClientProps = {
@@ -24,12 +25,12 @@ export default function HomeClient({
 }: HomeClientProps) {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold mb-6">管理ダッシュボード</h1>
+      <h1 className="mb-6 text-2xl font-bold">管理ダッシュボード</h1>
 
       {/* 統計カード */}
       <DashboardStats stats={stats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 最新の注文 */}
         <DashboardCard
           title="最新の注文"
@@ -40,7 +41,7 @@ export default function HomeClient({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-5 h-5"
+              className="h-5 w-5"
             >
               <path
                 strokeLinecap="round"
@@ -63,7 +64,7 @@ export default function HomeClient({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-5 h-5"
+              className="h-5 w-5"
             >
               <path
                 strokeLinecap="round"
@@ -87,7 +88,7 @@ export default function HomeClient({
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-5 h-5"
+            className="h-5 w-5"
           >
             <path
               strokeLinecap="round"

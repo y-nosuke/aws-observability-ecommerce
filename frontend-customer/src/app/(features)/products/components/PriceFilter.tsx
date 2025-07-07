@@ -9,12 +9,12 @@ export default function PriceFilter({
 }: PriceFilterProps) {
   // 価格帯の定義
   const priceRanges = [
-    { id: "price-1", label: "¥10,000以下", value: "under-10000" },
-    { id: "price-2", label: "¥10,000〜¥30,000", value: "10000-30000" },
-    { id: "price-3", label: "¥30,000〜¥50,000", value: "30000-50000" },
-    { id: "price-4", label: "¥50,000以上", value: "over-50000" },
+    { id: 'price-1', label: '¥10,000以下', value: 'under-10000' },
+    { id: 'price-2', label: '¥10,000〜¥30,000', value: '10000-30000' },
+    { id: 'price-3', label: '¥30,000〜¥50,000', value: '30000-50000' },
+    { id: 'price-4', label: '¥50,000以上', value: 'over-50000' },
   ];
-  
+
   // チェックボックスの状態変更ハンドラー
   const handlePriceFilterChange = (value: string) => {
     if (selectedPriceRanges.includes(value)) {
@@ -28,7 +28,7 @@ export default function PriceFilter({
 
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-bold mb-4">価格</h2>
+      <h2 className="mb-4 text-xl font-bold">価格</h2>
       <div className="space-y-2">
         {priceRanges.map((range) => (
           <div key={range.id} className="flex items-center">

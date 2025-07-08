@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"unicode"
 )
 
 // FuncInfo は関数の詳細情報（フルパス、モジュール、相対パスなど）を保持
@@ -59,23 +60,50 @@ func ParseFuncInfo(skip int) (*FuncInfo, string, int) {
 	receiver := ""
 	pkgPath := ""
 
-	// 関数名だけを抽出
-	if idx := strings.LastIndex(rel, "."); idx != -1 {
-		funcName = rel[idx+1:]
-	}
-
-	// レシーバとパッケージパスを分ける
-	// 例: internal/product/handler.(*ProductHandler)
-	if idx := strings.LastIndex(rel, "/"); idx != -1 {
-		left := rel[:idx]
-		right := rel[idx+1:]
-		if rIdx := strings.Index(right, ")"); rIdx != -1 {
-			open := strings.Index(right, "(")
-			if open != -1 {
-				receiver = right[open : rIdx+1]
+	lastDot := strings.LastIndex(rel, ".")
+	if lastDot == -1 {
+		// ドットがない場合、これはパッケージ修飾子のない純粋な関数名であると想定
+		// 例: main パッケージ内の main 関数など
+		funcName = rel
+	} else {
+		// 関数名とそれ以外（パッケージパス + レシーバ）を分離
+		funcName = rel[lastDot+1:]
+		qualifier := rel[:lastDot]
+		// ポインタレシーバか、値レシーバ/関数かでロジックを分岐
+		// 例: internal/product/handler.(*ProductHandler)
+		if strings.HasSuffix(qualifier, ")") {
+			// ポインタレシーバ: ".(...)" の形式を探す
+			if openParen := strings.LastIndex(qualifier, ".("); openParen != -1 {
+				pkgPath = qualifier[:openParen]
+				receiver = qualifier[openParen+1:]
+			} else {
+				// 予期しない形式だが、フォールバックとして qualifier をパッケージパスとする
+				pkgPath = qualifier
+			}
+		} else {
+			// 値レシーバ または レシーバなしの関数
+			// 修飾子内の最後のドットでパッケージと型を分離
+			// 例(値レシーバ): app/reception/infra/repo.UserRepositoryImpl -> repo, UserRepositoryImpl
+			// 例(関数): app/framework/session -> app/framework/session, (レシーバなし)
+			if receiverDot := strings.LastIndex(qualifier, "."); receiverDot != -1 {
+				// パッケージパスとレシーバ名の候補に分割
+				pathCandidate := qualifier[:receiverDot]
+				receiverCandidate := qualifier[receiverDot+1:]
+				// パッケージパス部分にスラッシュが含まれるか、
+				// またはレシーバ名の候補の最初の文字が大文字である場合、
+				// これをレシーバ付きメソッドと判断する
+				if strings.Contains(pathCandidate, "/") || (len(receiverCandidate) > 0 && unicode.IsUpper(rune(receiverCandidate[0]))) {
+					pkgPath = pathCandidate
+					receiver = receiverCandidate
+				} else {
+					// そうでなければレシーバなしの関数と判断
+					pkgPath = qualifier
+				}
+			} else {
+				// ドットがなければレシーバなしの関数
+				pkgPath = qualifier
 			}
 		}
-		pkgPath = left
 	}
 
 	return &FuncInfo{

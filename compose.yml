@@ -56,8 +56,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      # otel-collector:
-      #   condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 10s
@@ -254,67 +254,83 @@ services:
       #   condition: service_healthy
     networks:
       - ecommerce-network
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:13133/"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 10s
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 256M
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    restart: unless-stopped
-    volumes:
-      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
-      - grafana_data:/var/lib/grafana
-    environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_DISABLE_LOGIN_FORM=false
-    depends_on:
-      - loki
-      - tempo
-      - mimir
-      # loki:
-      #   condition: service_healthy
-      # mimir:
-      #   condition: service_healthy
-      # tempo:
-      #   condition: service_healthy
-    networks:
-      - ecommerce-network
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD",
-    #       "wget",
-    #       "--no-verbose",
-    #       "--tries=1",
-    #       "--spider",
-    #       "http://localhost:3000/api/health",
-    #     ]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-    #   start_period: 20s
+    healthcheck:
+      # curlコマンドがインストールされていないので無効化
+      disable: true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
-      - "traefik.http.routers.grafana.entrypoints=web"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      - "traefik.http.routers.grafana.middlewares=secure-headers@file,cors@file"
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 256M
+      # health_check endpoint
+      - "traefik.http.routers.otel-health.rule=Host(`otel-health.localhost`)"
+      - "traefik.http.routers.otel-health.entrypoints=web"
+      - "traefik.http.services.otel-health.loadbalancer.server.port=13133"
+      - "traefik.http.routers.otel-health.middlewares=secure-headers@file,cors@file"
+      # pprof endpoint
+      - "traefik.http.routers.otel-pprof.rule=Host(`otel-pprof.localhost`)"
+      - "traefik.http.routers.otel-pprof.entrypoints=web"
+      - "traefik.http.services.otel-pprof.loadbalancer.server.port=1777"
+      - "traefik.http.routers.otel-pprof.middlewares=secure-headers@file,cors@file"
+      # zpages endpoint
+      - "traefik.http.routers.otel-zpages.rule=Host(`otel-zpages.localhost`)"
+      - "traefik.http.routers.otel-zpages.entrypoints=web"
+      - "traefik.http.services.otel-zpages.loadbalancer.server.port=55679"
+      - "traefik.http.routers.otel-zpages.middlewares=secure-headers@file,cors@file"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    hostname: prometheus.localhost
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+      - --enable-feature=native-histograms
+    volumes:
+      - ./infra/prometheus/config.yaml:/etc/prometheus.yaml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+    networks:
+      - ecommerce-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    hostname: alloy.localhost
+    depends_on:
+      - loki
+    volumes:
+      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      [
+        "run",
+        "--server.http.listen-addr=0.0.0.0:12345",
+        "--storage.path=/var/lib/alloy/data",
+        "/etc/alloy/config.alloy",
+      ]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alloy.rule=Host(`alloy.localhost`)"
+      - "traefik.http.routers.alloy.entrypoints=web"
+      - "traefik.http.services.alloy.loadbalancer.server.port=12345"
+    networks:
+      - ecommerce-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   loki:
-    image: grafana/loki:3.4.1
+    image: grafana/loki:3.4.4
     container_name: loki
     restart: unless-stopped
     volumes:
@@ -337,10 +353,10 @@ services:
     #   start_period: 15s
     networks:
       - ecommerce-network
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 512M
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   mimir:
     image: grafana/mimir:latest
@@ -376,10 +392,10 @@ services:
       - "traefik.http.routers.mimir.entrypoints=web"
       - "traefik.http.services.mimir.loadbalancer.server.port=9009"
       - "traefik.http.routers.mimir.middlewares=secure-headers@file,cors@file"
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 1G
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
   tempo:
     image: grafana/tempo:latest
@@ -405,6 +421,61 @@ services:
     #   timeout: 5s
     #   retries: 3
     #   start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor traceQLStreaming metricsSummary
+    depends_on:
+      - prometheus
+      - loki
+      - mimir
+      - tempo
+      # loki:
+      #   condition: service_healthy
+      # mimir:
+      #   condition: service_healthy
+      # tempo:
+      #   condition: service_healthy
+    networks:
+      - ecommerce-network
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3000/api/health",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.middlewares=secure-headers@file,cors@file"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 volumes:
   mysql_data:

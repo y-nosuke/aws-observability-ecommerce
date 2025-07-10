@@ -117,10 +117,11 @@ tasks:
   clean:backend-api:
     desc: バックエンドのファイルをクリーンアップします
     cmds:
-      - sudo rm -rf backend-api/tmp
-      - sudo rm -rf backend-api/di/wire_gen.go
-      - sudo rm -rf backend-api/internal/shared/infrastructure/models
-      - sudo rm -rf backend-api/internal/shared/presentation/rest/openapi
+      - echo "skip"
+      # - rm -rf backend-api/tmp
+      # - rm -rf backend-api/di/wire_gen.go
+      # - rm -rf backend-api/internal/shared/infrastructure/models
+      # - rm -rf backend-api/internal/shared/presentation/rest/openapi
 
   clean:backend-image-processor:
     desc: バックエンドのファイルをクリーンアップします
@@ -130,14 +131,16 @@ tasks:
   clean:frontend-customer:
     desc: 顧客向けフロントエンドのファイルをクリーンアップします
     cmds:
-      - sudo rm -rf frontend-customer/node_modules
-      - sudo rm -rf frontend-customer/.next
+      - echo "skip"
+      # - sudo rm -rf frontend-customer/node_modules
+      # - sudo rm -rf frontend-customer/.next
 
   clean:frontend-admin:
     desc: 管理者向けフロントエンドのファイルをクリーンアップします
     cmds:
-      - sudo rm -rf frontend-admin/node_modules
-      - sudo rm -rf frontend-admin/.next
+      - echo "skip"
+      # - sudo rm -rf frontend-admin/node_modules
+      # - sudo rm -rf frontend-admin/.next
 
   logs:
     desc: 全コンテナのログを表示します
@@ -301,6 +304,15 @@ tasks:
   migrate:up:
     desc: データベースのマイグレーションを実行
     cmds:
+      - cmd: 'echo "MySQLの起動を確認しています..."'
+        silent: true
+      - |
+        while ! docker compose exec -T mysql mysqladmin ping -h localhost -u root -p"${MYSQL_ROOT_PASSWORD:-rootpassword}" --silent; do
+          echo "MySQLの起動待機中... (5秒後に再試行)"
+          sleep 5
+        done
+      - cmd: 'echo "MySQLが起動しています。マイグレーションを実行します..."'
+        silent: true
       - migrate -path "${MIGRATIONS_PATH}" -database "${MYSQL_DSN}" up
 
   migrate:down:

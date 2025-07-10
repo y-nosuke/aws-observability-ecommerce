@@ -18,9 +18,42 @@ type Observer struct {
 	spanName string
 }
 
-// Start はスパンを開始します
-func Start(ctx context.Context, kv ...attribute.KeyValue) (context.Context, *Observer) {
-	funcInfo, file, line := utils.ParseFuncInfo(1)
+// StartOption はStart関数のオプションを定義する型
+type StartOption func(*startConfig)
+
+// startConfig はStart関数の設定を保持する構造体
+type startConfig struct {
+	skip       int
+	attributes []attribute.KeyValue
+}
+
+// WithSkip はスキップレベルを指定するオプション
+func WithSkip(skip int) StartOption {
+	return func(c *startConfig) {
+		c.skip = skip
+	}
+}
+
+// WithAttributes は属性を指定するオプション
+func WithAttributes(attrs ...attribute.KeyValue) StartOption {
+	return func(c *startConfig) {
+		c.attributes = append(c.attributes, attrs...)
+	}
+}
+
+// Start はスパンを開始します（Functional Optionパターン使用）
+func Start(ctx context.Context, opts ...StartOption) (context.Context, *Observer) {
+	// デフォルト設定
+	config := &startConfig{
+		skip: 1, // デフォルトは1（Start関数の直接の呼び出し元）
+	}
+
+	// オプションを適用
+	for _, opt := range opts {
+		opt(config)
+	}
+
+	funcInfo, file, line := utils.ParseFuncInfo(config.skip)
 
 	spanName := fmt.Sprintf("%s.%s", funcInfo.Receiver, funcInfo.FuncName)
 
@@ -29,7 +62,7 @@ func Start(ctx context.Context, kv ...attribute.KeyValue) (context.Context, *Obs
 		attribute.Int("line", line),
 	}
 
-	attrs = append(attrs, kv...)
+	attrs = append(attrs, config.attributes...)
 
 	spanCtx, span := tracer.Start(ctx, spanName, trace.WithAttributes(attrs...))
 

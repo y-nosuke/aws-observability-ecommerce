@@ -8,7 +8,7 @@ import (
 
 // WithSpan は関数を実行する際に自動的にスパンを開始・終了します
 func WithSpan(ctx context.Context, fn func(context.Context, *Observer) error, attrs ...attribute.KeyValue) error {
-	spanCtx, o := Start(ctx, attrs...)
+	spanCtx, o := Start(ctx, WithSkip(2), WithAttributes(attrs...))
 	err := fn(spanCtx, o)
 	o.End(err)
 	return err
@@ -16,7 +16,7 @@ func WithSpan(ctx context.Context, fn func(context.Context, *Observer) error, at
 
 // WithSpanValue は戻り値を持つ関数版です
 func WithSpanValue[T any](ctx context.Context, fn func(context.Context, *Observer) (T, error), attrs ...attribute.KeyValue) (T, error) {
-	spanCtx, o := Start(ctx, attrs...)
+	spanCtx, o := Start(ctx, WithSkip(2), WithAttributes(attrs...))
 	result, err := fn(spanCtx, o)
 	o.End(err)
 	return result, err

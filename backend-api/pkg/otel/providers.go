@@ -24,6 +24,7 @@ func NewLoggerProvider(ctx context.Context, res *resource.Resource, config confi
 	if !config.Enabled {
 		return nil, nil, nil
 	}
+
 	exporter, err := otlploggrpc.New(ctx,
 		otlploggrpc.WithEndpoint(config.Endpoint),
 		otlploggrpc.WithTimeout(config.Timeout),
@@ -39,6 +40,7 @@ func NewLoggerProvider(ctx context.Context, res *resource.Resource, config confi
 	if err != nil {
 		return nil, nil, fmt.Errorf("otlploggrpc.New: %w", err)
 	}
+
 	provider := sdklog.NewLoggerProvider(
 		sdklog.WithResource(res),
 		sdklog.WithProcessor(
@@ -52,7 +54,9 @@ func NewLoggerProvider(ctx context.Context, res *resource.Resource, config confi
 			),
 		),
 	)
+
 	global.SetLoggerProvider(provider)
+
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -62,12 +66,15 @@ func NewLoggerProvider(ctx context.Context, res *resource.Resource, config confi
 			}
 		}
 	}
+
 	return provider, shutdown, nil
 }
+
 func NewMeterProvider(ctx context.Context, res *resource.Resource, config config.OTelMetricsConfig) (*sdkmetric.MeterProvider, func(), error) {
 	if !config.Enabled {
 		return nil, nil, nil
 	}
+
 	exporter, err := otlpmetricgrpc.New(ctx,
 		otlpmetricgrpc.WithEndpoint(config.Endpoint),
 		otlpmetricgrpc.WithTimeout(config.Timeout),
@@ -83,6 +90,7 @@ func NewMeterProvider(ctx context.Context, res *resource.Resource, config config
 	if err != nil {
 		return nil, nil, fmt.Errorf("otlpmetricgrpc.New: %w", err)
 	}
+
 	provider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
 		sdkmetric.WithReader(
@@ -91,7 +99,9 @@ func NewMeterProvider(ctx context.Context, res *resource.Resource, config config
 			),
 		),
 	)
+
 	otel.SetMeterProvider(provider)
+
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -101,12 +111,15 @@ func NewMeterProvider(ctx context.Context, res *resource.Resource, config config
 			}
 		}
 	}
+
 	return provider, shutdown, nil
 }
+
 func NewTracerProvider(ctx context.Context, res *resource.Resource, config config.OTelTracingConfig) (*sdktrace.TracerProvider, func(), error) {
 	if !config.Enabled {
 		return nil, nil, nil
 	}
+
 	exporter, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithEndpoint(config.Endpoint),
 		otlptracegrpc.WithTimeout(config.Timeout),
@@ -122,6 +135,7 @@ func NewTracerProvider(ctx context.Context, res *resource.Resource, config confi
 	if err != nil {
 		return nil, nil, fmt.Errorf("otlptracegrpc.New: %w", err)
 	}
+
 	provider := sdktrace.NewTracerProvider(
 		sdktrace.WithResource(res),
 		sdktrace.WithBatcher(exporter,
@@ -131,7 +145,9 @@ func NewTracerProvider(ctx context.Context, res *resource.Resource, config confi
 		),
 		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(config.SamplingRatio)),
 	)
+
 	otel.SetTracerProvider(provider)
+
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -141,5 +157,6 @@ func NewTracerProvider(ctx context.Context, res *resource.Resource, config confi
 			}
 		}
 	}
+
 	return provider, shutdown, nil
 }

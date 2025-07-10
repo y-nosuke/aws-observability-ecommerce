@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/mapper"
 	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/internal/query/rest/reader"
+	"github.com/y-nosuke/aws-observability-ecommerce/backend-api/pkg/otel"
 )
 
 // CategoryListHandler はカテゴリー一覧APIのハンドラー
@@ -26,14 +28,16 @@ func NewCategoryListHandler() *CategoryListHandler {
 
 // ListCategories はカテゴリー一覧を取得する
 func (h *CategoryListHandler) ListCategories(ctx echo.Context) error {
-	// カテゴリー一覧取得
-	categories, err := h.reader.FindCategoriesWithProductCount(ctx.Request().Context())
-	if err != nil {
-		return fmt.Errorf("failed to find categories: %w", err)
-	}
+	return otel.WithSpan(ctx.Request().Context(), func(spanCtx context.Context, o *otel.Observer) error {
+		// カテゴリー一覧取得
+		categories, err := h.reader.FindCategoriesWithProductCount(spanCtx)
+		if err != nil {
+			return fmt.Errorf("failed to find categories: %w", err)
+		}
 
-	// レスポンス変換
-	response := h.mapper.ToCategoryListResponse(categories)
+		// レスポンス変換
+		response := h.mapper.ToCategoryListResponse(categories)
 
-	return ctx.JSON(http.StatusOK, response)
+		return ctx.JSON(http.StatusOK, response)
+	})
 }

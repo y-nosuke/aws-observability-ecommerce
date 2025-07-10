@@ -22,20 +22,14 @@ func NewUploadProductImageUseCase(imageStorage service.ImageStorage) *UploadProd
 }
 
 // Execute は商品画像アップロードを実行する
-func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (res *dto.UploadImageResponse, err error) {
-	spanCtx, o := otel.Start(ctx)
-	defer func() {
-		o.End(err)
-	}()
+func (u *UploadProductImageUseCase) Execute(ctx context.Context, req *dto.UploadImageRequest) (*dto.UploadImageResponse, error) {
+	return otel.WithSpanValue(ctx, func(spanCtx context.Context, o *otel.Observer) (*dto.UploadImageResponse, error) {
+		// 画像をアップロード
+		uploadResult, err := u.imageStorage.UploadImage(spanCtx, req.ProductID, req.ImageData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload image: %w", err)
+		}
 
-	// 画像をアップロード
-	var s3Key string
-	var urls map[string]string
-
-	s3Key, urls, err = u.imageStorage.UploadImage(spanCtx, req.ProductID, req.ImageData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to upload image: %w", err)
-	}
-
-	return dto.NewUploadImageResponse(req.ProductID, req.Filename, s3Key, urls), nil
+		return dto.NewUploadImageResponse(req.ProductID, req.Filename, uploadResult.Key, uploadResult.URLs), nil
+	})
 }

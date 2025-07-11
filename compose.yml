@@ -46,11 +46,6 @@ services:
       - AWS_ENDPOINT=http://localstack:4566
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      # OpenTelemetry設定
-      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
-      - OTEL_SERVICE_NAME=aws-observability-ecommerce
-      - OTEL_SERVICE_VERSION=1.0.0
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=aws-observability-ecommerce,service.version=1.0.0,deployment.environment=development
     volumes:
       - ./backend-api:/app # ホットリロード用
     depends_on:
@@ -294,34 +289,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
       - "traefik.http.routers.prometheus.entrypoints=web"
-    networks:
-      - ecommerce-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-
-  alloy:
-    image: grafana/alloy:latest
-    container_name: alloy
-    hostname: alloy.localhost
-    depends_on:
-      - loki
-    volumes:
-      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command:
-      [
-        "run",
-        "--server.http.listen-addr=0.0.0.0:12345",
-        "--storage.path=/var/lib/alloy/data",
-        "/etc/alloy/config.alloy",
-      ]
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.alloy.rule=Host(`alloy.localhost`)"
-      - "traefik.http.routers.alloy.entrypoints=web"
-      - "traefik.http.services.alloy.loadbalancer.server.port=12345"
     networks:
       - ecommerce-network
     deploy:

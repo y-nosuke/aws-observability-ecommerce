@@ -42,30 +42,27 @@ func NewHealthHandler(db *sql.DB, stsClient *sts.Client, s3Client *s3.Client, cf
 }
 
 // HealthCheck はヘルスチェックエンドポイントのハンドラー関数
-func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) (err error) {
-	spanCtx, o := otel.Start(c.Request().Context())
-	defer func() {
-		o.End(err)
-	}()
+func (h *HealthHandler) HealthCheck(c echo.Context, params openapi.HealthCheckParams) error {
+	return otel.WithSpan(c.Request().Context(), func(spanCtx context.Context, o *otel.Observer) error {
+		spanCtx, cancel := context.WithTimeout(spanCtx, 5*time.Second)
+		defer cancel()
 
-	spanCtx, cancel := context.WithTimeout(spanCtx, 5*time.Second)
-	defer cancel()
+		var checks []string
+		if params.Checks != nil {
+			checks = strings.Split(*params.Checks, ",")
+		}
 
-	var checks []string
-	if params.Checks != nil {
-		checks = strings.Split(*params.Checks, ",")
-	}
+		response := &openapi.HealthResponse{
+			Status:     "ok",
+			Timestamp:  time.Now(),
+			Version:    h.version,
+			Uptime:     time.Since(h.startTime).Milliseconds(),
+			Resources:  h.createResources(),
+			Components: h.createComponents(spanCtx, checks),
+		}
 
-	response := &openapi.HealthResponse{
-		Status:     "ok",
-		Timestamp:  time.Now(),
-		Version:    h.version,
-		Uptime:     time.Since(h.startTime).Milliseconds(),
-		Resources:  h.createResources(),
-		Components: h.createComponents(spanCtx, checks),
-	}
-
-	return c.JSON(http.StatusOK, response)
+		return c.JSON(http.StatusOK, response)
+	})
 }
 
 func (h *HealthHandler) createResources() openapi.SystemResources {

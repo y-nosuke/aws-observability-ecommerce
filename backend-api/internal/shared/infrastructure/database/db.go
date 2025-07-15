@@ -33,16 +33,20 @@ func NewDBConfig(ctx context.Context, dbConfig config.DatabaseConfig) (*sql.DB, 
 	db, err := otelsql.Open("mysql", dsn,
 		otelsql.WithAttributes(
 			semconv.DBSystemNameMySQL,
+			semconv.ServerAddress(dbConfig.Host),
+			semconv.ServerPort(dbConfig.Port),
 			semconv.DBNamespace(dbConfig.Name),
+			semconv.PeerService("MySQL"),
 		),
 		otelsql.WithSpanOptions(otelsql.SpanOptions{
-			Ping:           true,
-			RowsNext:       true,
-			DisableErrSkip: true,
+			Ping:           true,  // 接続確認はトレースする
+			RowsNext:       false, // 行ごとのイベントは抑制し、パフォーマンスを優先
+			DisableErrSkip: true,  // driver.ErrSkip はエラーとして記録しない
+			DisableQuery:   false, // SQLクエリ本文は記録する
 		}),
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open database with otelsql: %w", err)
+		log.Fatalf("db open: %v", err)
 	}
 
 	bobDb = bob.NewDB(db)

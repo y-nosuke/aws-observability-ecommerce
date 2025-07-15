@@ -3,11 +3,22 @@ apiVersion: 1
 datasources:
   - name: Loki
     type: loki
+    uid: loki
     access: proxy
+    orgId: 1
     url: http://loki:3100
-    uid: loki # 追加: ダッシュボードで参照するUID
+    basicAuth: false
     isDefault: true
+    version: 1
     editable: true
+    jsonData:
+      derivedFields:
+        - datasourceName: Tempo
+          datasourceUid: tempo
+          matcherRegex: trace_id
+          matcherType: label
+          name: traceID
+          url: "$${__value.raw}"
 
   - name: Mimir
     type: prometheus
@@ -23,8 +34,41 @@ datasources:
 
   - name: Tempo
     type: tempo
-    access: proxy
-    url: http://tempo:3200
     uid: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo:3200
+    basicAuth: false
     isDefault: false
+    version: 1
     editable: true
+    apiVersion: 1
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus
+      lokiSearch:
+        datasourceUid: loki
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1h
+        spanEndTimeShift: 1h
+        tags:
+          [{ key: "container" }, { key: "service.name", value: "service_name" }]
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      httpMethod: GET

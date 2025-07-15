@@ -49,6 +49,7 @@ func NewLogger(provider *sdklog.LoggerProvider, cfg config.LoggingConfig) *slog.
 		handler = slog.NewTextHandler(os.Stdout, opts)
 	}
 	handler = NewTraceHandler(handler)
+
 	// OpenTelemetry ブリッジを使用
 	if cfg.EnableOTel {
 		handler = slogmulti.Fanout(

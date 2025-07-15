@@ -49,6 +49,7 @@
 - **Epic (`epic.md`):** 開発管理上のエピックを作成するためのテンプレート。
 - **User Story (`user-story.md`):** PBI（ユーザーストーリー形式）を作成するためのテンプレート。
 - **Refactoring (`refactoring.md`):** PBI（リファクタリングタスク）を作成するためのテンプレート。
+- **Spike (`spike.md`):** PBIとして管理する技術調査・学習・不確実性解消タスク用のテンプレート。目的、背景、調査・学習内容、進め方・アウトプット、結果・学びなどを記載し、スパイクの成果を明確にする。
 - **Sprint Planning (`sprint-planning.md`):** スプリント計画を記録するためのテンプレート。
   - (個人開発の場合、`sprint-management-handbook.md`で提案された「1つのIssueでスプリントを管理する方法」のテンプレートも参考にする。具体的なテンプレート例は本ドキュメントの付録Aを参照)
 - **Retrospective (`retrospective.md`):** スプリントの振り返りを記録するためのテンプレート。

@@ -1,12 +1,18 @@
 ---
 name: User Story
 about: 新しいユーザーストーリーを作成
-title: 'US-XX: [ユーザーストーリーのタイトル]'
+title: 'PBI-XX: [ユーザーストーリーのタイトル]'
 labels: 'user-story'
 assignees: ''
 ---
 
 # User Story: [ユーザーストーリーのタイトル]
+
+<!--
+【命名規則】
+- IDやタイトルには必ず連番（例：01, 02, ...）を付与してください。
+  例: PBI-CUST-BROWSE-LIST-ALL-01, PBI-CUST-BROWSE-LIST-ALL-02, ...
+-->
 
 ## エピック
 <!-- エピックのIDとタイトルを記載 -->

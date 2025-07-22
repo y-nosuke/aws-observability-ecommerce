@@ -7,14 +7,12 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || '/api';
   }
 
-  // サーバー環境（SSR）での自分自身のAPI Routes呼び出し
-  const baseUrl =
-    process.env.NEXTAUTH_URL ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:${process.env.PORT || 3000}`);
+  // サーバー環境（SSR）
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/api`
+    : process.env.BACKEND_API_URL;
 
-  return `${baseUrl}/api`;
+  return `${baseUrl}`;
 };
 
 // Axiosインスタンスの作成
@@ -29,16 +27,15 @@ export const apiClient = axios.create({
 // リクエストインターセプター
 apiClient.interceptors.request.use(
   (config) => {
-    // トークンがある場合はヘッダーに追加（ブラウザ環境でのみ）
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
+    // デバッグ用ログ（開発環境のみ）
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     }
+
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   },
 );
@@ -46,17 +43,21 @@ apiClient.interceptors.request.use(
 // レスポンスインターセプター
 apiClient.interceptors.response.use(
   (response) => {
+    // デバッグ用ログ（開発環境のみ）
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`API Response: ${response.status} ${response.config.url}`);
+    }
     return response;
   },
   (error) => {
     // エラーハンドリング
-    if (error.response) {
-      // 認証エラーの場合（ブラウザ環境でのみ）
-      if (error.response.status === 401 && typeof window !== 'undefined') {
-        // ログアウト処理など
-        localStorage.removeItem('auth_token');
-      }
-    }
+    console.error('API Error:', {
+      message: error.message,
+      config: error.config,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
     return Promise.reject(error);
   },
 );

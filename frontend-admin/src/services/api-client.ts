@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-import { clearAuthData, getAuthToken } from '../lib/auth/auth';
-
 // APIのベースURL（フロントエンドのAPI Routes）
 const getApiBaseUrl = () => {
   // ブラウザ環境（クライアントサイド）
@@ -9,14 +7,12 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || '/api';
   }
 
-  // サーバー環境（SSR）での自分自身のAPI Routes呼び出し
-  const baseUrl =
-    process.env.NEXTAUTH_URL ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:${process.env.PORT || 3000}`);
+  // サーバー環境（SSR）
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/api`
+    : process.env.BACKEND_API_URL;
 
-  return `${baseUrl}/api`;
+  return `${baseUrl}`;
 };
 
 // Axiosインスタンスの作成
@@ -36,11 +32,6 @@ apiClient.interceptors.request.use(
       console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     }
 
-    // 管理者認証トークンをヘッダーに追加
-    const token = getAuthToken();
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -67,16 +58,6 @@ apiClient.interceptors.response.use(
       status: error.response?.status,
     });
 
-    if (error.response) {
-      // 認証エラーの場合はログアウト処理
-      if (error.response.status === 401) {
-        clearAuthData();
-        // ログインページへリダイレクト（ブラウザ環境の場合）
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-      }
-    }
     return Promise.reject(error);
   },
 );

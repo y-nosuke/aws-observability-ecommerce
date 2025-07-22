@@ -3,15 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { getUserData } from '@/lib/auth/auth';
-
 type AdminHeaderProps = {
   toggleSidebar?: () => void;
 };
 
 export default function AdminHeader({ toggleSidebar }: AdminHeaderProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const userData = getUserData() || { name: 'Admin User' };
+  const userData = { name: 'Admin User' };
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);

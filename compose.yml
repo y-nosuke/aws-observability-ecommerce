@@ -65,6 +65,16 @@ services:
       - "traefik.http.routers.backend-api.entrypoints=web"
       - "traefik.http.services.backend-api.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend-api.middlewares=secure-headers@file,cors@file"
+
+      - "traefik.http.routers.backend-api-admin.rule=Host(`admin.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend-api-admin.entrypoints=web"
+      - "traefik.http.routers.backend-api-admin.service=backend-api"
+      - "traefik.http.routers.backend-api-admin.middlewares=secure-headers@file,cors@file"
+
+      - "traefik.http.routers.backend-api-customer.rule=Host(`customer.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend-api-customer.entrypoints=web"
+      - "traefik.http.routers.backend-api-customer.service=backend-api"
+      - "traefik.http.routers.backend-api-customer.middlewares=secure-headers@file,cors@file"
     networks:
       - ecommerce-network
 

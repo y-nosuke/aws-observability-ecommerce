@@ -3,11 +3,11 @@
 import DashboardCard from '@/components/ui/DashboardCard';
 import DashboardStats from '@/components/ui/DashboardStats';
 import SystemHealthStatus from '@/components/ui/SystemHealthStatus';
+import { InventoryAlertItem, OrderItem, ProductItem, StatItem } from '@/services/dashboard/types';
 
 import InventoryAlertsTable from './components/InventoryAlertsTable';
 import LatestOrdersTable from './components/LatestOrdersTable';
 import PopularProductsTable from './components/PopularProductsTable';
-import { InventoryAlertItem, OrderItem, ProductItem, StatItem } from './types';
 
 // Presentational コンポーネントの props 型定義
 type HomeClientProps = {
